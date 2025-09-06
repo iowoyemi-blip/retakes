@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz 1.2 Retake: Simplifying Radicals</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .btn-disabled { background-color: #9ca3af; cursor: not-allowed; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
+        
+        <div id="start-screen">
+            <header class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">1.2 Quiz Retake</h1>
+                <p class="mt-2 text-gray-600">Enter your name to begin. Achieve 100% on a set of problems to get your verification file.</p>
+            </header>
+            <div class="bg-white p-8 rounded-lg shadow-md max-w-md mx-auto">
+                <label for="student-name-input" class="block text-sm font-medium text-gray-700">Student Name</label>
+                <input type="text" id="student-name-input" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., Jane Doe">
+                <button id="start-quiz-btn" class="mt-6 w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Start Quiz
+                </button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <header class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">1.2 Quiz Retake</h1>
+                <div class="mt-2 text-gray-600 text-lg">
+                    Student: <span id="student-name-display" class="font-semibold text-indigo-700"></span>
+                </div>
+                 <div id="score-display" class="mt-1 text-gray-600">Score: 0 / 0</div>
+                <button id="new-quiz-btn" class="mt-6 px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105">
+                    Generate New Set (6 Problems)
+                </button>
+            </header>
+
+            <main id="quiz-container" class="space-y-6"></main>
+
+            <div id="completion-container" class="hidden text-center mt-8">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- STATE MANAGEMENT ---
+        let studentName = '';
+        let currentQuestions = [];
+        let score = 0;
+        let questionsAnswered = 0;
+
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const studentNameInput = document.getElementById('student-name-input');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const studentNameDisplay = document.getElementById('student-name-display');
+        const scoreDisplay = document.getElementById('score-display');
+        const quizContainer = document.getElementById('quiz-container');
+        const newQuizBtn = document.getElementById('new-quiz-btn');
+        const completionContainer = document.getElementById('completion-container');
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const getRandomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // --- PROBLEM GENERATORS ---
+        
+        function generateSimpleRadicalProblem() {
+            const perfectSquares = [4, 9, 16, 25, 36, 49, 64, 81];
+            const radicands = [2, 3, 5, 6, 7];
+            const s = getRandomElement(perfectSquares);
+            const r = getRandomElement(radicands);
+            const n = s * r;
+            const question = `Express in simplest radical form: $$\\sqrt{${n}}$$`;
+            const coeff = Math.sqrt(s);
+            const answer = `${coeff}√${r}`;
+            const solution = `<p>Find the largest perfect square that divides ${n}, which is ${s}.</p>
+                <p>$$ \\sqrt{${n}} = \\sqrt{${s} \\cdot ${r}} = \\sqrt{${s}} \\cdot \\sqrt{${r}} = ${coeff}\\sqrt{${r}} $$</p>`;
+            return { question, answer, solution, type: 'Simplify Numerical' };
+        }
+
+        function generatePerfectVarRadicalProblem() {
+            const s = getRandomElement([16, 25, 36, 49, 64, 81, 100]);
+            const v = getRandomElement(['a', 'b', 'x', 'y']);
+            const p = getRandomElement([2, 4, 6, 8, 10]);
+            const question = `Express in simplest radical form: $$\\sqrt{${s}${v}^{${p}}}$$`;
+            const coeff = Math.sqrt(s);
+            const exp = p / 2;
+            const answer = `${coeff}${v}${exp > 1 ? `^${exp}` : ''}`;
+            const solution = `<p>Take the square root of the coefficient and divide the exponent by 2.</p>
+                <p>$$ \\sqrt{${s}} \\cdot \\sqrt{${v}^{${p}}} = ${coeff} \\cdot ${v}^{${p}/2} = ${coeff}${v}${exp > 1 ? `^{${exp}}` : ''} $$</p>`;
+            return { question, answer, solution, type: 'Simplify w/ Variable' };
+        }
+
+        function generateMixedVarRadicalProblem(numVars) {
+            const s = getRandomElement([4, 9, 16, 25]), r = getRandomElement([2, 3, 5, 6]);
+            const n = s * r;
+            const vars = shuffleArray(['a', 'b', 'c', 'x', 'y']).slice(0, numVars);
+            let questionLatex = `${n}`;
+            let out_coeff = Math.sqrt(s), in_coeff = r;
+            let out_vars = [], in_vars = [];
+            let solutionSteps = [`<p><b>Number:</b> $$\\sqrt{${n}} = \\sqrt{${s} \\cdot ${r}} = ${out_coeff}\\sqrt{${r}}$$</p>`];
+
+            vars.forEach(v => {
+                const p = getRandomInt(2, 9);
+                questionLatex += `${v}^{${p}}`;
+                const outExp = Math.floor(p / 2);
+                const inExp = p % 2;
+                if (outExp > 0) out_vars.push(`${v}${outExp > 1 ? `^${outExp}` : ''}`);
+                if (inExp > 0) in_vars.push(v);
+                solutionSteps.push(`<p><b>Variable ${v}:</b> $$\\sqrt{${v}^{${p}}} = ${v}^{${outExp}}${inExp > 0 ? `\\sqrt{${v}}` : ''}$$</p>`);
+            });
+            
+            out_vars.sort();
+            in_vars.sort();
+
+            const question = `Express in simplest radical form: $$\\sqrt{${questionLatex}}$$`;
+            const answer = `${out_coeff}${out_vars.join('')}√${in_coeff}${in_vars.join('')}`;
+
+            const latex_out_vars = out_vars.join('').replace(/\^(\d+)/g, '^{$1}');
+            const latex_answer = `${out_coeff}${latex_out_vars}\\sqrt{${in_coeff}${in_vars.join('')}}`;
+
+            const solution = `<p>Break down each part of the radical separately.</p>${solutionSteps.join('')}
+                <p><b>Combine the parts:</b> The terms outside the square root are multiplied together (in alphabetical order), and the terms inside are multiplied together.</p>
+                <p>Final Answer: $$${latex_answer}$$</p>`;
+
+            return { question, answer, solution, type: 'Simplify w/ Variables' };
+        }
+
+        // --- QUIZ LOGIC ---
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = `Score: ${score} / ${questionsAnswered} (Total: ${currentQuestions.length})`;
+        }
+
+        function generateQuiz() {
+            score = 0; questionsAnswered = 0;
+            completionContainer.innerHTML = ''; completionContainer.classList.add('hidden');
+            quizContainer.innerHTML = `<div class="text-center"><p class="text-gray-600">Generating 6 new problems...</p></div>`;
+            updateScoreDisplay();
+            
+            setTimeout(() => {
+                const generatorsToCall = [
+                    generateSimpleRadicalProblem, generateSimpleRadicalProblem, generateSimpleRadicalProblem,
+                    generatePerfectVarRadicalProblem, () => generateMixedVarRadicalProblem(2), () => generateMixedVarRadicalProblem(3)
+                ];
+                currentQuestions = [];
+                let generatedProblems = new Set();
+                generatorsToCall.forEach(generator => {
+                    let problem;
+                    let attempts = 0;
+                    do { problem = generator(); attempts++; } while (generatedProblems.has(problem.question) && attempts < 20);
+                    if (attempts < 20) { currentQuestions.push(problem); generatedProblems.add(problem.question); }
+                });
+                renderQuiz(currentQuestions);
+                updateScoreDisplay();
+            }, 100);
+        }
+
+        function renderQuiz(questions) {
+            quizContainer.innerHTML = '';
+            questions.forEach((q, index) => {
+                const placeholder = 'e.g., 3√2 or 2ab^2√3c (variables alphabetized)';
+                const questionCard = `<div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex justify-between items-start">
+                        <div class="text-lg font-medium text-gray-800 pr-4"><span class="font-bold mr-2">${index + 1}.</span> ${q.question}</div>
+                        <span class="flex-shrink-0 bg-teal-100 text-teal-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${q.type}</span>
+                    </div>
+                    <div class="mt-4 flex flex-col sm:flex-row sm:items-center">
+                        <div class="relative flex-grow">
+                            <input type="text" id="answer-${index}" class="w-full pl-4 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="${placeholder}">
+                            <div class="absolute top-1/2 right-1 transform -translate-y-1/2"><button class="h-8 w-8 text-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-sans rounded-md" onclick="insertSymbol('√', 'answer-${index}')">√</button></div>
+                        </div>
+                        <button id="submit-${index}" class="mt-2 sm:mt-0 sm:ml-2 w-full sm:w-auto px-6 py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">Submit</button>
+                    </div>
+                    <div id="solution-${index}" class="hidden mt-4 p-4 bg-gray-50 rounded-md border border-gray-200">${q.solution}</div>
+                </div>`;
+                quizContainer.innerHTML += questionCard;
+            });
+            MathJax.typesetPromise();
+            questions.forEach((q, index) => {
+                const submitBtn = document.getElementById(`submit-${index}`);
+                const answerInput = document.getElementById(`answer-${index}`);
+                const checkFunc = () => checkAnswer(index, q.answer, q.solution);
+                submitBtn.addEventListener('click', checkFunc);
+                answerInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); checkFunc(); } });
+            });
+        }
+
+        function checkAnswer(index, correctAnswer, solution) {
+            const userInputEl = document.getElementById(`answer-${index}`);
+            if (userInputEl.disabled) return;
+            const userInputClean = userInputEl.value.replace(/\s/g, '').replace(/[()*]/g,'');
+            const correctAnswerClean = correctAnswer.toString().replace(/\s/g, '');
+            const isCorrect = userInputClean === correctAnswerClean;
+            
+            questionsAnswered++;
+            if (isCorrect) {
+                score++;
+                userInputEl.classList.add('border-green-500', 'border-2', 'bg-green-50');
+            } else {
+                userInputEl.classList.add('border-red-500', 'border-2', 'bg-red-50');
+                const correctAnswerEl = document.createElement('p');
+                correctAnswerEl.className = 'mt-2 text-red-600 font-semibold';
+                correctAnswerEl.innerHTML = `Correct answer: <span class="font-bold">${correctAnswer.replace(/\^/g,'<sup>').replace(/√/g,'&radic;')}</span>`;
+                solutionDiv.prepend(correctAnswerEl);
+            }
+            
+            currentQuestions[index].userAnswer = userInputEl.value;
+            currentQuestions[index].isCorrect = isCorrect;
+
+            const submitBtn = document.getElementById(`submit-${index}`);
+            const solutionDiv = document.getElementById(`solution-${index}`);
+            solutionDiv.innerHTML = (solutionDiv.hasChildNodes() && solutionDiv.firstChild.tagName === 'P' ? solutionDiv.firstChild.outerHTML : '') + solution;
+            userInputEl.disabled = true;
+            submitBtn.disabled = true;
+            submitBtn.classList.add('btn-disabled');
+            solutionDiv.classList.remove('hidden');
+            MathJax.typesetPromise([`#solution-${index}`]);
+
+            updateScoreDisplay();
+
+            if (questionsAnswered === currentQuestions.length && score === currentQuestions.length) {
+                showCompletion();
+            }
+        }
+
+        function showCompletion() {
+            completionContainer.classList.remove('hidden');
+            completionContainer.innerHTML = `
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md shadow-lg">
+                    <h2 class="text-2xl font-bold">Mastery Achieved!</h2>
+                    <p class="mt-2">Congratulations, you answered all questions correctly. You can now download your verification file to submit.</p>
+                    <button id="download-score-btn" class="mt-4 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        Download Verification File
+                    </button>
+                </div>`;
+            document.getElementById('download-score-btn').addEventListener('click', downloadScore);
+        }
+
+        function downloadScore() {
+            const verificationData = {
+                studentName: studentName,
+                quizTitle: "1.2 Quiz Retake: Simplifying Radicals",
+                completionDate: new Date().toISOString(),
+                masteryAttempt: {
+                    score: score,
+                    totalQuestions: currentQuestions.length,
+                    questions: currentQuestions.map(q => ({
+                        question: q.question.replace(/\$\$/g, ''),
+                        userAnswer: q.userAnswer,
+                        correctAnswer: q.answer,
+                    }))
+                }
+            };
+            const jsonString = JSON.stringify(verificationData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const safeName = studentName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            a.download = `${safeName}_quiz_1-2_retake.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function insertSymbol(symbol, inputId) {
+            const input = document.getElementById(inputId);
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            input.value = input.value.substring(0, start) + symbol + input.value.substring(end);
+            input.focus();
+            input.setSelectionRange(start + 1, start + 1);
+        }
+        
+        // --- INITIALIZATION ---
+        startQuizBtn.addEventListener('click', () => {
+            const name = studentNameInput.value.trim();
+            if (name) {
+                studentName = name;
+                studentNameDisplay.textContent = studentName;
+                startScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                generateQuiz();
+            } else {
+                alert('Please enter your name to start.');
+            }
+        });
+        newQuizBtn.addEventListener('click', generateQuiz);
+    </script>
+</body>
+</html>

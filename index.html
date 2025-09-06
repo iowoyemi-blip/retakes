@@ -2,13 +2,71 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Redirecting...</title>
-  <meta http-equiv="refresh" content="0; url=./index.html" />
-  <script>
-    window.location.href = "./index.html";
-  </script>
+  <title>Quiz Retakes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 2rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 2rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+    .card a {
+      text-decoration: none;
+      font-size: 1.2rem;
+      color: #2980b9;
+      font-weight: bold;
+      margin-top: 0.5rem;
+    }
+  </style>
 </head>
 <body>
-  <p>Redirecting back to Quiz Retakes...</p>
+  <h1>Quiz Retakes</h1>
+  <div class="grid" id="quizGrid"></div>
+
+  <script>
+    // ✅ Add new quiz retakes here:
+    const quizzes = [
+      { file: "1.1_Quiz_retake.html", title: "Quiz 1.1 Retake" },
+      { file: "1.2_Quiz_retake.html", title: "Quiz 1.2 Retake" },
+      { file: "1.3_Quiz_retake.html", title: "Quiz 1.3 Retake" }
+      // Example for future:
+      // { file: "1.4_Quiz_retake.html", title: "Quiz 1.4 Retake" }
+    ];
+
+    const grid = document.getElementById("quizGrid");
+    quizzes.forEach(q => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<a href="${q.file}">${q.title}</a>`;
+      grid.appendChild(card);
+    });
+  </script>
 </body>
 </html>

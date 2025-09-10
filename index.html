@@ -1,71 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Quiz Retakes</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f4f8;
-      margin: 0;
-      padding: 2rem;
-      text-align: center;
-    }
-    h1 {
-      color: #2c3e50;
-      margin-bottom: 2rem;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      padding: 2rem;
-      transition: transform 0.2s, box-shadow 0.2s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    }
-    .card a {
-      text-decoration: none;
-      font-size: 1.2rem;
-      color: #2980b9;
-      font-weight: bold;
-      margin-top: 0.5rem;
-    }
+    :root{--ink:#2c3e50;--muted:#6b7280;--brand:#2563eb;--bg:#f0f4f8;--card:#fff;--border:#e5e7eb}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    header{padding:2rem 1rem 1rem;text-align:center;background:#eef2ff;border-bottom:1px solid #e0e7ff}
+    h1{margin:.25rem 0 .5rem}
+    .sub{margin:0;color:#374151}
+    .wrap{max-width:1000px;margin:0 auto;padding:1rem}
+    .toolbar{display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;margin:1rem 0}
+    .search{width:min(520px,100%);display:flex;gap:.5rem}
+    .search input{flex:1;padding:.7rem .9rem;border:1px solid var(--border);border-radius:10px}
+    .section{margin:1.25rem 0}
+    .section h2{margin:.25rem 0 .5rem}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.06);padding:1.25rem;text-align:center;transition:transform .2s, box-shadow .2s}
+    .card:hover{transform:translateY(-3px);box-shadow:0 8px 16px rgba(0,0,0,.12)}
+    .card a{text-decoration:none;color:var(--brand);font-weight:700}
+    .meta{font-size:.9rem;color:var(--muted);margin-top:.35rem}
+    footer{margin:2rem 0;text-align:center;color:var(--muted)}
   </style>
 </head>
 <body>
-  <h1>Quiz Retakes</h1>
-  <div class="grid" id="quizGrid"></div>
+  <header>
+    <h1>Quiz Retakes</h1>
+    <p class="sub">Choose your unit and retake version.</p>
+  </header>
+
+  <div class="wrap">
+    <!-- Search -->
+    <div class="toolbar">
+      <div class="search">
+        <input id="q" type="search" placeholder="Search (e.g., 1.2 or Unit 3)…" aria-label="Search quizzes" />
+      </div>
+    </div>
+
+    <!-- Sections will render here -->
+    <div id="root"></div>
+
+    <footer>Tip: Add a new file and append one row to the list in the script below.</footer>
+  </div>
 
   <script>
-    // ✅ Add new quiz retakes here:
-    const quizzes = [
-      { file: "1.1_Quiz_retake.html", title: "Quiz 1.1 Retake" },
-      { file: "1.2_Quiz_retake.html", title: "Quiz 1.2 Retake" },
-      { file: "1.3_Quiz_retake.html", title: "Quiz 1.3 Retake" }
-      // Example for future:
-      // { file: "1.4_Quiz_retake.html", title: "Quiz 1.4 Retake" }
+    // ====== QUIZ LIST (from your repo screenshot) ============================
+    // title: what students see
+    // file:  exact filename in the repo (case-sensitive)
+    // unit:  numeric unit to group sections
+
+    const QUIZZES = [
+      // Unit 1
+      { title: "Quiz 1.1 Retake",              file: "1.1_Quiz_retake.html",  unit: 1 },
+      { title: "Quiz 1.1 Retake (v2)",         file: "1.1_Quiz_retake1.html", unit: 1 },
+      { title: "Quiz 1.2 Retake",              file: "1.2_Quiz_retake.html",  unit: 1 },
+      { title: "Quiz 1.2 Retake (v2)",         file: "1.2_Quiz_retake1.html", unit: 1 },
+      { title: "Quiz 1.3 Retake",              file: "1.3_Quiz_retake.html",  unit: 1 },
+      { title: "Quiz 1.3 Retake (v2)",         file: "1.3_Quiz_retake1.html", unit: 1 },
+
+      // Unit 2
+      { title: "Quiz 2.1 Retake",              file: "2.1_quiz_retake.html",  unit: 2 },
+      { title: "Quiz 2.2 Retake",              file: "2.2_quiz_retake.html",  unit: 2 },
+      { title: "Quiz 2.3 Retake",              file: "2.3_quiz_retake.html",  unit: 2 },
+      { title: "Quiz 2.4 Retake",              file: "2.4_quiz_retake.html",  unit: 2 },
+      { title: "Quiz 2.5 Retake",              file: "2.5_quiz_retake.html",  unit: 2 },
+      { title: "Quiz 2.6 Retake",              file: "2.6_quiz_retake.html",  unit: 2 },
+
+      // Unit 3
+      { title: "Quiz 3.1 Retake",              file: "3.1_quiz_retake.html",  unit: 3 },
+      { title: "Quiz 3.2 Retake",              file: "3.2_quiz_retake.html",  unit: 3 },
+      { title: "Quiz 3.3 Retake",              file: "3.3_quiz_retake.html",  unit: 3 },
+
+      // Unit 4
+      { title: "Quiz 4.1 Retake",              file: "4.1_quiz_retake.html",  unit: 4 },
+      { title: "Quiz 4.2 Retake",              file: "4.2_quiz_retake.html",  unit: 4 },
+      { title: "Quiz 4.3 Retake",              file: "4.3_quiz_retake.html",  unit: 4 },
+      { title: "Quiz 4.4 Retake",              file: "4.4_quiz_retake.html",  unit: 4 },
     ];
 
-    const grid = document.getElementById("quizGrid");
-    quizzes.forEach(q => {
-      const card = document.createElement("div");
-      card.className = "card";
-      card.innerHTML = `<a href="${q.file}">${q.title}</a>`;
-      grid.appendChild(card);
+    // ====== RENDER ===========================================================
+    const root = document.getElementById("root");
+
+    function groupByUnit(list){
+      return list.reduce((acc, item)=>{
+        (acc[item.unit] ||= []).push(item);
+        return acc;
+      }, {});
+    }
+
+    function render(list){
+      root.innerHTML = "";
+      const byUnit = groupByUnit(list);
+      const units = Object.keys(byUnit).sort((a,b)=>Number(a)-Number(b));
+
+      units.forEach(u=>{
+        const section = document.createElement("section");
+        section.className = "section";
+        section.innerHTML = `<h2>Unit ${u}</h2>`;
+
+        const grid = document.createElement("div");
+        grid.className = "grid";
+
+        // sort within unit by the numeric in the filename if possible
+        const items = byUnit[u].slice().sort((A,B)=>A.title.localeCompare(B.title, undefined, {numeric:true}));
+
+        items.forEach(q=>{
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `<a href="${q.file}">${q.title}</a>`;
+          grid.appendChild(card);
+        });
+
+        section.appendChild(grid);
+        root.appendChild(section);
+      });
+
+      if (!units.length){
+        root.innerHTML = `<p class="meta">No matches. Try searching “1.2” or “Unit 3”.</p>`;
+      }
+    }
+
+    // initial paint
+    render(QUIZZES);
+
+    // ====== SEARCH ===========================================================
+    const q = document.getElementById("q");
+    q.addEventListener("input", ()=>{
+      const needle = q.value.toLowerCase().trim();
+      const filtered = QUIZZES.filter(it=>{
+        const hay = `${it.title} unit ${it.unit}`.toLowerCase();
+        return !needle || hay.includes(needle);
+      });
+      render(filtered);
     });
   </script>
 </body>

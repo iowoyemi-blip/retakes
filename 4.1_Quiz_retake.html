@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphing Linear Equations Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-container {
+            transition: all 0.3s ease-in-out;
+        }
+        .result-item.correct {
+            background-color: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+        .result-item.incorrect {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        .question-prefix {
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        canvas {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+        .radio-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        .radio-label:has(input:checked) {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl quiz-container">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Graphing Linear Equations Quiz</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+        const gcd = (a, b) => { a=Math.abs(a); b=Math.abs(b); return b === 0 ? a : gcd(b, a % b); }
+
+        function simplifyFrac(num, den) {
+            if (den === 0) return "undefined";
+            if (num === 0) return "0";
+            const commonDivisor = gcd(num, den);
+            let n = num / commonDivisor;
+            let d = den / commonDivisor;
+            if (d < 0) { n = -n; d = -d; }
+            return d === 1 ? `${n}` : `${n}/${d}`;
+        }
+
+        function generateQuizData() {
+            let questions = [];
+            
+            // Q1: Write equation from graph
+            const q1a = { m_num: getRandomInt(-3, -1), m_den: getRandomInt(1, 3), b: getRandomInt(-4, 4) };
+            q1a.m_str = simplifyFrac(q1a.m_num, q1a.m_den);
+            const q1b = { m_num: getRandomInt(1, 3), m_den: getRandomInt(1, 3), b: getRandomInt(-4, 4) };
+            q1b.m_str = simplifyFrac(q1b.m_num, q1b.m_den);
+            questions.push({ type: 'from-graph', id: 'q1', title: 'Write the equation of each line shown in fully simplified slope-intercept form.',
+                subQuestions: [
+                    { id: 'q1a', data: q1a, answer: `y=${q1a.m_str}x${q1a.b === 0 ? '' : (q1a.b > 0 ? '+' + q1a.b : q1a.b)}` },
+                    { id: 'q1b', data: q1b, answer: `y=${q1b.m_str}x${q1b.b === 0 ? '' : (q1b.b > 0 ? '+' + q1b.b : q1b.b)}` }
+                ]
+            });
+
+            // Q2: Match graph (y=mx+b)
+            const q2_m_num = getRandomInt(-2, 2) || 1; const q2_m_den = getRandomInt(2, 3);
+            const q2_b = getRandomInt(-3, 3);
+            const q2_m_str = simplifyFrac(q2_m_num, q2_m_den);
+            const q2_correct = { m_num: q2_m_num, m_den: q2_m_den, b: q2_b };
+            const q2_options = shuffle([
+                q2_correct, // Correct
+                { m_num: q2_m_num, m_den: q2_m_den, b: -q2_b || 1 }, // Wrong b
+                { m_num: -q2_m_num, m_den: q2_m_den, b: q2_b }, // Wrong m sign
+                { m_num: q2_m_den, m_den: q2_m_num, b: q2_b } // Flipped m
+            ]);
+            questions.push({ type: 'match-graph', id: 'q2', title: `Which graph represents the graph of the equation y = ${q2_m_str}x ${q2_b === 0 ? '' : (q2_b > 0 ? '+ ' + q2_b : '- ' + Math.abs(q2_b))}`,
+                options: q2_options, answer: q2_correct });
+
+            // Q3: Match graph (Ax+By=C)
+            const q3_A = getRandomInt(-3, 3) || 1; const q3_B = getRandomInt(2, 4); const q3_C = q3_B * getRandomInt(1,3);
+            const q3_m_num = -q3_A; const q3_m_den = q3_B; const q3_b = q3_C/q3_B;
+            const q3_correct = { m_num: q3_m_num, m_den: q3_m_den, b: q3_b };
+            const q3_options = shuffle([
+                q3_correct, // Correct from Ax+By=C
+                { m_num: q3_A, m_den: q3_B, b: -q3_b }, // from Ax-By=C
+                { m_num: -q3_B, m_den: q3_A, b: q3_C/q3_A }, // from Bx+Ay=C
+                { m_num: q3_A, m_den: q3_B, b: q3_b } // from -Ax+By=C
+            ]);
+            questions.push({ type: 'match-graph', id: 'q3', title: `Which graph represents the graph of the equation ${q3_A}x + ${q3_B}y = ${q3_C}?`,
+                options: q3_options, answer: q3_correct });
+
+            // Q4: Find Intercepts
+            const q4_A = getRandomInt(1,4); const q4_B = getRandomInt(-4,-1);
+            const q4_C = q4_A * getRandomInt(1,4) * getRandomInt(-1,1,0); // Ensure integer x-intercept
+             questions.push({ type: 'intercepts', id: 'q4', title: 'Find the x-intercept and the y-intercept of the graph of the equation.',
+                text: `${q4_A}x ${q4_B > 0 ? '+':'-'} ${Math.abs(q4_B)}y = ${q4_C}`, 
+                answers: { x: `(${(q4_C/q4_A)},0)`, y: `(0,${simplifyFrac(q4_C,q4_B)})` }
+            });
+
+            // Q5: Rewrite Equation
+            const q5_A = getRandomInt(1,10); const q5_B = getRandomInt(2,5); const q5_C = getRandomInt(1,20);
+            const q5_m_str = simplifyFrac(-q5_A, q5_B);
+            const q5_b_str = simplifyFrac(q5_C, q5_B);
+            const q5_answer_b = q5_b_str.includes('/') ? `+${q5_b_str}` : (parseInt(q5_b_str) === 0 ? '' : (parseInt(q5_b_str) > 0 ? `+${q5_b_str}`: q5_b_str));
+            questions.push({ type: 'rewrite', id: 'q5', title: 'Rewrite the following equation in slope-intercept form. Simplify all fractions.',
+                text: `${q5_A}x + ${q5_B}y = ${q5_C}`, answers: {
+                    equation: `y=${q5_m_str}x${q5_answer_b}`, slope: q5_m_str, y_int: `(0,${q5_b_str})`
+                }
+            });
+            
+            // Q6: Rewrite Equation (Positive Slope)
+            const q6_A = getRandomInt(-10, -1); // Negative A
+            const q6_B = getRandomInt(2, 5); 
+            const q6_C = getRandomInt(1, 20);
+            const q6_m_str = simplifyFrac(-q6_A, q6_B); // -A/B -> positive slope
+            const q6_b_str = simplifyFrac(q6_C, q6_B);
+            const q6_answer_b = q6_b_str.includes('/') ? `+${q6_b_str}` : (parseInt(q6_b_str) === 0 ? '' : (parseInt(q6_b_str) > 0 ? `+${q6_b_str}`: q6_b_str));
+            questions.push({ type: 'rewrite', id: 'q6', title: 'Rewrite the following equation in slope-intercept form. Simplify all fractions.',
+                text: `${q6_A}x + ${q6_B}y = ${q6_C}`, answers: {
+                    equation: `y=${q6_m_str}x${q6_answer_b}`, slope: q6_m_str, y_int: `(0,${q6_b_str})`
+                }
+            });
+            
+            currentQuestions = questions;
+        }
+
+        function drawGraph(canvasId, graphData) {
+            const { m_num, m_den, b } = graphData;
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const { width, height, scale, originX, originY } = { width: 200, height: 200, scale: 20, originX: 100, originY: 100 };
+            canvas.width = width; canvas.height = height;
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.strokeStyle = '#d1d5db';
+            ctx.lineWidth = 1;
+            for (let i = scale; i < width; i += scale) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke(); }
+            for (let i = scale; i < height; i += scale) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke(); }
+            
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, originY);
+            ctx.lineTo(width, originY);
+            ctx.moveTo(originX, 0);
+            ctx.lineTo(originX, height);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const x_min = -5;
+            const y_min = (m_num / m_den) * x_min + b;
+            ctx.moveTo(originX + x_min * scale, originY - y_min * scale);
+            const x_max = 5;
+            const y_max = (m_num / m_den) * x_max + b;
+            ctx.lineTo(originX + x_max * scale, originY - y_max * scale);
+            ctx.stroke();
+        }
+        
+        function renderQuizForm() {
+            let html = '<form id="quizForm">';
+            currentQuestions.forEach(q => {
+                html += `<div class="mb-10"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.id.slice(1)}. ${q.title}</h2>`;
+                if(q.type === 'from-graph') {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">`;
+                    q.subQuestions.forEach((sq, i) => {
+                         html += `<div class="flex flex-col items-center">
+                                  <p class="mb-2">${String.fromCharCode(97+i)}.</p>
+                                  <canvas id="${sq.id}_canvas"></canvas>
+                                  <input type="text" id="${sq.id}" class="w-full max-w-xs mt-2 p-2 border rounded-lg" placeholder="y=mx+b">
+                                  </div>`;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'match-graph') {
+                    html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">`;
+                    q.options.forEach((opt, i) => {
+                        html += `<label class="radio-label">
+                                <p class="font-bold mb-2">${String.fromCharCode(65+i)}</p>
+                                <canvas id="${q.id}_opt${i}_canvas"></canvas>
+                                <input type="radio" name="${q.id}_option" value="${i}" class="mt-2 h-5 w-5">
+                                </label>`;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'intercepts') {
+                    html += `<div class="text-center"><p class="text-lg font-mono mb-4">${q.text}</p>
+                             <div class="inline-block text-left space-y-2">
+                                <div><label>x-intercept: </label><input id="${q.id}_x" class="p-1 border rounded-lg w-24" placeholder="(x, 0)"></div>
+                                <div><label>y-intercept: </label><input id="${q.id}_y" class="p-1 border rounded-lg w-24" placeholder="(0, y)"></div>
+                             </div></div>`;
+                } else if (q.type === 'rewrite') {
+                    html += `<div class="text-center"><p class="text-lg font-mono mb-4">${q.text}</p>
+                             <div class="inline-block text-left space-y-2">
+                                <div><label>Equation: </label><input id="${q.id}_eq" class="p-1 border rounded-lg"></div>
+                                <div><label>Slope: </label><input id="${q.id}_m" class="p-1 border rounded-lg w-24"></div>
+                                <div><label>y-intercept: </label><input id="${q.id}_b" class="p-1 border rounded-lg w-24" placeholder="(0, y)"></div>
+                             </div></div>`;
+                }
+                html += `</div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            
+            // Draw all canvases
+            currentQuestions.forEach(q => {
+                if (q.type === 'from-graph') q.subQuestions.forEach(sq => drawGraph(`${sq.id}_canvas`, sq.data));
+                if (q.type === 'match-graph') q.options.forEach((opt, i) => drawGraph(`${q.id}_opt${i}_canvas`, opt));
+            });
+            
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalizeEq = str => {
+            let s = str.replace(/\s+/g, '').toLowerCase();
+            // y=(-1/2)x+3 -> y=-1/2x+3
+            s = s.replace(/\(\s*(-?\d+\/\d+)\s*\)/g, '$1');
+            // y=2x+0 -> y=2x
+            if (s.endsWith('+0')) {
+                s = s.slice(0, -2);
+            }
+            if (s.endsWith('-0')) {
+                s = s.slice(0, -2);
+            }
+            return s;
+        };
+
+        const normalizePoint = str => str.replace(/\s+/g, '');
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                 if (q.type === 'from-graph') {
+                     q.subQuestions.forEach(sq => {
+                        total++;
+                        const userInput = document.getElementById(sq.id).value;
+                        const isCorrect = normalizeEq(userInput) === normalizeEq(sq.answer);
+                        if(isCorrect) score++;
+                        resultsHTML += `<div class="result-item border-l-4 p-4 ${isCorrect ? 'correct' : 'incorrect'}"><p>Question ${q.id.slice(1)}: Your Answer: ${userInput || 'none'}. ${!isCorrect ? `Correct: ${sq.answer}` : ''}</p></div>`;
+                     });
+                 } else if (q.type === 'match-graph') {
+                    total++;
+                    const userChoice = document.querySelector(`input[name="${q.id}_option"]:checked`)?.value;
+                    const correctIndex = q.options.findIndex(opt => JSON.stringify(opt) === JSON.stringify(q.answer));
+                    const isCorrect = userChoice == correctIndex;
+                    if(isCorrect) score++;
+                    resultsHTML += `<div class="result-item border-l-4 p-4 ${isCorrect ? 'correct' : 'incorrect'}"><p>Question ${q.id.slice(1)}: Your choice was ${isCorrect ? 'correct' : 'incorrect'}.</p></div>`;
+                 } else if (q.type === 'intercepts') {
+                    total += 2;
+                    const xUserInput = document.getElementById(`${q.id}_x`).value;
+                    const yUserInput = document.getElementById(`${q.id}_y`).value;
+                    const xUser = normalizePoint(xUserInput);
+                    const yUser = normalizePoint(yUserInput);
+                    const xCorrect = xUser === normalizePoint(q.answers.x);
+                    const yCorrect = yUser === normalizePoint(q.answers.y);
+                    if(xCorrect) score++; if(yCorrect) score++;
+                    resultsHTML += `<div class="result-item border-l-4 p-4 ${xCorrect && yCorrect ? 'correct' : 'incorrect'}"><p>Question ${q.id.slice(1)}:</p>
+                                    <p class="text-sm ${xCorrect ? '' : 'text-red-500'}">x-int: ${xUserInput || 'none'}. ${!xCorrect ? `Correct: ${q.answers.x}` : ''}</p>
+                                    <p class="text-sm ${yCorrect ? '' : 'text-red-500'}">y-int: ${yUserInput || 'none'}. ${!yCorrect ? `Correct: ${q.answers.y}` : ''}</p></div>`;
+                 } else if (q.type === 'rewrite') {
+                    total += 3;
+                    const eqUserInput = document.getElementById(`${q.id}_eq`).value;
+                    const mUserInput = document.getElementById(`${q.id}_m`).value;
+                    const bUserInput = document.getElementById(`${q.id}_b`).value;
+
+                    const eqUser = normalizeEq(eqUserInput);
+                    const mUser = normalizePoint(mUserInput);
+                    const bUser = normalizePoint(bUserInput);
+
+                    const eqCorrect = eqUser === normalizeEq(q.answers.equation);
+                    const mCorrect = mUser === normalizePoint(q.answers.slope);
+                    const bCorrect = bUser === normalizePoint(q.answers.y_int);
+                    if(eqCorrect) score++; if(mCorrect) score++; if(bCorrect) score++;
+                     resultsHTML += `<div class="result-item border-l-4 p-4 ${eqCorrect && mCorrect && bCorrect ? 'correct' : 'incorrect'}"><p>Question ${q.id.slice(1)}:</p>
+                                    <p class="text-sm ${eqCorrect ? '' : 'text-red-500'}">Equation: ${eqUserInput || 'none'}. ${!eqCorrect ? `Correct: ${q.answers.equation}` : ''}</p>
+                                    <p class="text-sm ${mCorrect ? '' : 'text-red-500'}">Slope: ${mUserInput || 'none'}. ${!mCorrect ? `Correct: ${q.answers.slope}` : ''}</p>
+                                    <p class="text-sm ${bCorrect ? '' : 'text-red-500'}">y-int: ${bUserInput || 'none'}. ${!bCorrect ? `Correct: ${q.answers.y_int}` : ''}</p></div>`;
+                 }
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+
+

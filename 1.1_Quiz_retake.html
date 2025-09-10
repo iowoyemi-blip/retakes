@@ -3,348 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz 1.1 Retake: Exponents</title>
-    
+    <title>Exponent Rules Practice</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        MathJax = {
-          tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']],
-            displayMath: [['$$', '$$'], ['\\[', '\\]']]
-          },
-          svg: {
-            fontCache: 'global'
-          }
-        };
-    </script>
-    <script type="text/javascript" id="MathJax-script" async
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-    </script>
-
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .btn-disabled { background-color: #9ca3af; cursor: not-allowed; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-container {
+            transition: all 0.3s ease-in-out;
+        }
+        .result-item.correct {
+            background-color: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+        .result-item.incorrect {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1em;
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .question-prefix {
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 0.2em;
+        }
+        .numerator {
+            border-bottom: 2px solid black;
+            padding: 0 0.4em;
+        }
+        .denominator {
+            padding: 0 0.4em;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <div class="container mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
-        
-        <div id="start-screen">
-            <header class="text-center mb-8">
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">1.1 Quiz Retake</h1>
-                <p class="mt-2 text-gray-600">Enter your name to begin. Achieve 100% on a set of problems to get your verification file.</p>
-            </header>
-            <div class="bg-white p-8 rounded-lg shadow-md max-w-md mx-auto">
-                <label for="student-name-input" class="block text-sm font-medium text-gray-700">Student Name</label>
-                <input type="text" id="student-name-input" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., Jane Doe">
-                <button id="start-quiz-btn" class="mt-6 w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Start Quiz
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-4xl quiz-container">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">1.1 Quiz Exponent Rules Retake</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime. Four-Function Calculator Allowed.</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
+                    Try This Quiz Again
+                </button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
+                    Generate New Quiz
                 </button>
             </div>
         </div>
-
-        <div id="quiz-screen" class="hidden">
-            <header class="text-center mb-8">
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">1.1 Quiz Retake</h1>
-                <div class="mt-2 text-gray-600 text-lg">
-                    Student: <span id="student-name-display" class="font-semibold text-indigo-700"></span>
-                </div>
-                 <div id="score-display" class="mt-1 text-gray-600">Score: 0 / 0</div>
-                <button id="new-quiz-btn" class="mt-6 px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105">
-                    Generate New Set (8 Problems)
-                </button>
-            </header>
-
-            <main id="quiz-container" class="space-y-6"></main>
-
-            <div id="completion-container" class="hidden text-center mt-8">
-                </div>
-        </div>
-    </div>
+    </main>
 
     <script>
-        // --- STATE MANAGEMENT ---
-        let studentName = '';
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
         let currentQuestions = [];
-        let score = 0;
-        let questionsAnswered = 0;
 
-        // --- DOM Elements ---
-        const startScreen = document.getElementById('start-screen');
-        const quizScreen = document.getElementById('quiz-screen');
-        const studentNameInput = document.getElementById('student-name-input');
-        const startQuizBtn = document.getElementById('start-quiz-btn');
-        const studentNameDisplay = document.getElementById('student-name-display');
-        const scoreDisplay = document.getElementById('score-display');
-        const quizContainer = document.getElementById('quiz-container');
-        const newQuizBtn = document.getElementById('new-quiz-btn');
-        const completionContainer = document.getElementById('completion-container');
-
+        // --- UTILITY FUNCTIONS ---
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const getRandomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
-        
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
 
-        // --- PROBLEM GENERATORS ---
-        function generateNegativeBaseEvenPowerProblem() {
-            const b = getRandomInt(2, 6), p = getRandomElement([2, 4]);
-            const question = `Evaluate: $$(-${b})^{${p}}$$`;
-            const answer = Math.pow(-b, p);
-            const solution = `<p>An even power results in a positive answer. $$(-${b})^{${p}} = ${answer}$$</p>`;
-            return { question, answer, solution, type: 'Evaluate' };
-        }
-        function generateNegationExponentProblem() {
-            const b = getRandomInt(2, 5), p = getRandomElement([2, 3, 4]);
-            const question = `Evaluate: $$-${b}^{${p}}$$`;
-            const answer = -Math.pow(b, p);
-            const solution = `<p>The exponent applies only to the base. $$-(${b}^{${p}}) = -(${Math.pow(b, p)}) = ${answer}$$</p>`;
-            return { question, answer, solution, type: 'Evaluate' };
-        }
-        function generateNegativeOneOddPowerProblem() {
-            const p = getRandomElement([13, 25, 47, 99]);
-            const question = `Evaluate: $$(-1)^{${p}}$$`;
-            const answer = -1;
-            const solution = `<p>A negative base to an odd power is negative. $$(-1)^{${p}} = -1$$</p>`;
-            return { question, answer, solution, type: 'Evaluate' };
-        }
-        function generateNegativeOneEvenPowerProblem() {
-            const p = getRandomElement([22, 36, 50, 102]);
-            const question = `Evaluate: $$(-1)^{${p}}$$`;
-            const answer = 1;
-            const solution = `<p>A negative base to an even power is positive. $$(-1)^{${p}} = 1$$</p>`;
-            return { question, answer, solution, type: 'Evaluate' };
-        }
-        function generateProductRuleSingleVarProblem() {
-            const c1 = getRandomInt(2, 9), c2 = getRandomInt(2, 9), v = getRandomElement(['x', 'y', 'a']), p1 = getRandomInt(2, 8), p2 = getRandomInt(2, 8);
-            const question = `Simplify: $$${c1}${v}^{${p1}} \\cdot ${c2}${v}^{${p2}}$$`;
-            const c_ans = c1 * c2, p_ans = p1 + p2;
-            const answer = `${c_ans}${v}^${p_ans}`;
-            const solution = `<p>Multiply coefficients, add exponents. $$(${c1} \\cdot ${c2}) \\cdot ${v}^{${p1}+${p2}} = ${c_ans}${v}^{${p_ans}}$$</p>`;
-            return { question, answer, solution, type: 'Simplify' };
-        }
-        function generateQuotientRuleProblem() {
-            const c2 = getRandomInt(2, 7), m = getRandomInt(2, 5), c1 = c2 * m, [v1, v2] = ['x', 'y'];
-            const p3 = getRandomInt(2, 5), p4 = getRandomInt(2, 5), p1 = p3 + getRandomInt(1, 4), p2 = p4 + getRandomInt(1, 4);
-            const question = `Simplify: $$\\frac{${c1}${v1}^{${p1}}${v2}^{${p2}}}{${c2}${v1}^{${p3}}${v2}^{${p4}}}$$`;
-            const c_ans = c1 / c2, p1_ans = p1 - p3, p2_ans = p2 - p4;
-            const answer = `${c_ans}${v1}${p1_ans > 1 ? `^${p1_ans}`: ''}${v2}${p2_ans > 1 ? `^${p2_ans}`: ''}`;
-            const solution = `<p>Divide coefficients, subtract exponents. $$(\\frac{${c1}}{${c2}}) \\cdot ${v1}^{${p1}-${p3}} \\cdot ${v2}^{${p2}-${p4}} = ${c_ans}${v1}^{${p1_ans}}${v2}^{${p2_ans}}$$</p>`;
-            return { question, answer, solution, type: 'Simplify' };
-        }
-        function generatePowerOfProductProblem() {
-            const c = getRandomInt(2, 5), [v1, v2] = ['x', 'y'], p1 = getRandomInt(2, 6), p2 = getRandomInt(2, 6), p_outer = getRandomInt(2, 3);
-            const question = `Simplify: $$(${c}${v1}^{${p1}}${v2}^{${p2}})^{${p_outer}}$$`;
-            const c_ans = Math.pow(c, p_outer), p1_ans = p1 * p_outer, p2_ans = p2 * p_outer;
-            const answer = `${c_ans}${v1}^${p1_ans}${v2}^${p2_ans}`;
-            const solution = `<p>Apply outer exponent, multiplying exponents. $$(${c})^{${p_outer}}(${v1}^{${p1}})^{${p_outer}}(${v2}^{${p2}})^{${p_outer}} = ${c_ans}${v1}^{${p1_ans}}${v2}^{${p2_ans}}$$</p>`;
-            return { question, answer, solution, type: 'Simplify' };
-        }
-        function generateComplexRetakeProblem() {
-            const c1 = getRandomInt(2, 4), c2 = getRandomInt(2, 4), [v1, v2] = ['x', 'y'], p_inner = 2, p_outer = 2;
-            const p_d1 = getRandomInt(2, 3), p_d2 = getRandomInt(2, 3), p_n1 = getRandomInt(1, 2), p_n2 = getRandomInt(4, 6), p_n3 = getRandomInt(2, 3), p_n4 = getRandomInt(1, 2);
-            const question = `Simplify: $$(\\frac{${c1}${v1}^{${p_n1}}${v2}^{${p_n2}} \\cdot ${v1}^{${p_n3}}${v2}^{${p_n4}}}{(${c2}${v1}^{${p_d1}}${v2}^{${p_d2}})^{${p_inner}}})^{${p_outer}}$$`;
-            const num_c = c1, num_p1 = p_n1 + p_n3, num_p2 = p_n2 + p_n4;
-            const den_c = Math.pow(c2, p_inner), den_p1 = p_d1 * p_inner, den_p2 = p_d2 * p_inner;
-            const frac_p1 = num_p1 - den_p1, frac_p2 = num_p2 - den_p2;
-            const final_c_num = Math.pow(num_c, p_outer), final_c_den = Math.pow(den_c, p_outer);
-            const final_p1 = frac_p1 * p_outer, final_p2 = frac_p2 * p_outer;
-            let num_parts = [], den_parts = [], sol_num_parts = [], sol_den_parts = [];
-            const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
-            const common = gcd(final_c_num, final_c_den);
-            const simp_num = final_c_num / common, simp_den = final_c_den / common;
-            if (simp_num !== 1) { num_parts.push(simp_num); sol_num_parts.push(simp_num); }
-            if (simp_den !== 1) { den_parts.push(simp_den); sol_den_parts.push(simp_den); }
-            if (final_p1 > 0) { num_parts.push(`${v1}^${final_p1}`); sol_num_parts.push(`${v1}^{${final_p1}}`); }
-            else if (final_p1 < 0) { den_parts.push(`${v1}^${-final_p1}`); sol_den_parts.push(`${v1}^{${-final_p1}}`); }
-            if (final_p2 > 0) { num_parts.push(`${v2}^${final_p2}`); sol_num_parts.push(`${v2}^{${final_p2}}`); }
-            else if (final_p2 < 0) { den_parts.push(`${v2}^${-final_p2}`); sol_den_parts.push(`${v2}^{${-final_p2}}`); }
-            if (num_parts.length === 0) { num_parts.push('1'); sol_num_parts.push('1'); }
-            const answer = den_parts.length === 0 ? num_parts.join('') : `${num_parts.join('')}/${den_parts.join('')}`;
-            const solution_ans = den_parts.length === 0 ? sol_num_parts.join('') : `\\frac{${sol_num_parts.join('')}}{${sol_den_parts.join('')}}`;
-            const solution = `<p><b>Steps:</b> Simplify numerator, simplify denominator, simplify fraction, apply outer power, then ensure all exponents are positive. Final Answer: $$${solution_ans}$$</p>`;
-            return { question, answer, solution, type: 'Simplify (Complex)' };
-        }
+        // --- QUESTION GENERATORS ---
+        function generateExponentQuestions() {
+            const questions = [];
 
-        // --- QUIZ LOGIC ---
-        function updateScoreDisplay() {
-            scoreDisplay.textContent = `Score: ${score} / ${questionsAnswered} (Total: ${currentQuestions.length})`;
-        }
-
-        function generateQuiz() {
-            score = 0;
-            questionsAnswered = 0;
-            completionContainer.innerHTML = '';
-            completionContainer.classList.add('hidden');
-            quizContainer.innerHTML = `<div class="text-center"><p class="text-gray-600">Generating 8 new problems...</p></div>`;
-            updateScoreDisplay();
+            // Section 1: Evaluate
+            const base1a = getRandomInt(2, 5);
+            questions.push({ type: 'eval', id: 'q1a', text: `<code>(-${base1a})<sup>2</sup></code>`, answer: Math.pow(base1a, 2).toString() });
             
-            setTimeout(() => {
-                const generatorsToCall = [
-                    generateNegativeBaseEvenPowerProblem, generateNegationExponentProblem,
-                    generateNegativeOneOddPowerProblem, generateNegativeOneEvenPowerProblem,
-                    generateProductRuleSingleVarProblem, generateQuotientRuleProblem,
-                    generatePowerOfProductProblem, generateComplexRetakeProblem
-                ];
-                let finalQuestions = [];
-                let generatedProblems = new Set();
-                generatorsToCall.forEach(generator => {
-                    let problem;
-                    let attempts = 0;
-                    do { problem = generator(); attempts++; } while (generatedProblems.has(problem.question) && attempts < 20);
-                    if (attempts < 20) { finalQuestions.push(problem); }
-                });
-                currentQuestions = finalQuestions;
-                renderQuiz(currentQuestions);
-                updateScoreDisplay();
-            }, 100);
-        }
+            const base1b = getRandomInt(2, 4);
+            questions.push({ type: 'eval', id: 'q1b', text: `<code>-${base1b}<sup>4</sup></code>`, answer: (-Math.pow(base1b, 4)).toString() });
 
-        function renderQuiz(questions) {
-            quizContainer.innerHTML = '';
-            questions.forEach((q, index) => {
-                const placeholder = q.type === 'Evaluate' ? 'Enter the final value' : 'e.g., 4x^2y^8 or y^6/4x^4';
-                const questionCard = `<div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex justify-between items-start">
-                        <div class="text-lg font-medium text-gray-800 pr-4"><span class="font-bold mr-2">${index + 1}.</span> ${q.question}</div>
-                        <span class="flex-shrink-0 bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${q.type}</span>
-                    </div>
-                    <div class="mt-4 flex flex-col sm:flex-row sm:items-center">
-                        <div class="relative flex-grow">
-                            <input type="text" id="answer-${index}" class="w-full pl-4 ${q.type !== 'Evaluate' ? 'pr-12' : 'pr-4'} py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="${placeholder}">
-                            ${q.type !== 'Evaluate' ? `<div class="absolute top-1/2 right-1 transform -translate-y-1/2"><button class="h-8 w-8 text-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-sans rounded-md" onclick="insertSymbol('^', 'answer-${index}')">xʸ</button></div>` : ''}
-                        </div>
-                        <button id="submit-${index}" class="mt-2 sm:mt-0 sm:ml-2 w-full sm:w-auto px-6 py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">Submit</button>
-                    </div>
-                    <div id="solution-${index}" class="hidden mt-4 p-4 bg-gray-50 rounded-md border border-gray-200">${q.solution}</div>
-                </div>`;
-                quizContainer.innerHTML += questionCard;
+            const pow1c = getRandomInt(15, 51) * 2 + 1; // odd power
+            questions.push({ type: 'eval', id: 'q1c', text: `<code>(-1)<sup>${pow1c}</sup></code>`, answer: '-1' });
+
+            const pow1d = getRandomInt(15, 51) * 2; // even power
+            questions.push({ type: 'eval', id: 'q1d', text: `<code>(-1)<sup>${pow1d}</sup></code>`, answer: '1' });
+
+            // Section 2: Simplify
+            // a) Product rule: c1*x^p1 * c2*x^p2
+            const c2a1 = getRandomInt(2, 6); const p2a1 = getRandomInt(2, 5);
+            const c2a2 = getRandomInt(2, 6); const p2a2 = getRandomInt(2, 5);
+            questions.push({ type: 'simplify', id: 'q2a', text: `<code>${c2a1}x<sup>${p2a1}</sup> &middot; ${c2a2}x<sup>${p2a2}</sup></code>`, answer: `${c2a1*c2a2}x^${p2a1+p2a2}` });
+
+            // b) Quotient rule
+            const c2b_d = getRandomInt(2, 5); const p2b_d = getRandomInt(2, 5); const q2b_d = getRandomInt(2, 5);
+            const c_mult = getRandomInt(2, 5); const p_add = getRandomInt(1, 4); const q_add = getRandomInt(1, 4);
+            const c2b_n = c2b_d * c_mult; const p2b_n = p2b_d + p_add; const q2b_n = q2b_d + q_add;
+            questions.push({ type: 'simplify', id: 'q2b', 
+                text: `<div class="fraction">
+                           <span class="numerator"><code>${c2b_n}x<sup>${p2b_n}</sup>y<sup>${q2b_n}</sup></code></span>
+                           <span class="denominator"><code>${c2b_d}x<sup>${p2b_d}</sup>y<sup>${q2b_d}</sup></code></span>
+                       </div>`, 
+                answer: `${c_mult}x^${p_add}y^${q_add}` 
             });
-            MathJax.typesetPromise();
-            questions.forEach((q, index) => {
-                const submitBtn = document.getElementById(`submit-${index}`);
-                const answerInput = document.getElementById(`answer-${index}`);
-                const checkFunc = () => checkAnswer(index, q.answer, q.solution);
-                submitBtn.addEventListener('click', checkFunc);
-                answerInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); checkFunc(); } });
+
+            // c) Power rule
+            const c2c = getRandomInt(2, 4); const p2c1 = getRandomInt(2, 4); const p2c2 = getRandomInt(2, 4); const pow2c = getRandomInt(2, 3);
+            questions.push({ type: 'simplify', id: 'q2c', text: `<code>(${c2c}x<sup>${p2c1}</sup>y<sup>${p2c2}</sup>)<sup>${pow2c}</sup></code>`, answer: `${Math.pow(c2c,pow2c)}x^${p2c1*pow2c}y^${p2c2*pow2c}` });
+
+            // d) Combo rule
+            const c2d_n1 = getRandomInt(2, 4); const p2d_n1 = 1; const q2d_n1 = getRandomInt(5, 9);
+            const p2d_n2 = getRandomInt(2, 4); const q2d_n2 = 1;
+            const c2d_d = c2d_n1; const p2d_d = p2d_n1 + p2d_n2; const q2d_d = getRandomInt(2, 5);
+            const pow2d = 2;
+            const final_q = (q2d_n1 + q2d_n2 - q2d_d) * pow2d;
+            questions.push({ type: 'simplify', id: 'q2d', 
+                text: `(&nbsp;<div class="fraction">
+                           <span class="numerator"><code>${c2d_n1}xy<sup>${q2d_n1}</sup> &middot; x<sup>${p2d_n2}</sup>y</code></span>
+                           <span class="denominator"><code>${c2d_d}x<sup>${p2d_d}</sup>y<sup>${q2d_d}</sup></code></span>
+                       </div>&nbsp;)<sup>${pow2d}</sup>`, 
+                answer: `y^${final_q}`
             });
+
+            return questions;
         }
 
-        function checkAnswer(index, correctAnswer, solution) {
-            const userInputEl = document.getElementById(`answer-${index}`);
-            if (userInputEl.disabled) return;
-            const userInputClean = userInputEl.value.replace(/\s/g, '').replace(/[()*]/g,'');
-            const correctAnswerClean = correctAnswer.toString().replace(/\s/g, '');
-            const isCorrect = userInputClean === correctAnswerClean;
+        // --- CORE QUIZ LOGIC ---
+        function generateAndRenderQuiz() {
+            currentQuestions = generateExponentQuestions();
+            renderQuizForm(currentQuestions);
+            quizContainer.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function renderQuizForm(questions) {
+            const q1 = questions.filter(q => q.type === 'eval');
+            const q2 = questions.filter(q => q.type === 'simplify');
+            const prefixes_a = ['a)', 'b)', 'c)', 'd)'];
             
-            questionsAnswered++;
-            if (isCorrect) {
-                score++;
-                userInputEl.classList.add('border-green-500', 'border-2', 'bg-green-50');
-            } else {
-                userInputEl.classList.add('border-red-500', 'border-2', 'bg-red-50');
-                const correctAnswerEl = document.createElement('p');
-                correctAnswerEl.className = 'mt-2 text-red-600 font-semibold';
-                correctAnswerEl.innerHTML = `Correct answer: <span class="font-bold">${correctAnswer}</span>`;
-                solutionDiv.prepend(correctAnswerEl);
-            }
+            const q1HTML = q1.map((q, i) => `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <p class="flex items-center gap-4"><span class="question-prefix">${prefixes_a[i]}</span>${q.text}</p>
+                    <input type="text" id="${q.id}" class="w-full p-2 border border-gray-300 rounded-lg">
+                </div>
+            `).join('<hr class="my-3 border-dashed">');
             
-            currentQuestions[index].userAnswer = userInputEl.value;
-            currentQuestions[index].isCorrect = isCorrect;
+            const q2HTML = q2.map((q, i) => `
+                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <p class="flex items-center gap-4"><span class="question-prefix">${prefixes_a[i]}</span>${q.text}</p>
+                    <input type="text" id="${q.id}" class="w-full p-2 border border-gray-300 rounded-lg">
+                 </div>
+            `).join('<hr class="my-3 border-dashed">');
 
-            const submitBtn = document.getElementById(`submit-${index}`);
-            const solutionDiv = document.getElementById(`solution-${index}`);
-            solutionDiv.innerHTML = (solutionDiv.hasChildNodes() && solutionDiv.firstChild.tagName === 'P' ? solutionDiv.firstChild.outerHTML : '') + solution;
-            userInputEl.disabled = true;
-            submitBtn.disabled = true;
-            submitBtn.classList.add('btn-disabled');
-            solutionDiv.classList.remove('hidden');
-            MathJax.typesetPromise([`#solution-${index}`]);
-
-            updateScoreDisplay();
-
-            if (questionsAnswered === currentQuestions.length && score === currentQuestions.length) {
-                showCompletion();
-            }
-        }
-
-        function showCompletion() {
-            completionContainer.classList.remove('hidden');
-            completionContainer.innerHTML = `
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md shadow-lg">
-                    <h2 class="text-2xl font-bold">Mastery Achieved!</h2>
-                    <p class="mt-2">Congratulations, you answered all questions correctly. You can now download your verification file to submit.</p>
-                    <button id="download-score-btn" class="mt-4 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                        Download Verification File
-                    </button>
-                </div>`;
-            document.getElementById('download-score-btn').addEventListener('click', downloadScore);
-        }
-
-        function downloadScore() {
-            const verificationData = {
-                studentName: studentName,
-                quizTitle: "1.1 Quiz Retake",
-                completionDate: new Date().toISOString(),
-                masteryAttempt: {
-                    score: score,
-                    totalQuestions: currentQuestions.length,
-                    percentage: (score / currentQuestions.length) * 100,
-                    questions: currentQuestions.map(q => ({
-                        question: q.question.replace(/\$\$/g, ''),
-                        userAnswer: q.userAnswer,
-                        correctAnswer: q.answer,
-                    }))
-                }
-            };
-
-            const jsonString = JSON.stringify(verificationData, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            const safeName = studentName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            a.download = `${safeName}_quiz_1-1_retake.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function insertSymbol(symbol, inputId) {
-            const input = document.getElementById(inputId);
-            const start = input.selectionStart;
-            const end = input.selectionEnd;
-            input.value = input.value.substring(0, start) + symbol + input.value.substring(end);
-            input.focus();
-            input.setSelectionRange(start + 1, start + 1);
+            quizContainer.innerHTML = `
+                <form id="quizForm">
+                    <div class="mb-10">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">1. Evaluate each expression:</h2>
+                        <div class="space-y-3">${q1HTML}</div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">2. Fully simplify each expression using only positive exponents.</h2>
+                        <div class="space-y-3">${q2HTML}</div>
+                    </div>
+                    <div class="mt-10 text-center">
+                        <button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button>
+                    </div>
+                </form>
+            `;
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
         }
         
-        // --- INITIALIZATION ---
-        startQuizBtn.addEventListener('click', () => {
-            const name = studentNameInput.value.trim();
-            if (name) {
-                studentName = name;
-                studentNameDisplay.textContent = studentName;
-                startScreen.classList.add('hidden');
-                quizScreen.classList.remove('hidden');
-                generateQuiz();
-            } else {
-                alert('Please enter your name to start.');
+        const normalizeAnswer = (str) => {
+            let s = str.replace(/\s+/g, '').replace(/\*/g, '').toLowerCase();
+            if (s.match(/[a-z]/)) {
+                const coeff = s.match(/^-?\d+/g) || ['1'];
+                const vars = s.match(/[a-z]\^?-?\d*/g) || [];
+                vars.sort();
+                return coeff.concat(vars).join('');
             }
+            return s;
+        };
+        
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0;
+            let resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                const userInput = document.getElementById(q.id).value;
+                const isCorrect = normalizeAnswer(userInput) === normalizeAnswer(q.answer);
+
+                if (isCorrect) score++;
+
+                resultsHTML += `<div class="result-item border-l-4 p-4 rounded-md ${isCorrect ? 'correct' : 'incorrect'}">
+                    <div class="font-semibold text-gray-800 flex items-center gap-4">${q.text}</div>
+                    <p class="mt-2 text-sm">Your answer: <span class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">${userInput || '<i>No answer</i>'}</span></p>
+                    ${!isCorrect ? `<p class="mt-1 text-sm">Correct answer: <span class="font-medium text-green-700">${q.answer}</span></p>` : ''}
+                </div>`;
+            });
+            
+            const totalQuestions = currentQuestions.length;
+            const percentage = Math.round((score / totalQuestions) * 100);
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${totalQuestions} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        // --- EVENT LISTENERS ---
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm(currentQuestions);
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
         });
-        newQuizBtn.addEventListener('click', generateQuiz);
+        generateNewBtn.addEventListener('click', generateAndRenderQuiz);
+        document.addEventListener('DOMContentLoaded', generateAndRenderQuiz);
     </script>
 </body>
 </html>
+

@@ -3,317 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz 1.3 Retake: Radical Operations</title>
-    
+    <title>Operations with Radicals Practice</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        MathJax = {
-          tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']],
-            displayMath: [['$$', '$$'], ['\\[', '\\]']]
-          },
-          svg: {
-            fontCache: 'global'
-          }
-        };
-    </script>
-    <script type="text/javascript" id="MathJax-script" async
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-    </script>
-
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .btn-disabled { background-color: #9ca3af; cursor: not-allowed; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-container {
+            transition: all 0.3s ease-in-out;
+        }
+        .result-item.correct {
+            background-color: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+        .result-item.incorrect {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        .question-prefix {
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            margin: 0 0.2em;
+        }
+        .numerator {
+            border-bottom: 1px solid black;
+            padding: 0 0.2em;
+        }
+        .denominator {
+            padding: 0 0.2em;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <div class="container mx-auto max-w-4xl p-4 sm:p-6 md:p-8">
-        
-        <div id="start-screen">
-            <header class="text-center mb-8">
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">1.3 Quiz Retake</h1>
-                <p class="mt-2 text-gray-600">Enter your name to begin. Achieve 100% on a set of problems to get your verification file.</p>
-            </header>
-            <div class="bg-white p-8 rounded-lg shadow-md max-w-md mx-auto">
-                <label for="student-name-input" class="block text-sm font-medium text-gray-700">Student Name</label>
-                <input type="text" id="student-name-input" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="e.g., Jane Doe">
-                <button id="start-quiz-btn" class="mt-6 w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Start Quiz
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-4xl quiz-container">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">1.3 Quiz Operations with Radicals Retake</h1>
+            <p class="text-gray-600 mt-2">Use the &radic; button or type 'sqrt()' for the square root symbol, e.g., 3sqrt(2).</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
+                    Try This Quiz Again
+                </button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
+                    Generate New Quiz
                 </button>
             </div>
         </div>
-
-        <div id="quiz-screen" class="hidden">
-            <header class="text-center mb-8">
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">1.3 Quiz Retake</h1>
-                <div class="mt-2 text-gray-600 text-lg">
-                    Student: <span id="student-name-display" class="font-semibold text-indigo-700"></span>
-                </div>
-                 <div id="score-display" class="mt-1 text-gray-600">Score: 0 / 0</div>
-                <button id="new-quiz-btn" class="mt-6 px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform transform hover:scale-105">
-                    Generate New Set (8 Problems)
-                </button>
-            </header>
-
-            <main id="quiz-container" class="space-y-6"></main>
-
-            <div id="completion-container" class="hidden text-center mt-8">
-                </div>
-        </div>
-    </div>
+    </main>
 
     <script>
-        // --- STATE MANAGEMENT ---
-        let studentName = '';
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
         let currentQuestions = [];
-        let score = 0;
-        let questionsAnswered = 0;
 
-        // --- DOM Elements ---
-        const startScreen = document.getElementById('start-screen');
-        const quizScreen = document.getElementById('quiz-screen');
-        const studentNameInput = document.getElementById('student-name-input');
-        const startQuizBtn = document.getElementById('start-quiz-btn');
-        const studentNameDisplay = document.getElementById('student-name-display');
-        const scoreDisplay = document.getElementById('score-display');
-        const quizContainer = document.getElementById('quiz-container');
-        const newQuizBtn = document.getElementById('new-quiz-btn');
-        const completionContainer = document.getElementById('completion-container');
-
+        // --- UTILITY FUNCTIONS ---
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const getRandomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
-        
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
 
-        // --- UTILITY FUNCTION TO FORMAT ANSWERS ---
-        function formatRadicalAnswer(coeff, rad) {
-            if (rad === 1 || rad === 0) return coeff.toString();
-            if (coeff === 1) return `√${rad}`;
-            if (coeff === -1) return `-√${rad}`;
-            return `${coeff}√${rad}`;
-        }
-        function formatLatexRadical(coeff, rad) {
-            if (rad === 1 || rad === 0) return coeff.toString();
-            if (coeff === 1) return `\\sqrt{${rad}}`;
-            if (coeff === -1) return `-\\sqrt{${rad}}`;
-            return `${coeff}\\sqrt{${rad}}`;
-        }
-
-        // --- PROBLEM GENERATORS ---
-        function generateAddSubtractProblem() {
-            const perfectSquares = [4, 9, 16, 25], primes = [2, 3, 5, 6, 7];
-            const commonRad = getRandomElement(primes);
-            let s1 = getRandomElement(perfectSquares), s2 = getRandomElement(perfectSquares);
-            while (s1 === s2) { s2 = getRandomElement(perfectSquares); }
-            let c1 = getRandomElement([-5, -3, -2, 2, 3, 4, 5, 8]), c2 = getRandomElement([-5, -3, -2, 2, 3, 4, 5]);
-            const op = getRandomElement(['+', '-']);
-            const n1 = s1 * commonRad, n2 = s2 * commonRad;
-            const simp_c1 = c1 * Math.sqrt(s1), simp_c2 = c2 * Math.sqrt(s2);
-            let finalCoeff = op === '+' ? simp_c1 + simp_c2 : simp_c1 - simp_c2;
-            if (finalCoeff === 0) return generateAddSubtractProblem();
-            const question = `Perform the indicated operations and simplify: $$${c1}\\sqrt{${n1}} ${op} ${c2}\\sqrt{${n2}}$$`;
-            const answer = formatRadicalAnswer(finalCoeff, commonRad);
-            const latexAnswer = formatLatexRadical(finalCoeff, commonRad);
-            const solution = `<p><b>Step 1:</b> Simplify each radical.</p><p>$$${c1}\\sqrt{${n1}} = ${simp_c1}\\sqrt{${commonRad}}$$</p><p>$$${c2}\\sqrt{${n2}} = ${simp_c2}\\sqrt{${commonRad}}$$</p><p><b>Step 2:</b> Combine like terms.</p><p>$$(${simp_c1} ${op} ${simp_c2})\\sqrt{${commonRad}} = ${latexAnswer}$$</p>`;
-            return { question, answer, solution, type: 'Add/Subtract Radicals' };
-        }
-        function generateMultiplyProblem() {
-            const c1 = getRandomElement([1, 1, 2, 3, 4, 5, 6]), c2 = getRandomElement([1, 1, 2, 3, 4, 5, 6]);
-            const r1 = getRandomElement([2, 3, 5, 6, 7, 10]), r2 = getRandomElement([2, 3, 5, 6, 7, 11, 13]);
-            const question = `Perform the indicated operations and simplify: $$${c1 === 1 ? '' : c1}\\sqrt{${r1}} \\cdot ${c2 === 1 ? '' : c2}\\sqrt{${r2}}$$`;
-            const finalCoeff = c1 * c2, product = r1 * r2;
-            let simpCoeff = 1, simpRad = product;
-            const perfectSquares = [100, 81, 64, 49, 36, 25, 16, 9, 4];
-            for (const s of perfectSquares) { if (product % s === 0) { simpCoeff = Math.sqrt(s); simpRad = product / s; break; } }
-            const totalCoeff = finalCoeff * simpCoeff;
-            const answer = formatRadicalAnswer(totalCoeff, simpRad);
-            const latexAnswer = formatLatexRadical(totalCoeff, simpRad);
-            const solution = `<p><b>Step 1:</b> Multiply outside and inside parts.</p><p>$$(${c1} \\cdot ${c2}) \\cdot \\sqrt{${r1} \\cdot ${r2}} = ${finalCoeff}\\sqrt{${product}}$$</p><p><b>Step 2:</b> Simplify the result.</p><p>$$${finalCoeff}\\sqrt{${product}} = ${finalCoeff} \\cdot ${formatLatexRadical(simpCoeff, simpRad)} = ${latexAnswer}$$</p>`;
-            return { question, answer, solution, type: 'Multiply Radicals' };
-        }
-        function generateSimpleDivisionProblem() {
-            const q = getRandomElement([2, 3, 5, 6, 7, 10]), d = getRandomElement([2, 3, 4, 5]), n = q * d;
-            const question = `Perform the indicated operations and simplify: $$\\frac{\\sqrt{${n}}}{\\sqrt{${d}}}$$`;
-            const answer = formatRadicalAnswer(1, q);
-            const solution = `<p>Combine into one radical, then simplify.</p><p>$$\\sqrt{\\frac{${n}}{${d}}} = \\sqrt{${q}} = ${formatLatexRadical(1, q)}$$</p>`;
-            return { question, answer, solution, type: 'Divide Radicals' };
-        }
-        function generateRationalizeDivisionProblem() {
-            const common_factor = getRandomElement([1, 1, 1, 2, 3]);
-            let n_part = getRandomElement([2, 3, 5, 7]), d_part = getRandomElement([2, 3, 5, 7]);
-            while(d_part === n_part) { d_part = getRandomElement([2, 3, 5, 7]); }
-            const n = n_part * common_factor, d = d_part * common_factor;
-            const question = `Perform the indicated operations and simplify: $$\\frac{\\sqrt{${n}}}{\\sqrt{${d}}}$$`;
-            const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
-            const common = gcd(n, d);
-            const simp_n = n / common, simp_d = d / common;
-            const answer = `${formatRadicalAnswer(1, simp_n * simp_d)}/${simp_d}`;
-            const latexAnswer = `\\frac{${formatLatexRadical(1, simp_n * simp_d)}}{${simp_d}}`;
-            let solution = common > 1 ? `<p><b>Step 1:</b> Simplify the fraction.</p><p>$$\\sqrt{\\frac{${n}}{${d}}} = \\sqrt{\\frac{${simp_n}}{${simp_d}}}$$</p>` : '';
-            solution += `<p><b>${common > 1 ? 'Step 2' : 'Step 1'}:</b> Rationalize.</p><p>$$\\frac{\\sqrt{${simp_n}}}{\\sqrt{${simp_d}}} \\cdot \\frac{\\sqrt{${simp_d}}}{\\sqrt{${simp_d}}} = ${latexAnswer}$$</p>`;
-            return { question, answer, solution, type: 'Rationalize Denominator' };
-        }
-
-        // --- QUIZ LOGIC ---
-        function updateScoreDisplay() {
-            scoreDisplay.textContent = `Score: ${score} / ${questionsAnswered} (Total: ${currentQuestions.length})`;
-        }
-        function generateQuiz() {
-            score = 0; questionsAnswered = 0;
-            completionContainer.innerHTML = ''; completionContainer.classList.add('hidden');
-            quizContainer.innerHTML = `<div class="text-center"><p class="text-gray-600">Generating 8 new problems...</p></div>`;
-            updateScoreDisplay();
-            setTimeout(() => {
-                const generatorsToCall = [
-                    generateAddSubtractProblem, generateAddSubtractProblem, generateMultiplyProblem, generateMultiplyProblem,
-                    generateSimpleDivisionProblem, generateSimpleDivisionProblem, generateRationalizeDivisionProblem, generateRationalizeDivisionProblem,
-                ];
-                currentQuestions = []; let generatedProblems = new Set();
-                generatorsToCall.forEach(generator => {
-                    let problem; let attempts = 0;
-                    do { problem = generator(); attempts++; } while (generatedProblems.has(problem.question) && attempts < 20);
-                    if (attempts < 20) { currentQuestions.push(problem); generatedProblems.add(problem.question); }
-                });
-                renderQuiz(shuffleArray(currentQuestions));
-                updateScoreDisplay();
-            }, 100);
-        }
-        function renderQuiz(questions) {
-            quizContainer.innerHTML = '';
-            questions.forEach((q, index) => {
-                const questionCard = `<div class="bg-white p-6 rounded-lg shadow-md">
-                    <div class="flex justify-between items-start">
-                        <div class="text-lg font-medium text-gray-800 pr-4"><span class="font-bold mr-2">${index + 1}.</span> ${q.question}</div>
-                        <span class="flex-shrink-0 bg-cyan-100 text-cyan-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${q.type}</span>
-                    </div>
-                    <div class="mt-4 flex flex-col sm:flex-row sm:items-center">
-                        <div class="relative flex-grow">
-                            <input type="text" id="answer-${index}" class="w-full pl-4 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="e.g., 10√3 or √6/3">
-                            <div class="absolute top-1/2 right-1 transform -translate-y-1/2"><button class="h-8 w-8 text-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-sans rounded-md" onclick="insertSymbol('√', 'answer-${index}')">√</button></div>
-                        </div>
-                        <button id="submit-${index}" class="mt-2 sm:mt-0 sm:ml-2 w-full sm:w-auto px-6 py-2 bg-green-500 text-white font-semibold rounded-md hover:bg-green-600">Submit</button>
-                    </div>
-                    <div id="solution-${index}" class="hidden mt-4 p-4 bg-gray-50 rounded-md border border-gray-200">${q.solution}</div>
-                </div>`;
-                quizContainer.innerHTML += questionCard;
-            });
-            MathJax.typesetPromise();
-            questions.forEach((q, index) => {
-                const submitBtn = document.getElementById(`submit-${index}`);
-                const answerInput = document.getElementById(`answer-${index}`);
-                const checkFunc = () => checkAnswer(index, q.answer, q.solution);
-                submitBtn.addEventListener('click', checkFunc);
-                answerInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); checkFunc(); } });
-            });
-        }
-        function checkAnswer(index, correctAnswer, solution) {
-            const userInputEl = document.getElementById(`answer-${index}`);
-            if (userInputEl.disabled) return;
-            const userInputClean = userInputEl.value.replace(/\s/g, '').replace(/[()*]/g,'');
-            const correctAnswerClean = correctAnswer.toString().replace(/\s/g, '');
-            const isCorrect = userInputClean === correctAnswerClean;
-            questionsAnswered++;
-            if (isCorrect) {
-                score++;
-                userInputEl.classList.add('border-green-500', 'border-2', 'bg-green-50');
-            } else {
-                userInputEl.classList.add('border-red-500', 'border-2', 'bg-red-50');
-                const correctAnswerEl = document.createElement('p');
-                correctAnswerEl.className = 'mt-2 text-red-600 font-semibold';
-                correctAnswerEl.innerHTML = `Correct answer: <span class="font-bold">${correctAnswer.replace(/\^/g,'<sup>').replace(/√/g,'&radic;')}</span>`;
-                solutionDiv.prepend(correctAnswerEl);
-            }
-            currentQuestions[index].userAnswer = userInputEl.value;
-            currentQuestions[index].isCorrect = isCorrect;
-            const submitBtn = document.getElementById(`submit-${index}`);
-            const solutionDiv = document.getElementById(`solution-${index}`);
-            solutionDiv.innerHTML = (solutionDiv.hasChildNodes() && solutionDiv.firstChild.tagName === 'P' ? solutionDiv.firstChild.outerHTML : '') + solution;
-            userInputEl.disabled = true;
-            submitBtn.disabled = true;
-            submitBtn.classList.add('btn-disabled');
-            solutionDiv.classList.remove('hidden');
-            MathJax.typesetPromise([`#solution-${index}`]);
-            updateScoreDisplay();
-            if (questionsAnswered === currentQuestions.length && score === currentQuestions.length) {
-                showCompletion();
-            }
-        }
-        function showCompletion() {
-            completionContainer.classList.remove('hidden');
-            completionContainer.innerHTML = `<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md shadow-lg"><h2 class="text-2xl font-bold">Mastery Achieved!</h2><p class="mt-2">Congratulations, you answered all questions correctly. You can now download your verification file to submit.</p><button id="download-score-btn" class="mt-4 px-6 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">Download Verification File</button></div>`;
-            document.getElementById('download-score-btn').addEventListener('click', downloadScore);
-        }
-
-        // --- ROBUST DOWNLOAD FUNCTION ---
-        function downloadScore() {
-            try {
-                const verificationData = {
-                    studentName: studentName,
-                    quizTitle: "1.3 Quiz Retake: Radical Operations",
-                    completionDate: new Date().toISOString(),
-                    masteryAttempt: {
-                        score: score,
-                        totalQuestions: currentQuestions.length,
-                        questions: currentQuestions.map(q => ({
-                            question: q.question.replace(/\$\$/g, ''),
-                            userAnswer: q.userAnswer,
-                            correctAnswer: q.answer,
-                        }))
-                    }
-                };
-                const jsonString = JSON.stringify(verificationData, null, 2);
-                const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                const safeName = studentName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                a.download = `${safeName}_quiz_1-3_retake.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                console.error("Download failed:", error);
-                alert("An error occurred while creating the download file. Please check the browser console for details.");
-            }
-        }
-
-        function insertSymbol(symbol, inputId) {
+        function insertSymbolAtCursor(inputId, textToInsert, cursorOffset) {
             const input = document.getElementById(inputId);
-            const start = input.selectionStart;
-            const end = input.selectionEnd;
-            input.value = input.value.substring(0, start) + symbol + input.value.substring(end);
+            if (!input) return;
+            const startPos = input.selectionStart;
+            const endPos = input.selectionEnd;
+            input.value = input.value.substring(0, startPos) + textToInsert + input.value.substring(endPos);
+            const newCursorPos = startPos + cursorOffset;
             input.focus();
-            input.setSelectionRange(start + 1, start + 1);
+            input.setSelectionRange(newCursorPos, newCursorPos);
+        }
+
+        // --- QUESTION GENERATORS ---
+        function generateRadicalOperationsQuestions() {
+            const questions = [];
+            const perfectSquares = [4, 9, 16, 25];
+            const radicands = [2, 3, 5, 6, 7];
+
+            // Section 1: Add/Subtract
+            let commonRad = shuffle(radicands)[0];
+            let sq = shuffle(perfectSquares).slice(0, 2);
+            let c1 = getRandomInt(2, 9); let c2 = getRandomInt(2, 9);
+            let r1 = sq[0] * commonRad; let r2 = sq[1] * commonRad;
+            let ans1 = c1 * Math.sqrt(sq[0]) - c2 * Math.sqrt(sq[1]);
+            questions.push({ id: 'q1a', text: `${c1}&radic;${r1} - ${c2}&radic;${r2}`, answer: `${ans1}sqrt(${commonRad})`});
+
+            commonRad = shuffle(radicands)[0];
+            sq = shuffle(perfectSquares).slice(0, 2);
+            c1 = getRandomInt(-5, -2); c2 = getRandomInt(2, 5);
+            r1 = sq[0] * commonRad; r2 = sq[1] * commonRad;
+            let ans2 = c1 * Math.sqrt(sq[0]) + c2 * Math.sqrt(sq[1]);
+            questions.push({ id: 'q1b', text: `${c1}&radic;${r1} + ${c2}&radic;${r2}`, answer: `${ans2}sqrt(${commonRad})`});
+
+            // Section 2: Multiply/Divide
+            // a) sqrt(a) * sqrt(b)
+            let r_a = shuffle(radicands)[0] * 2; let r_b = shuffle(perfectSquares)[0] * r_a / 2;
+            let ans_a_out = Math.sqrt(shuffle(perfectSquares)[0]); let ans_a_in = r_a * r_b / ans_a_out / ans_a_out;
+            questions.push({ id: 'q2a', text: `&radic;${r_a} &middot; &radic;${r_b}`, answer: `${Math.sqrt(r_a*r_b)}`});
+            if (!Number.isInteger(Math.sqrt(r_a*r_b))) {
+                 let rad = r_a * r_b;
+                 let sq_part = 1;
+                 for(let i=perfectSquares.length-1; i>=0; i--){ if(rad % perfectSquares[i] === 0) {sq_part = perfectSquares[i]; break;} }
+                 questions[questions.length-1].answer = `${Math.sqrt(sq_part)}sqrt(${rad/sq_part})`;
+            }
+
+
+            // b) c1*sqrt(a) * c2*sqrt(b)
+            let c_b1 = getRandomInt(2,7); let c_b2 = getRandomInt(2,7);
+            let r_b1 = shuffle([8,12,18,20])[0]; let r_b2 = shuffle([8,12,18,20])[0];
+            let rad_b = r_b1 * r_b2;
+            let sq_b = 1;
+            for(let i=perfectSquares.length-1; i>=0; i--){ if(rad_b % perfectSquares[i] === 0) {sq_b = perfectSquares[i]; break;} }
+            let ans_b = `${c_b1*c_b2*Math.sqrt(sq_b)}sqrt(${rad_b/sq_b})`;
+            if (rad_b/sq_b === 1) ans_b = `${c_b1*c_b2*Math.sqrt(sq_b)}`;
+            questions.push({ id: 'q2b', text: `${c_b1}&radic;${r_b1} &middot; ${c_b2}&radic;${r_b2}`, answer: ans_b });
+
+            // c) sqrt(a) / sqrt(b) where a is multiple of b
+            let den_c = shuffle(radicands)[0]; let num_c = den_c * shuffle(perfectSquares)[0];
+            questions.push({ id: 'q2c', text: `<div class="fraction"><span class="numerator">&radic;${num_c}</span><span class="denominator">&radic;${den_c}</span></div>`, answer: `${Math.sqrt(num_c/den_c)}` });
+            
+            // d) sqrt(a) / sqrt(b) where b is perfect square
+            let den_d = shuffle(perfectSquares)[0];
+            let num_d_rad = shuffle(radicands)[0];
+            let num_d_sq = shuffle(perfectSquares)[0];
+            let ans_d_out = Math.sqrt(num_d_sq); let ans_d_in = num_d_rad;
+            let ans_d = `${ans_d_out}sqrt(${ans_d_in}) / ${Math.sqrt(den_d)}`;
+            if (ans_d_out % Math.sqrt(den_d) === 0) {
+                ans_d = `${ans_d_out/Math.sqrt(den_d)}sqrt(${ans_d_in})`;
+            }
+            questions.push({ id: 'q2d', text: `<div class="fraction"><span class="numerator">&radic;${num_d_sq*num_d_rad}</span><span class="denominator">&radic;${den_d}</span></div>`, answer: ans_d});
+
+            // e) Rationalize
+            let r_e = shuffle(radicands).slice(0,2);
+            questions.push({ id: 'q2e', text: `<div class="fraction"><span class="numerator">&radic;${r_e[0]}</span><span class="denominator">&radic;${r_e[1]}</span></div>`, answer: `sqrt(${r_e[0]*r_e[1]})/${r_e[1]}`});
+
+            // f) Simplify then rationalize
+            let r_f_num = shuffle(radicands)[0];
+            let r_f_mult = shuffle([2,3,4,5])[0];
+            questions.push({ id: 'q2f', text: `<div class="fraction"><span class="numerator">&radic;${r_f_num}</span><span class="denominator">&radic;${r_f_num*r_f_mult}</span></div>`, answer: `sqrt(${r_f_mult})/${r_f_mult}`});
+
+            return questions;
+        }
+
+        // --- CORE QUIZ LOGIC ---
+        function generateAndRenderQuiz() {
+            currentQuestions = generateRadicalOperationsQuestions();
+            renderQuizForm(currentQuestions);
+            quizContainer.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function renderQuizForm(questions) {
+            const prefixes_1 = ['a)', 'b)'];
+            const prefixes_2 = ['a)', 'b)', 'c)', 'd)', 'e)', 'f)'];
+            const q1 = questions.slice(0, 2);
+            const q2 = questions.slice(2);
+
+            const createQuestionHTML = (q, i, prefixes) => `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                    <p class="flex items-center gap-4 text-xl"><span class="question-prefix">${prefixes[i]}</span>${q.text}</p>
+                    <div class="relative w-full">
+                         <input type="text" id="${q.id}" class="w-full p-2 border border-gray-300 rounded-lg pr-10">
+                         <button type="button" onclick="insertSymbolAtCursor('${q.id}', 'sqrt()', 5)" class="absolute inset-y-0 right-0 flex items-center justify-center w-10 h-full text-gray-600 hover:bg-gray-200 rounded-r-lg text-2xl font-semibold focus:outline-none" title="Insert Square Root">&radic;</button>
+                    </div>
+                </div>`;
+
+            const q1HTML = q1.map((q, i) => createQuestionHTML(q, i, prefixes_1)).join('<hr class="my-4 border-dashed">');
+            const q2HTML = q2.map((q, i) => createQuestionHTML(q, i, prefixes_2)).join('<hr class="my-4 border-dashed">');
+            
+            quizContainer.innerHTML = `
+                <form id="quizForm">
+                    <div class="mb-10">
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">1. Perform the indicated operations, if possible, and simplify.</h2>
+                        <div class="space-y-4">${q1HTML}</div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700 mb-6">2. Perform the indicated operations and simplify your answer.</h2>
+                        <div class="space-y-4">${q2HTML}</div>
+                    </div>
+                    <div class="mt-10 text-center">
+                        <button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button>
+                    </div>
+                </form>
+            `;
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
         }
         
-        // --- INITIALIZATION ---
-        startQuizBtn.addEventListener('click', () => {
-            const name = studentNameInput.value.trim();
-            if (name) {
-                studentName = name;
-                studentNameDisplay.textContent = studentName;
-                startScreen.classList.add('hidden');
-                quizScreen.classList.remove('hidden');
-                generateQuiz();
-            } else {
-                alert('Please enter your name to start.');
+        const normalizeAnswer = (str) => {
+            let s = str.replace(/\s+/g, '').replace(/\*/g, '').toLowerCase();
+            if (!s.includes('sqrt') && !s.includes('/')) return s;
+
+            let denominator = '';
+            if (s.includes('/')) {
+                const parts = s.split('/');
+                s = parts[0];
+                denominator = `/${parts[1]}`;
             }
+
+            const sqrtMatch = s.match(/sqrt\([^)]+\)/);
+            if (!sqrtMatch) return s + denominator;
+            
+            const sqrtPart = sqrtMatch[0];
+            let coeffPart = s.replace(sqrtPart, '');
+
+            if (coeffPart === '') coeffPart = '1';
+            if (coeffPart === '-') coeffPart = '-1';
+            
+            if (coeffPart === '1' && sqrtPart) return sqrtPart + denominator;
+
+            return coeffPart + sqrtPart + denominator;
+        };
+        
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0;
+            let resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                const userInput = document.getElementById(q.id).value;
+                const isCorrect = normalizeAnswer(userInput) === normalizeAnswer(q.answer);
+
+                if (isCorrect) score++;
+
+                resultsHTML += `<div class="result-item border-l-4 p-4 rounded-md ${isCorrect ? 'correct' : 'incorrect'}">
+                    <div class="font-semibold text-gray-800 flex items-center gap-4 text-xl">${q.text}</div>
+                    <p class="mt-2 text-sm">Your answer: <span class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">${userInput || '<i>No answer</i>'}</span></p>
+                    ${!isCorrect ? `<p class="mt-1 text-sm">Correct answer: <span class="font-medium text-green-700">${q.answer}</span></p>` : ''}
+                </div>`;
+            });
+            
+            const totalQuestions = currentQuestions.length;
+            const percentage = Math.round((score / totalQuestions) * 100);
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${totalQuestions} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        // --- EVENT LISTENERS ---
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm(currentQuestions);
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
         });
-        newQuizBtn.addEventListener('click', generateQuiz);
+        generateNewBtn.addEventListener('click', generateAndRenderQuiz);
+        document.addEventListener('DOMContentLoaded', generateAndRenderQuiz);
     </script>
 </body>
 </html>
+
+

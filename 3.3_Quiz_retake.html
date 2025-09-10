@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Functions Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-container {
+            transition: all 0.3s ease-in-out;
+        }
+        .result-item.correct {
+            background-color: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+        .result-item.incorrect {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        .question-prefix {
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .data-table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 160px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: #f3f4f6;
+        }
+        canvas {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        .checkbox-label:has(input:checked) {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl quiz-container">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">3.3 Quiz Linear Functions Retake (Must Take Two Sets in a Row)</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+        const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+
+        function generateQuizData() {
+            let questions = [];
+            
+            // Q1: Identify Linear Tables
+            const tables = [];
+            // Linear tables
+            const m1 = getRandomInt(2, 5); const b1 = getRandomInt(1, 10);
+            tables.push({ data: Array.from({length: 4}, (_, i) => ({x: i+1, y: m1*(i+1)+b1})), isLinear: true, id: 'q1_t1' });
+            const m2 = getRandomInt(-5, -2); const b2 = getRandomInt(10, 20);
+            tables.push({ data: Array.from({length: 4}, (_, i) => ({x: i+1, y: m2*(i+1)+b2})), isLinear: true, id: 'q1_t2' });
+            // Non-linear tables
+            tables.push({ data: Array.from({length: 4}, (_, i) => ({x: i+1, y: (i+1)**2 + 1})), isLinear: false, id: 'q1_t3' });
+            tables.push({ data: Array.from({length: 4}, (_, i) => ({x: i+1, y: 2**(i+1)})), isLinear: false, id: 'q1_t4' });
+            questions.push({ type: 'select-tables', id: 'q1', title: 'Which table of values represent a linear function? Circle ALL that apply.', tables: shuffle(tables) });
+
+            // Q2: Determine Slope
+            const slopeQuestions = [];
+            // a) Two points
+            const x1 = getRandomInt(-5, 0); const y1 = getRandomInt(-5, 5);
+            const dx = getRandomInt(2, 6); const dy = getRandomInt(-10, 10);
+            const x2 = x1 + dx; const y2 = y1 + dy;
+            const commonDivisor = gcd(dy, dx);
+            const simplifiedDy = dy / commonDivisor; const simplifiedDx = dx / commonDivisor;
+            let slopeAns2a = simplifiedDx === 1 ? `${simplifiedDy}` : `${simplifiedDy}/${simplifiedDx}`;
+            if (simplifiedDx < 0) { // Keep denominator positive
+                 slopeAns2a = `${-simplifiedDy}/${-simplifiedDx}`;
+            }
+            slopeQuestions.push({ type: 'points', id: 'q2a', text: `Passing through the points: (${x1}, ${y1}) and (${x2}, ${y2})`, answer: slopeAns2a });
+            // b) Graph
+            const m2b = getRandomInt(-2, 2) || 1; const b2b = getRandomInt(-3, 3);
+            slopeQuestions.push({ type: 'graph', id: 'q2b', text: 'The graph:', data: { m: m2b, b: b2b }, answer: m2b.toString() });
+            // c) Table
+            const m2c = getRandomInt(-5, 5) || 1; const b2c = getRandomInt(0, 10);
+            const table2c = Array.from({length: 5}, (_, i) => ({x: i+1, y: m2c*(i+1)+b2c}));
+            slopeQuestions.push({ type: 'table', id: 'q2c', text: 'The table of values:', data: table2c, answer: m2c.toString() });
+            questions.push({ type: 'slope', id: 'q2', title: 'Determine the slope of the line represented in each case. Simplify your answers.', subQuestions: slopeQuestions });
+
+            // Q3: Find Equation
+            const eqQuestions = [];
+            const m3a = getRandomInt(2, 10); const b3a = getRandomInt(5, 15);
+            eqQuestions.push({id: 'q3a', data: Array.from({length: 4}, (_, i) => ({x: i, y: m3a*i+b3a})), answer: `y=${m3a}x+${b3a}`});
+            const m3b = getRandomInt(-5, 5) || 1; const b3b = getRandomInt(-5, 5);
+            eqQuestions.push({id: 'q3b', data: Array.from({length: 4}, (_, i) => ({x: i+1, y: m3b*(i+1)+b3b})), answer: `y=${m3b}x${b3b >= 0 ? '+' : ''}${b3b}`});
+            questions.push({ type: 'equation', id: 'q3', title: 'Find the equation of each linear function represented by the tables below in slope-intercept form.', subQuestions: eqQuestions });
+            
+            // Q4: Word Problem
+            const rate = getRandomInt(40, 70);
+            const inputVal = getRandomInt(2, 5);
+            questions.push({ type: 'word-problem', id: 'q4',
+                text: `Julia is driving along a highway at a speed of ${rate} miles per hour. Answer the following questions regarding the relationship between distance and time.`,
+                answers: {
+                    independent: 'time', dependent: 'distance',
+                    func: `J(x)=${rate}x`,
+                    eval: (rate * inputVal).toString(),
+                    meaning: `the distance traveled in ${inputVal} hours`
+                },
+                inputVal
+            });
+
+            currentQuestions = questions;
+        }
+
+        function drawGraph(canvasId, graphData) {
+            const { m, b } = graphData;
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const { width, height, scale, originX, originY } = { width: 240, height: 240, scale: 20, originX: 120, originY: 120 };
+            canvas.width = width; canvas.height = height;
+            ctx.clearRect(0, 0, width, height);
+
+            ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 1;
+            for (let i = scale; i < width; i += scale) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke(); }
+            for (let i = scale; i < height; i += scale) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke(); }
+            
+            ctx.strokeStyle = '#374151'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(width, originY); ctx.moveTo(originX, 0); ctx.lineTo(originX, height); ctx.stroke();
+
+            ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2;
+            ctx.beginPath();
+            const x_min = -6; const y_min = m * x_min + b;
+            ctx.moveTo(originX + x_min * scale, originY - y_min * scale);
+            const x_max = 6; const y_max = m * x_max + b;
+            ctx.lineTo(originX + x_max * scale, originY - y_max * scale);
+            ctx.stroke();
+
+            // Highlight two points
+            ctx.fillStyle = '#ef4444';
+            const p1x = 1, p1y = m*1+b;
+            const p2x = 2, p2y = m*2+b;
+            if (Math.abs(p1y) < 6 && Math.abs(p2y) < 6) {
+                ctx.beginPath(); ctx.arc(originX + p1x*scale, originY - p1y*scale, 4, 0, 2*Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(originX + p2x*scale, originY - p2y*scale, 4, 0, 2*Math.PI); ctx.fill();
+            }
+        }
+        
+        function renderQuizForm() {
+            let html = '<form id="quizForm">';
+            currentQuestions.forEach(q => {
+                html += `<div class="mb-10"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.id.toUpperCase()}. ${q.title}</h2>`;
+                if(q.type === 'select-tables') {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+                    q.tables.forEach(t => {
+                        html += `<div class="checkbox-label"><input type="checkbox" id="${t.id}" class="mr-4 h-5 w-5">
+                                <table class="data-table"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>
+                                ${t.data.map(p => `<tr><td>${p.x}</td><td>${p.y}</td></tr>`).join('')}</tbody></table></div>`;
+                    });
+                    html += `</div>`;
+                } else if(q.type === 'slope') {
+                    html += `<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">`;
+                    q.subQuestions.forEach((sq, i) => {
+                        html += `<div class="flex flex-col items-center">
+                                <p class="mb-2 text-center">${String.fromCharCode(97+i)}) ${sq.text}</p>`;
+                        if(sq.type === 'graph') html += `<canvas id="${sq.id}_canvas"></canvas>`;
+                        if(sq.type === 'table') html += `<table class="data-table"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>
+                                ${sq.data.map(p => `<tr><td>${p.x}</td><td>${p.y}</td></tr>`).join('')}</tbody></table>`;
+                        html += `<input type="text" id="${sq.id}" class="w-full max-w-xs mt-2 p-2 border rounded-lg" placeholder="Slope"></div>`;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'equation') {
+                     html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">`;
+                     q.subQuestions.forEach((sq, i) => {
+                         html += `<div class="flex flex-col items-center"><p class="mb-2">${String.fromCharCode(97+i)})</p>
+                                  <table class="data-table"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>
+                                  ${sq.data.map(p => `<tr><td>${p.x}</td><td>${p.y}</td></tr>`).join('')}</tbody></table>
+                                  <input type="text" id="${sq.id}" class="w-full max-w-xs mt-2 p-2 border rounded-lg" placeholder="Equation: y=mx+b"></div>`;
+                     });
+                     html += `</div>`;
+                } else if(q.type === 'word-problem') {
+                    html += `<p class="mb-4">${q.text}</p><div class="space-y-3 max-w-lg mx-auto">
+                        <div><label>The independent variable is </label><input id="wp_ind" class="p-1 border rounded"></div>
+                        <div><label>The dependent variable is </label><input id="wp_dep" class="p-1 border rounded"></div>
+                        <div><label>Write a function relating these variables: </label><input id="wp_func" class="p-1 border rounded"></div>
+                        <div><label>So, J(${q.inputVal}) = </label><input id="wp_eval" class="w-20 p-1 border rounded">
+                        <label>, meaning </label><input id="wp_meaning" class="p-1 border rounded"></div>
+                    </div>`;
+                }
+                html += `</div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            
+            const graphQuestion = currentQuestions.find(q=>q.type==='slope')?.subQuestions.find(sq=>sq.type==='graph');
+            if(graphQuestion) drawGraph(`${graphQuestion.id}_canvas`, graphQuestion.data);
+            
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                 if(q.type === 'select-tables') {
+                    total++;
+                    const userChecked = q.tables.filter(t => document.getElementById(t.id).checked).map(t => t.id).sort();
+                    const correctChecked = q.tables.filter(t => t.isLinear).map(t => t.id).sort();
+                    const isCorrect = JSON.stringify(userChecked) === JSON.stringify(correctChecked);
+                    if(isCorrect) score++;
+                    resultsHTML += `<div class="result-item border-l-4 p-4 ${isCorrect ? 'correct' : 'incorrect'}"><p>${q.title}</p>
+                                    <p class="text-sm">You selected ${userChecked.length} tables. Correct answer: tables where rate of change is constant.</p></div>`;
+                 } else if(q.type === 'slope' || q.type === 'equation') {
+                    q.subQuestions.forEach(sq => {
+                        total++;
+                        const userInput = document.getElementById(sq.id).value.replace(/\s+/g, '').toLowerCase();
+                        const isCorrect = userInput === sq.answer.replace(/\s+/g, '').toLowerCase();
+                        if(isCorrect) score++;
+                        resultsHTML += `<div class="result-item border-l-4 p-4 ${isCorrect ? 'correct' : 'incorrect'}"><p>Part ${sq.id}: ${sq.text||''}</p>
+                                        <p class="text-sm">Your answer: ${userInput || 'none'}. ${!isCorrect ? `Correct: ${sq.answer}` : ''}</p></div>`;
+                    });
+                 } else if (q.type === 'word-problem') {
+                    total+=4;
+                    const results = {
+                        ind: document.getElementById('wp_ind').value.trim().toLowerCase(),
+                        dep: document.getElementById('wp_dep').value.trim().toLowerCase(),
+                        func: document.getElementById('wp_func').value.replace(/\s+/g, '').toLowerCase(),
+                        eval: document.getElementById('wp_eval').value.trim(),
+                        meaning: document.getElementById('wp_meaning').value.trim().toLowerCase()
+                    };
+                    const correct = q.answers;
+                    const indCorrect = results.ind.includes(correct.independent);
+                    const depCorrect = results.dep.includes(correct.dependent);
+                    const funcCorrect = results.func === correct.func.toLowerCase();
+                    const evalCorrect = results.eval === correct.eval;
+                    if(indCorrect) score++; if(depCorrect) score++; if(funcCorrect) score++; if(evalCorrect) score++;
+
+                     resultsHTML += `<div class="result-item border-l-4 p-4">
+                        <p class="${indCorrect ? 'text-green-700' : 'text-red-700'}">Independent: ${results.ind} ${!indCorrect ? `(Correct: ${correct.independent})`:''}</p>
+                        <p class="${depCorrect ? 'text-green-700' : 'text-red-700'}">Dependent: ${results.dep} ${!depCorrect ? `(Correct: ${correct.dependent})`:''}</p>
+                        <p class="${funcCorrect ? 'text-green-700' : 'text-red-700'}">Function: ${results.func} ${!funcCorrect ? `(Correct: ${correct.func})`:''}</p>
+                        <p class="${evalCorrect ? 'text-green-700' : 'text-red-700'}">Evaluation: ${results.eval} ${!evalCorrect ? `(Correct: ${correct.eval})`:''}</p>
+                        <p>Meaning: ${results.meaning} (Correct: ${correct.meaning})</p>
+                    </div>`;
+                 }
+            });
+
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+
+

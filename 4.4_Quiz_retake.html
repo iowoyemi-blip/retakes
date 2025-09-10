@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphing Linear Inequalities Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        canvas {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            text-align: center;
+            height: 220px;
+            vertical-align: middle;
+        }
+        .radio-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        .radio-label:has(input:checked) {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-6xl">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Graphing Linear Inequalities</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+        const gcd = (a, b) => { a=Math.abs(a); b=Math.abs(b); return b === 0 ? a : gcd(b, a % b); }
+
+        function simplifyFrac(num, den) {
+            if (den === 0) return "undefined";
+            if (num === 0) return "0";
+            const commonDivisor = gcd(num, den);
+            let n = num / commonDivisor;
+            let d = den / commonDivisor;
+            if (d < 0) { n = -n; d = -d; }
+            return d === 1 ? `${n}` : `${n}/${d}`;
+        }
+        
+        function formatB(b_str) {
+            if (b_str === '0') return '';
+            const b_num = parseFloat(b_str);
+            if (b_str.includes('/')) return `+${b_str}`;
+            return b_num > 0 ? `+${b_num}` : `${b_num}`;
+        }
+
+        function createInequality() {
+            const m_den = getRandomInt(1, 3);
+            const m_num = getRandomInt(-3, 3) || 1;
+            const b = getRandomInt(-4, 4);
+            const symbols = ['<', '>', '<=', '>='];
+            const symbol = shuffle(symbols)[0];
+
+            let slopeIntercept = `y ${symbol} ${simplifyFrac(m_num, m_den)}x ${formatB(b.toString())}`;
+            
+            // Convert to Ax + By C
+            let A = -m_num;
+            let B = m_den;
+            let C = b * m_den;
+            let standardSymbol = symbol;
+
+            if (B < 0) {
+                A = -A; B = -B; C = -C;
+                standardSymbol = standardSymbol.replace('<', '>').replace('>', '<');
+                 // Flip the symbol if we multiply/divide by a negative
+                if (standardSymbol.includes('=')) {
+                    standardSymbol = standardSymbol.includes('<') ? '>=' : '<=';
+                } else {
+                    standardSymbol = standardSymbol.includes('<') ? '>' : '<';
+                }
+            }
+             if (A === 0 && B === 0) { // Failsafe
+                A = 1; B = 1; C = 1;
+            }
+
+            const standardForm = `${A}x + ${B}y ${standardSymbol} ${C}`;
+
+            return { m_num, m_den, b, symbol, slopeIntercept, standardForm, A, B, C, standardSymbol };
+        }
+
+        function generateQuizData() {
+            let questions = [];
+
+            // Q1: True/False
+            const q1_ineq = createInequality();
+            const q1_pt = { x: getRandomInt(-5, 5), y: getRandomInt(-5, 5) };
+            const q1_eval = q1_ineq.A * q1_pt.x + q1_ineq.B * q1_pt.y;
+            let q1_answer;
+            switch(q1_ineq.standardSymbol) {
+                case '<': q1_answer = q1_eval < q1_ineq.C; break;
+                case '>': q1_answer = q1_eval > q1_ineq.C; break;
+                case '<=': q1_answer = q1_eval <= q1_ineq.C; break;
+                case '>=': q1_answer = q1_eval >= q1_ineq.C; break;
+            }
+            questions.push({ type: 'true-false', id: 'q1', title: 'True or False? Show how you know.',
+                text: `The point (${q1_pt.x}, ${q1_pt.y}) is part of the solution set of the inequality ${q1_ineq.standardForm}.`,
+                answer: q1_answer
+            });
+
+            // Q2: Complete the Table
+            let ineq1, ineq2;
+            do { ineq1 = createInequality(); } while (!ineq1.symbol.includes('='));
+            do { ineq2 = createInequality(); } while (ineq2.symbol.includes('=') || (ineq2.m_num/ineq2.m_den === ineq1.m_num/ineq1.m_den));
+            questions.push({ type: 'fill-table', id: 'q2', title: 'Complete the table:', rows: [ineq1, ineq2] });
+
+
+            // Q3: Graph to Inequality
+            const q3_correct = createInequality();
+            const q3_options = [q3_correct];
+            while (q3_options.length < 4) { q3_options.push(createInequality()); }
+            questions.push({ type: 'graph-to-eq', id: 'q3', title: 'Which of the following inequalities below is represented by the graph?',
+                correct: q3_correct, options: shuffle(q3_options) });
+
+            // Q4: Inequality to Graph
+            const q4_correct = createInequality();
+            const q4_options = [q4_correct];
+            while (q4_options.length < 4) { q4_options.push(createInequality()); }
+            questions.push({ type: 'eq-to-graph', id: 'q4', title: `Which of the following graphs below represents the inequality ${q4_correct.slopeIntercept}?`,
+                correct: q4_correct, options: shuffle(q4_options) });
+            
+            currentQuestions = questions;
+        }
+
+        function drawInequalityGraph(canvasId, ineqData) {
+            const { m_num, m_den, b, symbol } = ineqData;
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const { width, height, scale, originX, originY } = { width: 200, height: 200, scale: 20, originX: 100, originY: 100 };
+            canvas.width = width; canvas.height = height;
+            
+            ctx.clearRect(0, 0, width, height);
+
+            // Grid
+            ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+            for (let i = scale; i < width; i+=scale) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke(); }
+            for (let i = scale; i < height; i+=scale) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke(); }
+
+            // Axes
+            ctx.strokeStyle = '#374151'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(width, originY); ctx.moveTo(originX, 0); ctx.lineTo(originX, height); ctx.stroke();
+
+            // Shading
+            const m = m_num / m_den;
+            ctx.fillStyle = symbol.includes('=') ? 'rgba(59, 130, 246, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+            ctx.beginPath();
+            const y_at_left = m * (-5) + b;
+            const y_at_right = m * (5) + b;
+            ctx.moveTo(0, originY - y_at_left * scale);
+            ctx.lineTo(width, originY - y_at_right * scale);
+            if (symbol.includes('>')) { // Shade above
+                ctx.lineTo(width, 0); ctx.lineTo(0, 0);
+            } else { // Shade below
+                ctx.lineTo(width, height); ctx.lineTo(0, height);
+            }
+            ctx.closePath();
+            ctx.fill();
+
+            // Line
+            ctx.strokeStyle = symbol.includes('=') ? '#1d4ed8' : '#b91c1c';
+            ctx.lineWidth = 2;
+            if (symbol === '<' || symbol === '>') { ctx.setLineDash([6, 6]); }
+            ctx.beginPath();
+            ctx.moveTo(0, originY - y_at_left * scale);
+            ctx.lineTo(width, originY - y_at_right * scale);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        function renderQuizForm() {
+            let html = '<form id="quizForm">';
+            currentQuestions.forEach(q => {
+                html += `<div class="mb-12"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.id.slice(1)}. ${q.title}</h2>`;
+                if (q.type === 'true-false') {
+                    html += `<p class="mb-4 text-center text-lg">${q.text}</p>
+                             <div class="flex justify-center gap-4">
+                                <label><input type="radio" name="${q.id}" value="true" class="mr-2"> True</label>
+                                <label><input type="radio" name="${q.id}" value="false" class="mr-2"> False</label>
+                             </div>`;
+                } else if (q.type === 'fill-table') {
+                    html += `<table class="data-table"><thead><tr><th>Standard Form</th><th>Slope-Intercept Form</th><th>Graph</th></tr></thead><tbody>`;
+                    q.rows.forEach((row, i) => {
+                        html += `<tr>
+                                    <td><input type="text" id="${q.id}_row${i}_std" class="w-full p-2 border rounded"></td>
+                                    <td><input type="text" id="${q.id}_row${i}_si" class="w-full p-2 border rounded"></td>
+                                    <td><canvas id="${q.id}_row${i}_canvas"></canvas></td>
+                                 </tr>`;
+                    });
+                    html += `</tbody></table>`;
+                } else if (q.type === 'graph-to-eq') {
+                     html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                                <canvas id="${q.id}_canvas" class="w-full max-w-sm mx-auto"></canvas>
+                                <div class="space-y-3">
+                                    ${q.options.map((opt, i) => `<label class="block p-2 border rounded"><input type="radio" name="${q.id}" value="${i}" class="mr-3">${opt.slopeIntercept}</label>`).join('')}
+                                </div>
+                              </div>`;
+                } else if (q.type === 'eq-to-graph') {
+                    html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">`;
+                    q.options.forEach((opt, i) => {
+                        html += `<label class="radio-label">
+                                <p class="font-bold mb-2">${String.fromCharCode(97+i)}</p>
+                                <canvas id="${q.id}_opt${i}_canvas"></canvas>
+                                <input type="radio" name="${q.id}" value="${i}" class="mt-2 h-5 w-5">
+                                </label>`;
+                    });
+                    html += `</div>`;
+                }
+                html += `</div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            
+            // Draw all canvases
+            currentQuestions.forEach(q => {
+                if (q.type === 'fill-table') q.rows.forEach((row, i) => drawInequalityGraph(`${q.id}_row${i}_canvas`, row));
+                if (q.type === 'graph-to-eq') drawInequalityGraph(`${q.id}_canvas`, q.correct);
+                if (q.type === 'eq-to-graph') q.options.forEach((opt, i) => drawInequalityGraph(`${q.id}_opt${i}_canvas`, opt));
+            });
+            
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalizeEq = str => {
+            let s = str.replace(/\s+/g, '').toLowerCase().replace('+-','-');
+             // Handle implicit 1s for slope, e.g. y=x+1 -> y=1x+1 or y=-x+1 -> y=-1x+1
+            s = s.replace(/([=<>])x/g, '$11x').replace(/([=<>])\-x/g, '$1-1x');
+            return s;
+        };
+
+        function parseStandardInequality(str) {
+            let s = str.replace(/\s+/g, '').toLowerCase();
+            const parts = s.split(/[<>]=?/);
+            if (parts.length !== 2) return null;
+
+            let left = parts[0];
+            const C = parseFloat(parts[1]);
+            const symbol = s.match(/[<>]=?/)[0];
+
+            let A = 0;
+            const xMatch = left.match(/(-?\d*\.?\d*)x/);
+            if (xMatch) {
+                const xCoeffStr = xMatch[1];
+                if (xCoeffStr === '' || xCoeffStr === '+') A = 1;
+                else if (xCoeffStr === '-') A = -1;
+                else A = parseFloat(xCoeffStr);
+                left = left.replace(xMatch[0], '');
+            }
+
+            let B = 0;
+            const yMatch = left.match(/(-?\d*\.?\d*)y/);
+            if (yMatch) {
+                const yCoeffStr = yMatch[1];
+                if (yCoeffStr === '' || yCoeffStr === '+') B = 1;
+                else if (yCoeffStr === '-') B = -1;
+                else B = parseFloat(yCoeffStr);
+            }
+            
+            if (isNaN(A) || isNaN(B) || isNaN(C) || !symbol) return null;
+
+            return { A, B, C, symbol };
+        }
+
+        function areInequalitiesEquivalent(userInput, correctIneq) {
+            const user = parseStandardInequality(userInput);
+            if (!user) return false;
+
+            const correct = { A: correctIneq.A, B: correctIneq.B, C: correctIneq.C, symbol: correctIneq.standardSymbol };
+
+            let k;
+            if (correct.A !== 0) k = user.A / correct.A;
+            else if (correct.B !== 0) k = user.B / correct.B;
+            else if (correct.C !== 0) k = user.C / correct.C;
+            else return user.C === 0;
+
+            if (k === 0 || isNaN(k)) return false;
+
+            const tolerance = 0.01;
+            if (Math.abs(user.B - correct.B * k) > tolerance || Math.abs(user.C - correct.C * k) > tolerance) {
+                return false;
+            }
+
+            let expectedUserSymbol = correct.symbol;
+            if (k < 0) {
+                expectedUserSymbol = expectedUserSymbol.replace('>', 'TEMP').replace('<', '>').replace('TEMP', '<');
+            }
+
+            return user.symbol === expectedUserSymbol;
+        }
+
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                if (q.type === 'true-false') {
+                    total++;
+                    const userInput = document.querySelector(`input[name="${q.id}"]:checked`)?.value;
+                    const isCorrect = (userInput === 'true') === q.answer;
+                    if (isCorrect) score++;
+                    resultsHTML += `<div class="result-item border-l-4 p-4 ${isCorrect?'c':'inc'}orrect"><p>Q1: Your answer ${userInput} was ${isCorrect?'correct':'incorrect'}.</p></div>`;
+                } else if (q.type === 'fill-table') {
+                    q.rows.forEach((row, i) => {
+                        total += 2; // two answers per row
+                        const stdInput = document.getElementById(`${q.id}_row${i}_std`).value;
+                        const siInput = document.getElementById(`${q.id}_row${i}_si`).value;
+
+                        const stdCorrect = areInequalitiesEquivalent(stdInput, row);
+                        const siCorrect = normalizeEq(siInput) === normalizeEq(row.slopeIntercept);
+
+                        if(stdCorrect) score++;
+                        if(siCorrect) score++;
+
+                        resultsHTML += `<div class="result-item border-l-4 p-4"><p>Q2 Row ${i+1}:</p>
+                            <p class="${stdCorrect?'':'text-red-500'}">Standard: ${stdInput} (Expected: ${row.standardForm})</p>
+                            <p class="${siCorrect?'':'text-red-500'}">Slope-Int: ${siInput} (Expected: ${row.slopeIntercept})</p></div>`;
+                    });
+                } else if (q.type === 'graph-to-eq' || q.type === 'eq-to-graph') {
+                    total++;
+                    const userChoiceIndex = document.querySelector(`input[name="${q.id}"]:checked`)?.value;
+                    const correctIndex = q.options.findIndex(opt => JSON.stringify(opt) === JSON.stringify(q.correct));
+                    const isCorrect = userChoiceIndex == correctIndex;
+                    if(isCorrect) score++;
+                     resultsHTML += `<div class="result-item border-l-4 p-4 ${isCorrect?'c':'inc'}orrect"><p>Q${q.id.slice(1)}: Your selection was ${isCorrect?'correct':'incorrect'}.</p></div>`;
+                }
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Functions and Relations Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-container {
+            transition: all 0.3s ease-in-out;
+        }
+        .result-item.correct {
+            background-color: #f0fdf4;
+            border-left-color: #22c55e;
+        }
+        .result-item.incorrect {
+            background-color: #fef2f2;
+            border-left-color: #ef4444;
+        }
+        .question-prefix {
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .radio-label, .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        .radio-label:has(input:checked), .checkbox-label:has(input:checked) {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+        .data-table {
+            border-collapse: collapse;
+            margin: 1rem auto;
+            min-width: 120px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: #f3f4f6;
+        }
+        .graph-description {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl quiz-container">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">3.1 Quiz Functions, Relations, and Domain/Range Retake</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 transition-transform transform hover:scale-105">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+        const getRandomIntExclude = (min, max, exclude) => {
+            let num;
+            do {
+                num = getRandomInt(min, max);
+            } while (num === exclude);
+            return num;
+        };
+
+        function generateQuizData() {
+            let questions = [];
+
+            // Q1: Discrete vs Continuous
+            const q1Scenarios = shuffle([
+                { text: "The number of touchdowns in a football game.", answer: "discrete" },
+                { text: "The amount of water in a tank.", answer: "continuous" },
+                { text: "The temperature throughout a day.", answer: "continuous" },
+                { text: "The number of chairs in a classroom.", answer: "discrete" },
+                { text: "The height of a growing tree.", answer: "continuous" },
+                { text: "The number of pages in a book.", answer: "discrete" }
+            ]).slice(0, 3);
+            questions.push({ type: 'multi-radio', id: 'q1', title: 'State whether each relationship described below represents discrete or continuous data.', scenarios: q1Scenarios });
+
+            // Q2: Independent vs Dependent
+            const q2Scenarios = shuffle([
+                { a: "The amount of money raised", b: "The number of tickets sold", answer: "The number of tickets sold" },
+                { a: "The thickness of a scrapbook", b: "The number of photos added", answer: "The number of photos added" },
+                { a: "The number of hours an air conditioner runs", b: "The cost of electricity to run an air conditioner", answer: "The number of hours an air conditioner runs" },
+                { a: "The number of miles that can be driven", b: "The number of gallons of gas in a car's tank", answer: "The number of gallons of gas in a car's tank" }
+            ]);
+            questions.push({ type: 'table-radio', id: 'q2', title: 'Circle the independent variable in each row of the table below.', scenarios: q2Scenarios });
+
+            // Q3: Domain, Range from graphs/tables
+            const q3Scenarios = [];
+            // Discrete points
+            const points1 = new Set();
+            while(points1.size < 4) { points1.add(`${getRandomInt(-5,5)},${getRandomInt(-5,5)}`); }
+            const discretePoints = Array.from(points1).map(p => p.split(',').map(Number));
+            const domain1 = `{${[...new Set(discretePoints.map(p => p[0]))].sort((a,b)=>a-b).join(',')}}`;
+            const range1 = `{${[...new Set(discretePoints.map(p => p[1]))].sort((a,b)=>a-b).join(',')}}`;
+            q3Scenarios.push({ id: 'q3a', type: 'discrete-points', data: discretePoints, answers: { domain: domain1, range: range1, type: 'discrete' } });
+            
+            // Continuous graph
+            const startX = getRandomInt(-8, -4); const endX = getRandomInt(3, 7);
+            const startY = getRandomInt(-5, 0); const endY = getRandomInt(1, 5);
+            q3Scenarios.push({ id: 'q3b', type: 'continuous-graph', data: {startX, endX, startY, endY}, answers: { domain: `[${startX},${endX}]`, range: `[${startY},${endY}]`, type: 'continuous' } });
+
+            // Table of values
+            const points2 = new Set();
+            while(points2.size < 4) { points2.add(`${getRandomInt(-8,8)},${getRandomInt(-8,8)}`); }
+            const tablePoints = Array.from(points2).map(p => p.split(',').map(Number));
+            const domain2 = `{${[...new Set(tablePoints.map(p => p[0]))].sort((a,b)=>a-b).join(',')}}`;
+            const range2 = `{${[...new Set(tablePoints.map(p => p[1]))].sort((a,b)=>a-b).join(',')}}`;
+            q3Scenarios.push({ id: 'q3c', type: 'table', data: tablePoints, answers: { domain: domain2, range: range2, type: 'discrete' } });
+            questions.push({ type: 'domain-range', id: 'q3', title: 'Use the following graphs to answer the questions below each graph.', scenarios: q3Scenarios });
+
+            // Q4: Is it a function? (Rewritten for accuracy)
+            const q4Relations = [];
+            
+            // A: Function (set)
+            const x_vals_a = new Set();
+            while(x_vals_a.size < 4) x_vals_a.add(getRandomInt(-5,5));
+            const p4a = Array.from(x_vals_a).map(x => `(${x},${getRandomInt(-5,5)})`);
+            q4Relations.push({ id:'q4a', type:'set', text:`{${p4a.join(', ')}}`, isFunction: true });
+            
+            // B: Not a function (set)
+            const x_b_repeat = getRandomInt(-5, 5);
+            const x_vals_b = new Set();
+            while(x_vals_b.size < 3) x_vals_b.add(getRandomIntExclude(-5, 5, x_b_repeat));
+            const p4b_unique = Array.from(x_vals_b).map(x => `(${x},${getRandomInt(-5,5)})`);
+            const p4b_repeat = [`(${x_b_repeat},${getRandomInt(-5,0)})`, `(${x_b_repeat},${getRandomInt(1,5)})`];
+            q4Relations.push({ id:'q4b', type:'set', text:`{${shuffle([...p4b_unique, ...p4b_repeat]).join(', ')}}`, isFunction: false });
+            
+            // C: Function (table)
+             const x_vals_c = new Set();
+            while(x_vals_c.size < 4) x_vals_c.add(getRandomInt(-5,5));
+            const p4c_data = Array.from(x_vals_c).map(x => [x, getRandomInt(-5,5)]);
+            q4Relations.push({ id:'q4c', type:'table', data: p4c_data, isFunction: true });
+
+            // D: Not a function (table)
+            const x_d_repeat = getRandomInt(0,5);
+            const x_vals_d = new Set();
+            while(x_vals_d.size < 3) x_vals_d.add(getRandomIntExclude(0, 5, x_d_repeat));
+            const p4d_unique = Array.from(x_vals_d).map(x => [x, getRandomInt(0,5)]);
+            const p4d_repeat = [[x_d_repeat, getRandomInt(0,2)], [x_d_repeat, getRandomInt(3,5)]];
+            q4Relations.push({ id:'q4d', type:'table', data: shuffle([...p4d_unique, ...p4d_repeat]), isFunction: false });
+
+            // E: Function (graph)
+            q4Relations.push({ id:'q4e', type:'graph', text: 'A parabola opening upwards, symmetric about the y-axis.', isFunction: true });
+            // F: Not a Function (graph)
+            q4Relations.push({ id:'q4f', type:'graph', text: 'A circle centered at (2, 1) with a radius of 3.', isFunction: false });
+            questions.push({ type: 'is-function', id: 'q4', title: 'Which of the following relation(s) is/are function(s). Circle all that apply.', relations: shuffle(q4Relations)});
+
+            currentQuestions = questions;
+            return questions;
+        }
+
+        function renderQuizForm(questions) {
+            let html = '<form id="quizForm">';
+            
+            questions.forEach(q => {
+                html += `<div class="mb-12"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.title}</h2>`;
+                if(q.type === 'multi-radio') {
+                    q.scenarios.forEach((s, i) => {
+                        html += `<div class="p-4 border-b"><p class="mb-2">${String.fromCharCode(97 + i)}) ${s.text}</p>
+                                 <div class="flex gap-4"><label class="radio-label"><input type="radio" name="${q.id}_${i}" value="discrete"> Discrete</label>
+                                 <label class="radio-label"><input type="radio" name="${q.id}_${i}" value="continuous"> Continuous</label></div></div>`;
+                    });
+                } else if (q.type === 'table-radio') {
+                    html += `<table class="w-full text-center"><thead><tr class="bg-gray-100">
+                             <th class="p-2 border">Variable A</th><th class="p-2 border">Variable B</th></tr></thead><tbody>`;
+                    q.scenarios.forEach((s, i) => {
+                        html += `<tr><td class="p-2 border"><label class="p-2 block cursor-pointer"><input type="radio" name="${q.id}_${i}" value="${s.a}" class="mr-2">${s.a}</label></td>
+                                     <td class="p-2 border"><label class="p-2 block cursor-pointer"><input type="radio" name="${q.id}_${i}" value="${s.b}" class="mr-2">${s.b}</label></td></tr>`;
+                    });
+                    html += `</tbody></table>`;
+                } else if (q.type === 'domain-range') {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8">`;
+                    q.scenarios.forEach(s => {
+                        html += `<div class="border rounded-lg p-4">`;
+                        if(s.type === 'discrete-points') {
+                             html += `<div class="graph-description">A graph consisting of the following points: <strong>{${s.data.map(p => `(${p[0]},${p[1]})`).join(', ')}}</strong></div>`;
+                        } else if(s.type === 'continuous-graph') {
+                             html += `<div class="graph-description">A continuous graph segment from <strong>(${s.data.startX}, ${s.data.startY})</strong> to <strong>(${s.data.endX}, ${s.data.endY})</strong>, including both endpoints.</div>`;
+                        } else if (s.type === 'table') {
+                            html += `<table class="data-table"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>
+                                     ${s.data.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('')}
+                                     </tbody></table>`;
+                        }
+                        html += `<div class="mt-4 space-y-2">
+                                    <div><label>Domain: </label><input type="text" id="${s.id}_domain" class="w-full p-2 border rounded"></div>
+                                    <div><label>Range: </label><input type="text" id="${s.id}_range" class="w-full p-2 border rounded"></div>
+                                    <div class="flex gap-4"><label class="radio-label"><input type="radio" name="${s.id}_type" value="discrete"> Discrete</label>
+                                    <label class="radio-label"><input type="radio" name="${s.id}_type" value="continuous"> Continuous</label></div>
+                                 </div></div>`;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'is-function') {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
+                    q.relations.forEach(r => {
+                        html += `<div class="checkbox-label"><input type="checkbox" id="${r.id}" class="mr-4 h-5 w-5">`;
+                        if(r.type === 'set' || r.type === 'graph') {
+                            html += `<label for="${r.id}">${r.text}</label>`;
+                        } else if (r.type === 'table') {
+                             html += `<label for="${r.id}"><table class="data-table"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>
+                                     ${r.data.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('')}
+                                     </tbody></table></label>`;
+                        }
+                        html += `</div>`;
+                    });
+                    html += `</div>`;
+                }
+                html += `</div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalizeSet = str => `{${str.replace(/[\s{}]/g, '').split(',').sort((a,b)=>a-b).join(',')}}`;
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0;
+            let resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                let questionResult = '';
+                if(q.type === 'multi-radio') {
+                    questionResult += `<div class="font-semibold">${q.title}</div>`;
+                    q.scenarios.forEach((s, i) => {
+                        total++;
+                        const userAnswer = document.querySelector(`input[name="${q.id}_${i}"]:checked`)?.value;
+                        const isCorrect = userAnswer === s.answer;
+                        if(isCorrect) score++;
+                        questionResult += `<div class="pl-4 pt-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">${s.text} - Your answer: ${userAnswer || 'none'}. ${!isCorrect ? `Correct: ${s.answer}` : ''}</div>`;
+                    });
+                } else if (q.type === 'table-radio') {
+                    questionResult += `<div class="font-semibold">${q.title}</div>`;
+                     q.scenarios.forEach((s, i) => {
+                        total++;
+                        const userAnswer = document.querySelector(`input[name="${q.id}_${i}"]:checked`)?.value;
+                        const isCorrect = userAnswer === s.answer;
+                        if(isCorrect) score++;
+                        questionResult += `<div class="pl-4 pt-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">Row ${i+1}: You chose '${userAnswer || 'none'}'. ${!isCorrect ? `Correct: '${s.answer}'` : ''}</div>`;
+                    });
+                } else if (q.type === 'domain-range') {
+                    questionResult += `<div class="font-semibold">${q.title}</div>`;
+                    q.scenarios.forEach(s => {
+                        total += 3;
+                        const domainUser = document.getElementById(`${s.id}_domain`).value;
+                        const rangeUser = document.getElementById(`${s.id}_range`).value;
+                        const typeUser = document.querySelector(`input[name="${s.id}_type"]:checked`)?.value;
+                        
+                        const domainCorrect = normalizeSet(domainUser) === normalizeSet(s.answers.domain) || domainUser.replace(/\s/g, '') === s.answers.domain;
+                        const rangeCorrect = normalizeSet(rangeUser) === normalizeSet(s.answers.range) || rangeUser.replace(/\s/g, '') === s.answers.range;
+                        const typeCorrect = typeUser === s.answers.type;
+
+                        if (domainCorrect) score++; if(rangeCorrect) score++; if(typeCorrect) score++;
+
+                        questionResult += `<div class="pl-4 pt-2">
+                            <p class="${domainCorrect ? 'text-green-700' : 'text-red-700'}">Domain: ${domainUser || 'none'} ${!domainCorrect ? `(Correct: ${s.answers.domain})` : ''}</p>
+                            <p class="${rangeCorrect ? 'text-green-700' : 'text-red-700'}">Range: ${rangeUser || 'none'} ${!rangeCorrect ? `(Correct: ${s.answers.range})` : ''}</p>
+                            <p class="${typeCorrect ? 'text-green-700' : 'text-red-700'}">Type: ${typeUser || 'none'} ${!typeCorrect ? `(Correct: ${s.answers.type})` : ''}</p>
+                        </div>`;
+                    });
+                } else if (q.type === 'is-function') {
+                    questionResult += `<div class="font-semibold">${q.title}</div>`;
+                    q.relations.forEach(r => {
+                        total++;
+                        const userAnswer = document.getElementById(r.id).checked;
+                        const isCorrect = userAnswer === r.isFunction;
+                        if (isCorrect) score++;
+                        questionResult += `<div class="pl-4 pt-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">Relation (${r.type}): You said ${userAnswer ? 'Function' : 'Not a function'}. That is ${isCorrect ? 'correct' : 'incorrect'}.</div>`;
+                    });
+                }
+                resultsHTML += `<div class="result-item border-l-4 p-4 rounded-md">${questionResult}</div>`;
+            });
+
+            const percentage = Math.round((score / total) * 100);
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm(currentQuestions);
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm(currentQuestions);
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm(currentQuestions);
+        });
+    </script>
+</body>
+</html>
+

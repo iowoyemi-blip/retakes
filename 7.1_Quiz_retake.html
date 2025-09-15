@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadratic Functions Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        canvas {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+        .data-table {
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            text-align: center;
+        }
+        .prop-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .prop-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+        }
+        .prop-table td:first-child {
+            font-weight: 500;
+            background-color: #f9fafb;
+        }
+        .choice-label {
+             display: flex;
+             align-items: center;
+             cursor: pointer;
+             padding: 0.25rem 0.75rem;
+             border-radius: 9999px;
+             border: 1px solid #d1d5db;
+             transition: all 0.2s;
+             font-size: 0.875rem;
+        }
+        .choice-label:has(input:checked) {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-6xl">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Quadratic Functions and Their Properties</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        function generateQuizData() {
+            let questions = [];
+
+            // Q1: Identify function type
+            const tables = [];
+            const m = getRandomInt(2, 5); const b = getRandomInt(1, 3);
+            tables.push({ id: 'q1a', type: 'linear', data: Array.from({length: 5}, (_, i) => ({x: i, y: m*i+b})) });
+            const base = getRandomInt(2, 3); const coeff = getRandomInt(1,3);
+            tables.push({ id: 'q1b', type: 'exponential', data: Array.from({length: 5}, (_, i) => ({x: i, y: coeff * (base**i)})) });
+            const a = getRandomInt(1, 3); const c = getRandomInt(1, 3);
+            tables.push({ id: 'q1c', type: 'quadratic', data: Array.from({length: 5}, (_, i) => ({x: i, y: a*i**2 + m*i + c})) });
+            questions.push({ type: 'identify-function', id: 'q1', title: 'What type of function can be used to model the data in the table below? Select the correct classification under each table.', tables: shuffle(tables) });
+
+            // Q2: Stomp Rocket
+            const landTime = getRandomInt(8, 10);
+            const a_rocket = -getRandomInt(14, 18);
+            const rocketFn = t => a_rocket * t * (t - landTime);
+            const vertex_t = landTime / 2;
+            const vertex_h = rocketFn(vertex_t);
+            const tableData = Array.from({length: landTime + 2}, (_, i) => ({t: i, h: rocketFn(i) >= 0 ? Math.round(rocketFn(i)) : null }));
+            questions.push({ type: 'rocket', id: 'q2', title: 'The table below shows the height of a stomp rocket at various times. The relationship between the height and time is quadratic.',
+                table: tableData, answers: { t_max: vertex_t, h_max: vertex_h, land: landTime }
+            });
+
+            // Q3 & Q4: Graphing and Analysis
+            const createParabola = (opensUp = true) => {
+                const a = opensUp ? getRandomInt(1, 2) : getRandomInt(-2, -1);
+                const h = getRandomInt(-4, 4);
+                const k_sqrt = getRandomInt(2, 4);
+                const k = -a * (k_sqrt ** 2);
+                const b = -2 * a * h;
+                const c = a * h**2 + k;
+                const x_int1 = h - k_sqrt;
+                const x_int2 = h + k_sqrt;
+                return {
+                    text: `y = ${a}x<sup>2</sup> ${b>=0?'+':'-'} ${Math.abs(b)}x ${c>=0?'+':'-'} ${Math.abs(c)}`,
+                    a, b, c, h, k,
+                    vertex: `(${h},${k})`,
+                    axis_of_symmetry: `x=${h}`,
+                    'min/max': opensUp ? 'Min' : 'Max',
+                    y_intercept: `(0,${c})`,
+                    x_intercepts: `(${Math.min(x_int1, x_int2)},0), (${Math.max(x_int1, x_int2)},0)`,
+                    concavity: opensUp ? 'Up' : 'Down',
+                    domain: '(-inf,inf)',
+                    range: opensUp ? `[${k},inf)` : `(-inf,${k}]`
+                };
+            };
+            questions.push({ type: 'graph-analysis', id: 'q3', title: 'Complete the given table to identify the important properties of the parabola.', data: createParabola(true) });
+            questions.push({ type: 'graph-analysis', id: 'q4', title: 'Complete the given table to identify the important properties of the parabola.', data: createParabola(false) });
+            
+            currentQuestions = questions;
+        }
+
+        function renderQuizForm() {
+            let html = '<form id="quizForm">';
+            currentQuestions.forEach(q => {
+                html += `<div class="mb-12"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.id.slice(1)}. ${q.title}</h2>`;
+                if(q.type === 'identify-function') {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-8">`;
+                    q.tables.forEach(t => {
+                        html += `<div class="text-center">
+                                    <table class="data-table"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>
+                                    ${t.data.map(p => `<tr><td>${p.x}</td><td>${p.y}</td></tr>`).join('')}</tbody></table>
+                                    <div class="flex justify-center gap-2 mt-3">
+                                        <label class="choice-label"><input type="radio" name="${t.id}" value="linear" class="sr-only"> Linear</label>
+                                        <label class="choice-label"><input type="radio" name="${t.id}" value="quadratic" class="sr-only"> Quadratic</label>
+                                        <label class="choice-label"><input type="radio" name="${t.id}" value="exponential" class="sr-only"> Exponential</label>
+                                    </div>
+                                 </div>`;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'rocket') {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                                <div class="space-y-4">
+                                    <p>a. Complete the table and then answer the following questions.</p>
+                                    <div><label class="font-medium">b. How many seconds did it take the rocket to reach the maximum height?</label><input id="${q.id}_tmax" class="w-full p-2 border rounded"></div>
+                                    <div><label class="font-medium">c. What was the rocket's maximum height?</label><input id="${q.id}_hmax" class="w-full p-2 border rounded"></div>
+                                    <div><label class="font-medium">d. How long did it take the rocket to land?</label><input id="${q.id}_land" class="w-full p-2 border rounded"></div>
+                                </div>
+                                <table class="data-table"><thead><tr><th>Time (secs)</th><th>Height (feet)</th></tr></thead><tbody>
+                                ${q.table.map(row => `<tr><td>${row.t}</td><td>${row.h !== null ? row.h : `<input id="${q.id}_t${row.t}" class="w-20 p-1 border rounded">`}</td></tr>`).join('')}
+                                </tbody></table>
+                             </div>`;
+                } else if (q.type === 'graph-analysis') {
+                    const props = ['Vertex', 'Axis of Symmetry', 'Min/Max', 'y-intercept', 'x-intercepts', 'Concavity', 'Domain', 'Range'];
+                    html += `<h3 class="text-center font-bold text-lg mb-4">${q.data.text}</h3>
+                             <div class="flex justify-center">
+                                <div class="w-full max-w-md">
+                                    <table class="prop-table"><tbody>
+                                    ${props.map(p => `<tr><td>${p}</td><td><input id="${q.id}_${p.toLowerCase().replace(/\s|\//g,'_')}" class="w-full p-1 border rounded"></td></tr>`).join('')}
+                                    </tbody></table>
+                                </div>
+                             </div>`;
+                }
+                html += `</div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+        
+        const normalize = str => (str || '').replace(/\s+/g, '').toLowerCase().replace('infinity', 'inf');
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                if (q.type === 'identify-function') {
+                    q.tables.forEach(t => {
+                        total++;
+                        const userInput = document.querySelector(`input[name="${t.id}"]:checked`)?.value || '';
+                        const isCorrect = userInput === t.type;
+                        if(isCorrect) score++;
+                        resultsHTML += `<div class="p-2 border-l-4 ${isCorrect?'border-green-500':'border-red-500'}">Q1 Table (${t.id}): Your answer <strong>${userInput}</strong>. Correct: <strong>${t.type}</strong></div>`;
+                    });
+                } else if (q.type === 'rocket') {
+                    let rocketScore = 0;
+                    q.table.forEach(row => { if (row.h === null) {
+                        total++;
+                        const userInput = document.getElementById(`${q.id}_t${row.t}`).value;
+                        const correctH = Math.round(q.answers.h_max - 16 * (row.t - q.answers.t_max)**2);
+                        if (userInput == correctH) { score++; rocketScore++; }
+                    }});
+                    const user = {
+                        t_max: document.getElementById(`${q.id}_tmax`).value,
+                        h_max: document.getElementById(`${q.id}_hmax`).value,
+                        land: document.getElementById(`${q.id}_land`).value
+                    };
+                    total += 3;
+                    const tMaxCorrect = user.t_max == q.answers.t_max;
+                    const hMaxCorrect = user.h_max == q.answers.h_max;
+                    const landCorrect = user.land == q.answers.land;
+                    if(tMaxCorrect) score++; if(hMaxCorrect) score++; if(landCorrect) score++;
+                    resultsHTML += `<div class="p-2 border-l-4"><p>Q2 Rocket:</p>
+                        <p>Table Completion: You got ${rocketScore} of ${q.table.filter(r=>r.h===null).length} correct.</p>
+                        <p class="${tMaxCorrect?'':'text-red-500'}">Time to Max Height: ${user.t_max} (Correct: ${q.answers.t_max})</p>
+                        <p class="${hMaxCorrect?'':'text-red-500'}">Max Height: ${user.h_max} (Correct: ${q.answers.h_max})</p>
+                        <p class="${landCorrect?'':'text-red-500'}">Landing Time: ${user.land} (Correct: ${q.answers.land})</p></div>`;
+                } else if (q.type === 'graph-analysis') {
+                     const props = ['vertex', 'axis_of_symmetry', 'min/max', 'y_intercept', 'x_intercepts', 'concavity', 'domain', 'range'];
+                     total += props.length;
+                     let analysisHTML = `<div class="p-2 border-l-4"><p>Q${q.id.slice(1)} Analysis: ${q.data.text}</p>`;
+                     props.forEach(p_key => {
+                        const key_norm = p_key.replace(/\s|\//g,'_');
+                        const userInput = document.getElementById(`${q.id}_${key_norm}`).value;
+                        const correctAns = q.data[p_key.replace(/\s/g,'_')];
+                        const isCorrect = normalize(userInput) === normalize(correctAns);
+                        if(isCorrect) score++;
+                        analysisHTML += `<p class="${isCorrect?'':'text-red-500'}">${p_key}: ${userInput} (Correct: ${correctAns})</p>`;
+                     });
+                     analysisHTML += `</div>`;
+                     resultsHTML += analysisHTML;
+                }
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+

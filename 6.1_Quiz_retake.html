@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polynomial Operations Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Introduction to Polynomials</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime. Use the ^ character for exponents in your answers (e.g., 3x^2).</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max, allowZero = false) => {
+            let num;
+            do {
+                num = Math.floor(Math.random() * (max - min + 1)) + min;
+            } while (num === 0 && !allowZero);
+            return num;
+        };
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        // --- Helper to format a term (e.g., 5, 2 -> "+5x^2") ---
+        const formatTerm = (coeff, exp, isFirst = false) => {
+            if (coeff === 0) return '';
+            const sign = isFirst ? (coeff < 0 ? '-' : '') : (coeff < 0 ? ' - ' : ' + ');
+            const absCoeff = Math.abs(coeff);
+            const coeffStr = absCoeff === 1 && exp > 0 ? '' : absCoeff;
+            const xStr = exp > 0 ? 'x' : '';
+            const expStr = exp > 1 ? `<sup>${exp}</sup>` : '';
+            return `${sign}${coeffStr}${xStr}${expStr}`;
+        };
+
+        // --- Helper to format a polynomial from a coefficient map ---
+        const formatPoly = (polyMap) => {
+            const exps = Object.keys(polyMap).map(Number).sort((a, b) => b - a);
+            if (exps.length === 0) return '0';
+            let result = '';
+            exps.forEach((exp, i) => {
+                result += formatTerm(polyMap[exp], exp, i === 0);
+            });
+            return result.trim();
+        };
+
+        function generateQuizData() {
+            let questions = [];
+
+            // --- Q1: Classification ---
+            const degreeNames = ['Constant', 'Linear', 'Quadratic', 'Cubic', 'Quartic'];
+            const termNames = ['Monomial', 'Binomial', 'Trinomial'];
+            const getClassification = (degree, terms) => {
+                const dName = degreeNames[degree] || `Degree ${degree}`;
+                const tName = termNames[terms - 1] || `${terms}-term Polynomial`;
+                return `${dName} ${tName}`;
+            };
+            
+            const p1a = { 2: getRandomInt(-9, -2), 1: getRandomInt(2, 8), 0: getRandomInt(2, 8) };
+            const p1b = { 3: getRandomInt(2, 8), 2: getRandomInt(2, 8), 1: getRandomInt(-8, -2), 0: getRandomInt(2, 8) };
+            const p1c = { 1: -1, 0: getRandomInt(2, 9) };
+            
+            questions.push({ type: 'classify', id: 'q1', title: 'Rewrite each polynomial in standard form. Then, identify the leading coefficient, the degree, and the number of terms and classify the polynomial.',
+                subQuestions: [
+                    { id: 'q1a', text: shuffle(Object.entries(p1a).map(([exp, coeff]) => formatTerm(coeff, exp, true))).join(' + ').replace(/\+ -/g, '- '), 
+                      answers: { std: formatPoly(p1a), lc: p1a[2], deg: 2, terms: 3, class: getClassification(2, 3) } },
+                    { id: 'q1b', text: shuffle(Object.entries(p1b).map(([exp, coeff]) => formatTerm(coeff, exp, true))).join(' + ').replace(/\+ -/g, '- '), 
+                      answers: { std: formatPoly(p1b), lc: p1b[3], deg: 3, terms: 4, class: getClassification(3, 4) } },
+                    { id: 'q1c', text: shuffle(Object.entries(p1c).map(([exp, coeff]) => formatTerm(coeff, exp, true))).join(' + ').replace(/\+ -/g, '- '), 
+                      answers: { std: formatPoly(p1c), lc: p1c[1], deg: 1, terms: 2, class: getClassification(1, 2) } }
+                ]
+            });
+            
+            // --- Q2: Add/Subtract ---
+            const add = (p1, p2) => { const res = {...p1}; for(const k in p2) res[k] = (res[k]||0)+p2[k]; return res; };
+            const sub = (p1, p2) => { const res = {...p1}; for(const k in p2) res[k] = (res[k]||0)-p2[k]; return res; };
+            
+            const p2a1 = {2:1, 1:-7, 0:-6}, p2a2 = {2:-5, 1:-8, 0:10};
+            const p2b1 = {2:1, 1:-4, 0:-5}, p2b2 = {2:3, 1:-2, 0:-1};
+            const p2c1 = {3:-4, 2:2, 1:3, 0:-5}, p2c2 = {3:7, 2:3, 1:3, 0:10};
+            const p2d1 = {3:8, 2:2, 0:-5, 1:6}, p2d2 = {3:-1, 2:1, 1:1, 0:-1};
+
+            questions.push({ type: 'add-sub', id: 'q2', title: 'Add/subtract and write your answer in standard form:',
+                subQuestions: [
+                    { id: 'q2a', text: `(${formatPoly(p2a1)}) + (${formatPoly(p2a2)})`, answer: formatPoly(add(p2a1, p2a2)) },
+                    { id: 'q2b', text: `(${formatPoly(p2b1)}) - (${formatPoly(p2b2)})`, answer: formatPoly(sub(p2b1, p2b2)) },
+                    { id: 'q2c', text: `(${formatPoly(p2c1)}) + (${formatPoly(p2c2)})`, answer: formatPoly(add(p2c1, p2c2)) },
+                    { id: 'q2d', text: `(${formatPoly(p2d1)}) - (${formatPoly(p2d2)})`, answer: formatPoly(sub(p2d1, p2d2)) }
+                ]
+            });
+            
+            // --- Q3: Multiply ---
+            const mul = (p1, p2) => {
+                const res = {};
+                for (const e1 in p1) { for (const e2 in p2) {
+                    const newExp = Number(e1) + Number(e2);
+                    res[newExp] = (res[newExp] || 0) + p1[e1] * p2[e2];
+                }}
+                return res;
+            };
+            
+            const p3a1={1:getRandomInt(2,5)}, p3a2={1:1,0:getRandomInt(-5,-2)};
+            const p3b1={1:1,0:getRandomInt(2,5)}, p3b2={1:1,0:getRandomInt(-8,-5)};
+            const p3c1={1:getRandomInt(2,5),0:getRandomInt(-5,-2)}, p3c2={1:getRandomInt(2,5),0:-1};
+            const p3d1={1:1,0:getRandomInt(-5,-2)};
+            const p3e1={1:-getRandomInt(2,5)}, p3e2={2:1,1:-getRandomInt(2,5),0:getRandomInt(2,5)};
+            const p3f1={1:getRandomInt(2,5),0:-1}, p3f2={2:1,1:-getRandomInt(2,5),0:-getRandomInt(2,7)};
+            const p3g1={2:getRandomInt(2,5),1:-getRandomInt(2,5),0:-2}, p3g2={2:1,1:-getRandomInt(2,5),0:2};
+
+            questions.push({ type: 'multiply', id: 'q3', title: 'Multiply and write your answer in standard form:',
+                subQuestions: [
+                    { id: 'q3a', text: `${formatPoly(p3a1)}(${formatPoly(p3a2)})`, answer: formatPoly(mul(p3a1, p3a2)) },
+                    { id: 'q3b', text: `(${formatPoly(p3b1)})(${formatPoly(p3b2)})`, answer: formatPoly(mul(p3b1, p3b2)) },
+                    { id: 'q3c', text: `(${formatPoly(p3c1)})(${formatPoly(p3c2)})`, answer: formatPoly(mul(p3c1, p3c2)) },
+                    { id: 'q3d', text: `(${formatPoly(p3d1)})^2`, answer: formatPoly(mul(p3d1, p3d1)) },
+                    { id: 'q3e', text: `${formatPoly(p3e1)}(${formatPoly(p3e2)})`, answer: formatPoly(mul(p3e1, p3e2)) },
+                    { id: 'q3f', text: `(${formatPoly(p3f1)})(${formatPoly(p3f2)})`, answer: formatPoly(mul(p3f1, p3f2)) },
+                    { id: 'q3g', text: `(${formatPoly(p3g1)})(${formatPoly(p3g2)})`, answer: formatPoly(mul(p3g1, p3g2)) }
+                ]
+            });
+            
+            currentQuestions = questions;
+        }
+        
+        function renderQuizForm() {
+            let html = '<form id="quizForm">';
+            currentQuestions.forEach(q => {
+                html += `<div class="mb-10"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.id.slice(1)}. ${q.title}</h2>`;
+                if(q.type === 'classify') {
+                     html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-8">`;
+                     q.subQuestions.forEach((sq, i) => {
+                         html += `<div class="p-4 border rounded-lg">
+                                    <p class="font-mono text-center mb-4 text-lg">${sq.text}</p>
+                                    <div class="space-y-2 text-sm">
+                                        <div><label>Standard form:</label><input id="${sq.id}_std" class="w-full p-1 border rounded"></div>
+                                        <div><label>Leading coefficient:</label><input id="${sq.id}_lc" class="w-full p-1 border rounded"></div>
+                                        <div><label>Degree:</label><input id="${sq.id}_deg" class="w-full p-1 border rounded"></div>
+                                        <div><label>Number of terms:</label><input id="${sq.id}_terms" class="w-full p-1 border rounded"></div>
+                                        <div><label>Polynomial classification:</label><input id="${sq.id}_class" class="w-full p-1 border rounded"></div>
+                                    </div>
+                                  </div>`;
+                     });
+                     html += `</div>`;
+                } else {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">`;
+                    q.subQuestions.forEach((sq, i) => {
+                        html += `<div><label for="${sq.id}" class="block mb-1 font-mono">${String.fromCharCode(97+i)}) ${sq.text}</label>
+                                 <input type="text" id="${sq.id}" class="w-full p-2 border rounded-lg"></div>`;
+                    });
+                    html += `</div>`;
+                }
+                html += `</div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalizePoly = str => {
+            let s = str.replace(/\s+/g, '').replace(/\+-/g, '-');
+            // Normalize superscripts from the answer key to caret notation to match user input
+            s = s.replace(/<sup>/g, '^').replace(/<\/sup>/g, '');
+            // Handle implicit 1s for coefficients, e.g., x^2 -> 1x^2, -x -> -1x
+            s = s.replace(/(^|[-+])x/g, '$11x');
+            // Remove ^1, which is redundant for comparison
+            s = s.replace(/\^1/g, '');
+            return s;
+        }
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                 if (q.type === 'classify') {
+                     q.subQuestions.forEach(sq => {
+                        total += 5;
+                        const user = {
+                            std: document.getElementById(`${sq.id}_std`).value,
+                            lc: document.getElementById(`${sq.id}_lc`).value.trim(),
+                            deg: document.getElementById(`${sq.id}_deg`).value.trim(),
+                            terms: document.getElementById(`${sq.id}_terms`).value.trim(),
+                            class: document.getElementById(`${sq.id}_class`).value.trim().toLowerCase()
+                        };
+                        const correct = sq.answers;
+                        const stdCorrect = normalizePoly(user.std) === normalizePoly(correct.std);
+                        const lcCorrect = user.lc == correct.lc;
+                        const degCorrect = user.deg == correct.deg;
+                        const termsCorrect = user.terms == correct.terms;
+                        const classCorrect = user.class.replace('-term polynomial', ' polynomial') === correct.class.toLowerCase().replace('-term polynomial', ' polynomial');
+                        
+                        if(stdCorrect) score++; if(lcCorrect) score++; if(degCorrect) score++; if(termsCorrect) score++; if(classCorrect) score++;
+                        
+                        let resultHTML = `<div class="p-4 border-l-4"><p class="font-bold">${sq.text}</p>`;
+                        resultHTML += `<p class="${stdCorrect?'':'text-red-500'}">Standard: ${user.std} (Correct: ${correct.std})</p>`;
+                        resultHTML += `<p class="${lcCorrect?'':'text-red-500'}">LC: ${user.lc} (Correct: ${correct.lc})</p>`;
+                        resultHTML += `<p class="${degCorrect?'':'text-red-500'}">Degree: ${user.deg} (Correct: ${correct.deg})</p>`;
+                        resultHTML += `<p class="${termsCorrect?'':'text-red-500'}">Terms: ${user.terms} (Correct: ${correct.terms})</p>`;
+                        resultHTML += `<p class="${classCorrect?'':'text-red-500'}">Class: ${user.class} (Correct: ${correct.class})</p>`;
+                        resultHTML += `</div>`;
+                        resultsHTML += resultHTML;
+                     });
+                 } else { // Add/Sub/Multiply
+                     q.subQuestions.forEach(sq => {
+                        total++;
+                        const userInput = document.getElementById(sq.id).value;
+                        const isCorrect = normalizePoly(userInput) === normalizePoly(sq.answer);
+                        if (isCorrect) score++;
+                         resultsHTML += `<div class="p-4 border-l-4 ${isCorrect?'border-green-500 bg-green-50':'border-red-500 bg-red-50'}">
+                            <p>${sq.text}</p>
+                            <p>Your Answer: ${userInput || 'none'}</p>
+                            ${!isCorrect ? `<p>Correct Answer: ${sq.answer}</p>` : ''}
+                        </div>`;
+                     });
+                 }
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+
+

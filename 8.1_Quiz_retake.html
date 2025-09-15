@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exponential Functions Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .data-table {
+            border-collapse: collapse;
+            margin: 0 auto 1rem;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            text-align: center;
+        }
+        .choice-label {
+             display: flex;
+             align-items: center;
+             cursor: pointer;
+             padding: 0.25rem 0.75rem;
+             border-radius: 9999px;
+             border: 1px solid #d1d5db;
+             transition: all 0.2s;
+             font-size: 0.875rem;
+        }
+        .choice-label:has(input:checked) {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Exponential Functions and Applications</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime. Use '^' for exponents (e.g., y=5*(2)^x).</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        function generateQuizData() {
+            let questions = [];
+
+            // Q1: Identify from tables
+            const tables = [];
+            // Decay
+            const a1 = getRandomInt(4, 6) * 16; const b1_den = shuffle([2, 4])[0];
+            tables.push({ id: 'q1a', a: a1, b_num: 1, b_den: b1_den, data: Array.from({length: 4}, (_, i) => ({x: i, y: a1 * ((1/b1_den)**i)})) });
+            // Growth (decimal)
+            const a2 = getRandomInt(2, 4) / 10; const b2 = getRandomInt(3, 5);
+            tables.push({ id: 'q1b', a: a2, b_num: b2, b_den: 1, data: Array.from({length: 4}, (_, i) => ({x: i, y: a2 * (b2**i)})) });
+            // Growth (integer)
+            const a3 = getRandomInt(3, 6); const b3 = getRandomInt(2, 4);
+            tables.push({ id: 'q1c', a: a3, b_num: b3, b_den: 1, data: Array.from({length: 4}, (_, i) => ({x: i, y: a3 * (b3**i)})) });
+            questions.push({ type: 'tables', id: 'q1', title: 'Use patterns from each given table to identify a and b and write an exponential function, y = ab<sup>x</sup>, for each data set.', tables: shuffle(tables) });
+
+            // Q2: Growth/Decay from equation
+            const q2_eqs = [];
+            const r_growth = getRandomInt(2, 15) / 100;
+            q2_eqs.push({ id: 'q2a', text: `y = ${getRandomInt(100,200)}(${1+r_growth})<sup>x</sup>`, type: 'growth', percent: r_growth * 100 });
+            const r_decay = getRandomInt(5, 40) / 100;
+            q2_eqs.push({ id: 'q2b', text: `y = ${getRandomInt(20,50)}(${1-r_decay})<sup>x</sup>`, type: 'decay', percent: r_decay * 100 });
+            questions.push({ type: 'growth-decay', id: 'q2', title: 'Given the following exponential functions, identify whether the change represents growth or decay, and determine the percentage rate of increase or decrease.', equations: q2_eqs });
+
+            // Q3 & Q4: Write equation
+            const p3 = getRandomInt(18, 25) * 1000; const r3 = (getRandomInt(5, 120) / 10).toFixed(1); const t3 = getRandomInt(4, 8);
+            questions.push({ type: 'write-eq', id: 'q3', text: `A new car is purchased for $${p3.toLocaleString()}. The value of the car depreciates at a rate of ${r3}% per year. Write an equation that represents the value of the car after ${t3} years.`, answer: `y=${p3}(${1 - r3/100})^${t3}` });
+            const p4 = getRandomInt(400, 600); const r4 = getRandomInt(2, 6); const t4 = getRandomInt(5, 10);
+            questions.push({ type: 'write-eq', id: 'q4', text: `Ella has a collection of vintage action figures that is worth $${p4}. If the collection appreciates at a rate of ${r4}% per year, write an equation that represents the value of the collection after ${t4} years.`, answer: `y=${p4}(${1 + r4/100})^${t4}` });
+
+            // Q5, 6, 7: Solve
+            const p5 = getRandomInt(400, 500); const r5 = (getRandomInt(80, 150) / 10).toFixed(1); const t5 = getRandomInt(15, 20);
+            questions.push({ type: 'solve', id: 'q5', text: `An element with mass ${p5} grams decays by ${r5}% per minute. How much of the element is remaining after ${t5} minutes, to the nearest 10th of a gram?`, answer: (p5 * ((1 - r5/100)**t5)).toFixed(1) });
+            const p6 = getRandomInt(20, 30) * 100; const r6 = getRandomInt(3, 6); const t6 = getRandomInt(3, 5);
+            questions.push({ type: 'solve', id: 'q6', text: `You deposit $${p6.toLocaleString()} in your high-yield savings account that pays ${r6}% annual interest. Find the balance after ${t6} years.`, answer: (p6 * ((1 + r6/100)**t6)).toFixed(2) });
+            const p7 = getRandomInt(10, 15) * 10; const r7 = getRandomInt(10, 15); const t7 = getRandomInt(3, 5);
+            questions.push({ type: 'solve', id: 'q7', text: `You drink a beverage with ${p7} mg of caffeine. Each hour, the caffeine in your system decreases by about ${r7}%. How much caffeine will be left in your system after ${t7} hours?`, answer: (p7 * ((1 - r7/100)**t7)).toFixed(2) });
+
+            currentQuestions = questions;
+        }
+
+        function renderQuizForm() {
+            let html = '<form id="quizForm">';
+            currentQuestions.forEach((q, i) => {
+                html += `<div class="mb-10"><h2 class="text-xl font-semibold text-gray-700 mb-6">${i + 1}. ${q.title || q.text}</h2>`;
+                if (q.type === 'tables') {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-3 gap-8">`;
+                    q.tables.forEach(t => {
+                        html += `<div class="text-center">
+                                    <table class="data-table"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>
+                                    ${t.data.map(p => `<tr><td>${p.x}</td><td>${p.y.toFixed(4).replace(/\.?0+$/,"")}</td></tr>`).join('')}</tbody></table>
+                                    <div class="space-y-2 text-left px-4">
+                                        <div><label>a = </label><input id="${t.id}_a" class="w-full p-1 border rounded"></div>
+                                        <div><label>b = </label><input id="${t.id}_b" class="w-full p-1 border rounded"></div>
+                                        <div><label>Equation: </label><input id="${t.id}_eq" class="w-full p-1 border rounded"></div>
+                                    </div>
+                                 </div>`;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'growth-decay') {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8">`;
+                    q.equations.forEach((eq, j) => {
+                        html += `<div><p class="font-mono text-lg text-center mb-4">${String.fromCharCode(97+j)}) ${eq.text}</p>
+                                 <div class="flex justify-center gap-2">
+                                     <label class="choice-label"><input type="radio" name="${eq.id}_type" value="growth" class="sr-only"> Growth</label>
+                                     <label class="choice-label"><input type="radio" name="${eq.id}_type" value="decay" class="sr-only"> Decay</label>
+                                 </div>
+                                 <div class="mt-2"><label>Percent increase/decrease value: </label><input id="${eq.id}_percent" class="w-full p-1 border rounded"></div>
+                                 </div>`;
+                    });
+                    html += `</div>`;
+                } else { // write-eq and solve
+                    html += `<input type="text" id="${q.id}" class="w-full p-2 border rounded-lg">`;
+                }
+                html += `</div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalizeEq = str => str.replace(/\s+/g, '').toLowerCase().replace('+-','-');
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                if (q.type === 'tables') {
+                    q.tables.forEach(t => {
+                        total += 3;
+                        const user = {
+                            a: document.getElementById(`${t.id}_a`).value.trim(),
+                            b: document.getElementById(`${t.id}_b`).value.trim(),
+                            eq: document.getElementById(`${t.id}_eq`).value
+                        };
+                        const correct = { a: t.a, b: t.b_den === 1 ? t.b_num.toString() : `${t.b_num}/${t.b_den}`, b_dec: (t.b_num / t.b_den).toString() };
+                        correct.eq = `y=${correct.a}(${correct.b})^x`;
+                        const aCorrect = user.a == correct.a;
+                        const bCorrect = user.b === correct.b || user.b === correct.b_dec;
+                        const eqCorrect = normalizeEq(user.eq) === normalizeEq(correct.eq) || normalizeEq(user.eq) === normalizeEq(`y=${correct.a}(${correct.b_dec})^x`);
+
+                        if(aCorrect) score++; if(bCorrect) score++; if(eqCorrect) score++;
+
+                        resultsHTML += `<div class="p-2 border-l-4"><p class="font-bold">Table (${t.id}):</p>
+                            <p class="${aCorrect?'':'text-red-500'}">a: ${user.a} (Correct: ${correct.a})</p>
+                            <p class="${bCorrect?'':'text-red-500'}">b: ${user.b} (Correct: ${correct.b})</p>
+                            <p class="${eqCorrect?'':'text-red-500'}">Eq: ${user.eq} (Correct: ${correct.eq})</p></div>`;
+                    });
+                } else if (q.type === 'growth-decay') {
+                    q.equations.forEach(eq => {
+                        total += 2;
+                        const userType = document.querySelector(`input[name="${eq.id}_type"]:checked`)?.value;
+                        const userPercent = document.getElementById(`${eq.id}_percent`).value.replace('%','').trim();
+                        const typeCorrect = userType === eq.type;
+                        const percentCorrect = userPercent == eq.percent;
+                        if(typeCorrect) score++; if(percentCorrect) score++;
+                        resultsHTML += `<div class="p-2 border-l-4"><p class="font-bold">Equation ${eq.id}:</p>
+                            <p class="${typeCorrect?'':'text-red-500'}">Type: ${userType||'none'} (Correct: ${eq.type})</p>
+                            <p class="${percentCorrect?'':'text-red-500'}">Percent: ${userPercent}% (Correct: ${eq.percent}%)</p></div>`;
+                    });
+                } else { // write-eq and solve
+                    total++;
+                    const userInput = document.getElementById(q.id).value;
+                    const isCorrect = normalizeEq(userInput) === normalizeEq(q.answer);
+                    if (isCorrect) score++;
+                     resultsHTML += `<div class="p-4 border-l-4 ${isCorrect?'border-green-500 bg-green-50':'border-red-500 bg-red-50'}">
+                        <p class="font-semibold">${q.id.slice(1)}. ${q.text}</p>
+                        <p>Your Answer: ${userInput || '<em>none</em>'}</p>
+                        ${!isCorrect ? `<p>Correct Answer: ${q.answer}</p>` : ''}
+                    </div>`;
+                }
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-500');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Systems of Linear Inequalities Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        canvas {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+        .radio-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+        }
+        .radio-label:has(input:checked) {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+        .system-brace {
+            font-size: 3rem;
+            font-family: serif;
+            margin-right: 0.5rem;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-6xl">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Systems of Linear Inequalities</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        function createInequality() {
+            const m_num = getRandomInt(-3, 3) || 1;
+            const m_den = getRandomInt(1, 3);
+            const b = getRandomInt(-4, 4);
+            const symbols = ['<', '>', '<=', '>='];
+            const symbol = shuffle(symbols)[0];
+            return { m_num, m_den, b, symbol };
+        }
+
+        function getSystemText(system) {
+            return system.map(ineq => {
+                const m_str = (num, den) => den === 1 ? `${num}` : `${num}/${den}`;
+                const b_str = (b) => b === 0 ? '' : (b > 0 ? ` + ${b}` : ` - ${Math.abs(b)}`);
+                return `y ${ineq.symbol} ${m_str(ineq.m_num, ineq.m_den)}x${b_str(ineq.b)}`;
+            }).join('<br>');
+        }
+
+        function generateQuizData() {
+            let questions = [];
+
+            // Q1: Match graph from system
+            const sys1_correct = [createInequality(), createInequality()];
+            const sys1_options = shuffle([
+                sys1_correct,
+                [{...sys1_correct[0], symbol: shuffle( ['<', '>', '<=', '>='].filter(s => s !== sys1_correct[0].symbol) )[0]}, sys1_correct[1]],
+                [sys1_correct[0], {...sys1_correct[1], b: -sys1_correct[1].b || 1}],
+                [{...sys1_correct[0], m_num: -sys1_correct[0].m_num}, {...sys1_correct[1], symbol: shuffle( ['<', '>', '<=', '>='].filter(s => s !== sys1_correct[1].symbol) )[0]}]
+            ]);
+            questions.push({ type: 'match-graph', id: 'q1', title: 'Given the following system of linear inequalities, which graph shows the correct solution set?',
+                systemText: getSystemText(sys1_correct), options: sys1_options, answer: sys1_correct
+            });
+
+            // Q2: Which point lies in solution set
+            const sys2 = [createInequality(), createInequality()];
+            const isSolution = (pt, ineq) => {
+                const y_line = (ineq.m_num / ineq.m_den) * pt.x + ineq.b;
+                switch (ineq.symbol) {
+                    case '<': return pt.y < y_line;
+                    case '>': return pt.y > y_line;
+                    case '<=': return pt.y <= y_line;
+                    case '>=': return pt.y >= y_line;
+                }
+            };
+            let correctPt, incorrectPts = [];
+            while (!correctPt) {
+                let pt = { x: getRandomInt(-5, 5), y: getRandomInt(-5, 5) };
+                if (isSolution(pt, sys2[0]) && isSolution(pt, sys2[1])) correctPt = pt;
+            }
+             while (incorrectPts.length < 3) {
+                let pt = { x: getRandomInt(-5, 5), y: getRandomInt(-5, 5) };
+                if (!isSolution(pt, sys2[0]) || !isSolution(pt, sys2[1])) incorrectPts.push(pt);
+            }
+            questions.push({ type: 'point-in-set', id: 'q2', title: 'Which of the following points lie in the solution set of the system of inequalities graphed below?',
+                system: sys2, options: shuffle([correctPt, ...incorrectPts]), answer: correctPt
+            });
+            
+            // Q3: Which system represents the graph
+            const sys3_correct = [createInequality(), createInequality()];
+            const sys3_options = shuffle([
+                sys3_correct,
+                [{...sys3_correct[0], symbol: shuffle( ['<', '>', '<=', '>='].filter(s => s !== sys3_correct[0].symbol) )[0]}, sys3_correct[1]],
+                [sys3_correct[0], {...sys3_correct[1], symbol: shuffle( ['<', '>', '<=', '>='].filter(s => s !== sys3_correct[1].symbol) )[0]}],
+                [{...sys3_correct[0], b: -sys3_correct[0].b || 1}, {...sys3_correct[1], m_num: -sys3_correct[1].m_num}],
+            ]);
+            questions.push({ type: 'graph-to-system', id: 'q3', title: 'Which system of inequalities represents the graph below?',
+                system: sys3_correct, options: sys3_options, answer: sys3_correct
+            });
+            
+            // Q4: Write the system
+            questions.push({ type: 'write-system', id: 'q4', title: 'Write the system of inequalities for each graph:',
+                systems: [ [createInequality(), createInequality()], [createInequality(), createInequality()] ]
+            });
+
+            // Q5: Is the point a solution
+            const sys5 = [createInequality(), createInequality()];
+            const pt5 = { x: getRandomInt(-5, 5), y: getRandomInt(-5, 5) };
+            const answer5 = isSolution(pt5, sys5[0]) && isSolution(pt5, sys5[1]);
+            questions.push({ type: 'is-solution', id: 'q5', title: `Is the point (${pt5.x}, ${pt5.y}) a solution to the system?`,
+                systemText: getSystemText(sys5), answer: answer5
+            });
+
+
+            currentQuestions = questions;
+        }
+
+        function drawSystemInequalityGraph(canvasId, systemData) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            // Adjusted dimensions to ensure axes align with grid lines
+            const { width, height, scale, originX, originY } = { width: 240, height: 240, scale: 20, originX: 120, originY: 120 };
+            canvas.width = width; canvas.height = height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+            for (let i = scale; i < width; i+=scale) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke(); }
+            for (let i = scale; i < height; i+=scale) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke(); }
+            ctx.strokeStyle = '#374151'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(width, originY); ctx.moveTo(originX, 0); ctx.lineTo(originX, height); ctx.stroke();
+
+            const colors = ['rgba(220, 38, 38, 0.25)', 'rgba(37, 99, 235, 0.25)'];
+            const lineColors = ['#991b1b', '#1e40af'];
+
+            systemData.forEach((ineq, index) => {
+                const { m_num, m_den, b, symbol } = ineq;
+                const m = m_num / m_den;
+                // Extended range to cover the new canvas size
+                const y_at_left = m * (-6) + b;
+                const y_at_right = m * (6) + b;
+
+                // Shading
+                ctx.fillStyle = colors[index];
+                ctx.beginPath();
+                ctx.moveTo(0, originY - y_at_left * scale);
+                ctx.lineTo(width, originY - y_at_right * scale);
+                if (symbol.includes('>')) { ctx.lineTo(width, 0); ctx.lineTo(0, 0); } 
+                else { ctx.lineTo(width, height); ctx.lineTo(0, height); }
+                ctx.closePath();
+                ctx.fill();
+
+                // Line
+                ctx.strokeStyle = lineColors[index]; ctx.lineWidth = 2;
+                if (symbol === '<' || symbol === '>') { ctx.setLineDash([5, 5]); }
+                ctx.beginPath();
+                ctx.moveTo(0, originY - y_at_left * scale);
+                ctx.lineTo(width, originY - y_at_right * scale);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            });
+        }
+        
+        function renderQuizForm() {
+            let html = '<form id="quizForm">';
+            currentQuestions.forEach(q => {
+                html += `<div class="mb-12"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.id.slice(1)}. ${q.title}</h2>`;
+                if(q.type === 'match-graph' || q.type === 'eq-to-graph') {
+                    html += `<div class="flex items-center justify-center mb-4">
+                                <span class="system-brace">{</span><div class="text-lg font-mono">${q.systemText}</div>
+                             </div>
+                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">`;
+                    q.options.forEach((opt, i) => {
+                        html += `<label class="radio-label">
+                                <p class="font-bold mb-2">${String.fromCharCode(65+i)}</p>
+                                <canvas id="${q.id}_opt${i}_canvas"></canvas>
+                                <input type="radio" name="${q.id}" value="${i}" class="mt-2 h-5 w-5">
+                                </label>`;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'point-in-set' || q.type === 'graph-to-system') {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                                <canvas id="${q.id}_canvas" class="w-full max-w-sm mx-auto"></canvas>
+                                <div class="space-y-3">`;
+                    q.options.forEach((opt, i) => {
+                        const label = q.type === 'point-in-set' ? `(${opt.x}, ${opt.y})` : getSystemText(opt);
+                        html += `<label class="block p-3 border rounded-lg"><input type="radio" name="${q.id}" value="${i}" class="mr-3">${label}</label>`;
+                    });
+                    html += `</div></div>`;
+                } else if (q.type === 'write-system') {
+                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">`;
+                    q.systems.forEach((sys, i) => {
+                        html += `<div class="flex flex-col items-center">
+                                    <canvas id="${q.id}_${i}_canvas"></canvas>
+                                    <textarea id="${q.id}_${i}_answer" class="w-full mt-2 p-2 border rounded-lg" rows="2" placeholder="y > mx + b\ny < mx + b"></textarea>
+                                 </div>`;
+                    });
+                    html += `</div>`;
+                } else if (q.type === 'is-solution') {
+                     html += `<div class="text-center">
+                                <div class="flex items-center justify-center mb-4">
+                                    <span class="system-brace">{</span><div class="text-lg font-mono">${q.systemText}</div>
+                                </div>
+                                <div class="flex justify-center gap-4">
+                                    <label class="radio-label px-6"><input type="radio" name="${q.id}" value="true" class="mr-2"> Yes, it is a solution</label>
+                                    <label class="radio-label px-6"><input type="radio" name="${q.id}" value="false" class="mr-2"> No, it is not a solution</label>
+                                </div>
+                              </div>`;
+                }
+                html += `</div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            
+            // Draw all canvases
+            currentQuestions.forEach(q => {
+                if (q.type === 'match-graph' || q.type === 'eq-to-graph') q.options.forEach((opt, i) => drawSystemInequalityGraph(`${q.id}_opt${i}_canvas`, opt));
+                if (q.type === 'point-in-set' || q.type === 'graph-to-system') drawSystemInequalityGraph(`${q.id}_canvas`, q.system);
+                if (q.type === 'write-system') q.systems.forEach((sys, i) => drawSystemInequalityGraph(`${q.id}_${i}_canvas`, sys));
+            });
+            
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalizeEq = str => str.replace(/\s+/g, '').toLowerCase().replace('+-','-').replace(/([=<>])x/g, '$11x').replace(/([=<>])\-x/g, '$1-1x');
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                 if (q.type === 'match-graph' || q.type === 'eq-to-graph' || q.type === 'point-in-set' || q.type === 'graph-to-system') {
+                    total++;
+                    const userChoiceIndex = document.querySelector(`input[name="${q.id}"]:checked`)?.value;
+                    const correctIndex = q.options.findIndex(opt => JSON.stringify(opt) === JSON.stringify(q.answer));
+                    const isCorrect = userChoiceIndex == correctIndex;
+                    if (isCorrect) score++;
+                    resultsHTML += `<div class="p-4 border-l-4 ${isCorrect?'border-green-500 bg-green-50':'border-red-500 bg-red-50'}"><p>Question ${q.id.slice(1)}: Your selection was ${isCorrect?'correct':'incorrect'}.</p></div>`;
+                 } else if (q.type === 'write-system') {
+                    q.systems.forEach((sys, i) => {
+                        total++;
+                        const userInput = document.getElementById(`${q.id}_${i}_answer`).value;
+                        const userLines = userInput.split('\n').map(normalizeEq).sort();
+                        const correctLines = getSystemText(sys).split('<br>').map(normalizeEq).sort();
+                        const isCorrect = JSON.stringify(userLines) === JSON.stringify(correctLines);
+                        if (isCorrect) score++;
+                         resultsHTML += `<div class="p-4 border-l-4 ${isCorrect?'border-green-500 bg-green-50':'border-red-500 bg-red-50'}"><p>Question ${q.id.slice(1)} Part ${i+1}: Your answer was ${isCorrect?'correct':'incorrect'}.<br><small>Correct: ${getSystemText(sys)}</small></p></div>`;
+                    });
+                 } else if (q.type === 'is-solution') {
+                    total++;
+                    const userInput = document.querySelector(`input[name="${q.id}"]:checked`)?.value;
+                    const isCorrect = (userInput === 'true') === q.answer;
+                    if (isCorrect) score++;
+                    resultsHTML += `<div class="p-4 border-l-4 ${isCorrect?'border-green-500 bg-green-50':'border-red-500 bg-red-50'}"><p>Question ${q.id.slice(1)}: Your answer was ${isCorrect?'correct':'incorrect'}.</p></div>`;
+                 }
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+
+

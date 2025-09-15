@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regression Models Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .data-table {
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #d1d5db;
+            padding: 0.5rem;
+            text-align: center;
+        }
+        .data-table th {
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Linear and Exponential Regression</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const getRandomFloat = (min, max) => Math.random() * (max - min) + min;
+
+        // --- REGRESSION CALCULATION FUNCTIONS ---
+        function linearRegression(data) {
+            const n = data.length;
+            let sum_x = 0, sum_y = 0, sum_xy = 0, sum_x2 = 0;
+            for (const p of data) {
+                sum_x += p.x;
+                sum_y += p.y;
+                sum_xy += p.x * p.y;
+                sum_x2 += p.x * p.x;
+            }
+            const m = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x);
+            const b = (sum_y - m * sum_x) / n;
+            return { m, b };
+        }
+
+        function exponentialRegression(data) {
+            const logData = data.map(p => ({ x: p.x, y: Math.log(p.y) }));
+            const linReg = linearRegression(logData);
+            const a = Math.exp(linReg.b);
+            const b = Math.exp(linReg.m);
+            return { a, b };
+        }
+
+        function generateQuizData() {
+            let questions = [];
+
+            // --- Q1: Exponential Regression ---
+            const true_a1 = getRandomInt(700, 800);
+            const true_b1 = getRandomFloat(0.75, 0.85);
+            const x_vals1 = [0, 2, 5, 9, 14, 17, 19];
+            const data1 = x_vals1.map(x => {
+                const y_perfect = true_a1 * (true_b1 ** x);
+                const y_noisy = y_perfect * (1 + (Math.random() - 0.5) * 0.1); // add noise
+                return { x, y: Math.round(y_noisy) };
+            });
+            const expReg = exponentialRegression(data1);
+            const predict_x1 = 2002 - 1990; // x = 12
+            const predict_y1 = expReg.a * (expReg.b ** predict_x1);
+            questions.push({
+                type: 'regression', id: 'q1',
+                title: 'The table below shows the amount of a decaying radioactive substance that remained for selected years after 1990.',
+                table: { headers: ['Years After 1990 (x)', 'Amount (y)'], data: data1 },
+                subQuestions: [
+                    { id: 'q1_eq', prompt: 'Write an exponential regression equation for this set of data, rounding all values to the nearest thousandth.', answer: `y=${expReg.a.toFixed(3)}(${expReg.b.toFixed(3)})^x` },
+                    { id: 'q1_ans', prompt: `Using this equation, determine the amount of the substance that remained in 2002, to the nearest integer.`, answer: Math.round(predict_y1).toString() }
+                ]
+            });
+
+            // --- Q2: Linear Regression ---
+            const true_m2 = getRandomFloat(0.5, 1.2);
+            const true_b2 = getRandomFloat(10, 25);
+            const x_vals2 = Array.from({length: 8}, () => getRandomInt(55, 95));
+            const data2 = x_vals2.map(x => {
+                const y_perfect = true_m2 * x + true_b2;
+                const y_noisy = y_perfect + (Math.random() - 0.5) * 10; // add noise
+                return { x, y: Math.round(y_noisy) };
+            });
+            const linReg = linearRegression(data2);
+            const predict_y2 = 89;
+            const predict_x2 = (predict_y2 - linReg.b) / linReg.m;
+            questions.push({
+                type: 'regression', id: 'q2',
+                title: 'A mathematics teacher wanted to see the correlation between test scores and homework. The homework grade (x) and test grade (y) are given in the accompanying table.',
+                table: { headers: ['Homework Grade (x)', 'Test Grade (y)'], data: data2 },
+                 subQuestions: [
+                    { id: 'q2_eq', prompt: 'Write the linear regression equation that represents this set of data, rounding all coefficients to the nearest hundredth.', answer: `y=${linReg.m.toFixed(2)}x+${linReg.b.toFixed(2)}` },
+                    { id: 'q2_ans', prompt: `Using this equation, estimate the homework grade, to the nearest integer, for a student with a test grade of ${predict_y2}.`, answer: Math.round(predict_x2).toString() }
+                ]
+            });
+
+            currentQuestions = questions;
+        }
+        
+        function renderQuizForm() {
+            let html = '<form id="quizForm" class="space-y-12">';
+            currentQuestions.forEach((q, i) => {
+                html += `<div><h2 class="text-xl font-semibold text-gray-700 mb-4">${i + 1}. ${q.title}</h2>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                            <div>
+                                <table class="data-table w-full"><thead><tr><th>${q.table.headers[0]}</th><th>${q.table.headers[1]}</th></tr></thead><tbody>
+                                ${q.table.data.map(p => `<tr><td>${p.x}</td><td>${p.y}</td></tr>`).join('')}
+                                </tbody></table>
+                            </div>
+                            <div class="space-y-6">`;
+                q.subQuestions.forEach((sq, j) => {
+                    html += `<div>
+                                <label for="${sq.id}" class="font-medium block">${String.fromCharCode(97+j)}. ${sq.prompt}</label>
+                                <input type="text" id="${sq.id}" class="w-full mt-1 p-2 border rounded-lg">
+                             </div>`;
+                });
+                html += `       </div>
+                         </div></div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalize = str => (str || '').replace(/\s+/g, '').toLowerCase();
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach((q, i) => {
+                let questionResultHTML = `<div class="p-4 border-l-4"><p class="font-bold">Question ${i+1}:</p>`;
+                q.subQuestions.forEach(sq => {
+                    total++;
+                    const userInput = document.getElementById(sq.id).value;
+                    const isCorrect = normalize(userInput) === normalize(sq.answer);
+                    if (isCorrect) score++;
+                     questionResultHTML += `<div class="mt-2 ${isCorrect?'':'text-red-500'}">
+                        <p>${sq.prompt}</p>
+                        <p>Your Answer: ${userInput || '<em>none</em>'}</p>
+                        ${!isCorrect ? `<p>Correct Answer: ${sq.answer}</p>` : ''}
+                    </div>`;
+                });
+                questionResultHTML += `</div>`;
+                resultsHTML += questionResultHTML;
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-500');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factoring Polynomials Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Factoring Polynomials</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime. Use the ^ character for exponents in your answers (e.g., 3x(x-4)(x+4)).</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        const formatTerm = (coeff, exp, isFirst = false) => {
+            if (coeff === 0) return '';
+            const sign = isFirst ? (coeff < 0 ? '-' : '') : (coeff < 0 ? ' - ' : ' + ');
+            const absCoeff = Math.abs(coeff);
+            const coeffStr = absCoeff === 1 && exp > 0 ? '' : absCoeff;
+            const xStr = exp > 0 ? 'x' : '';
+            const expStr = exp > 1 ? `<sup>${exp}</sup>` : '';
+            return `${sign}${coeffStr}${xStr}${expStr}`;
+        };
+
+        const formatPolyFromMap = (polyMap) => {
+            const exps = Object.keys(polyMap).map(Number).sort((a, b) => b - a);
+            if (exps.length === 0) return '0';
+            let result = '';
+            exps.forEach((exp, i) => { result += formatTerm(polyMap[exp], exp, i === 0); });
+            return result.trim();
+        };
+        
+        const formatPolyFromTerms = (terms) => {
+             const polyMap = {};
+             terms.forEach(term => { polyMap[term.exp] = (polyMap[term.exp] || 0) + term.coeff; });
+             return formatPolyFromMap(polyMap);
+        };
+
+
+        function generateQuizData() {
+            let questions = [];
+
+            // --- Q1: Binomials ---
+            const q1 = [];
+            let k = getRandomInt(2, 5); let n = getRandomInt(2, 6);
+            q1.push({id: 'q1a', text: `${k}x<sup>3</sup> - ${k*n*n}x`, answer: `${k}x(x-${n})(x+${n})`});
+            k = getRandomInt(2, 4); let a = getRandomInt(2, 5);
+            q1.push({id: 'q1b', text: `-${k*a}x<sup>2</sup> + ${k}x`, answer: `-${k}x(${a}x-1)`});
+            k = getRandomInt(2, 5); let m = getRandomInt(2, 5);
+            q1.push({id: 'q1c', text: `${k}x + ${k*m}`, answer: `${k}(x+${m})`});
+            k = getRandomInt(2, 5); a = getRandomInt(2, 5); let b = getRandomInt(2, 5);
+            q1.push({id: 'q1d', text: `-${k*a}x<sup>3</sup> - ${k*b}x<sup>2</sup>`, answer: `-${k}x^2(${a}x+${b})`});
+            questions.push({type: 'factor', id: 'q1', title: 'Factor each binomial expression completely.', subQuestions: q1});
+            
+            // --- Q2: Grouping ---
+            const q2 = [];
+            a = getRandomInt(2,4); let c = getRandomInt(2,4); let d = getRandomInt(2,5); b = getRandomInt(-4,-1);
+            q2.push({id: 'q2a', text: `${a*c}x<sup>2</sup> + ${a*d}x + ${b*c}x + ${b*d}`, answer: `(${a}x+${b})(${c}x+${d})`});
+            d = getRandomInt(-5,-1); b = getRandomInt(-5,-1);
+            q2.push({id: 'q2b', text: `x<sup>3</sup> ${formatTerm(d, 2)} ${formatTerm(b, 1)} ${formatTerm(b*d, 0)}`, answer: `(x^2+${b})(x+${d})`});
+            questions.push({type: 'factor', id: 'q2', title: 'Factor by grouping each expression completely.', subQuestions: q2});
+            
+            // --- Q3: Trinomials ---
+            const q3 = [];
+            // a: a>1, mixed signs
+            a=2; c=getRandomInt(2,3); b=getRandomInt(2,5); d=getRandomInt(2,5);
+            q3.push({id: 'q3a', text: formatPolyFromTerms([{coeff:a*c, exp:2}, {coeff:a*d-b*c, exp:1}, {coeff:-b*d, exp:0}]), answer: `(${a}x-${b})(${c}x+${d})`});
+            // b: a=1, mixed signs
+            b=getRandomInt(2,8); d=getRandomInt(2,8); if(b===d)d++;
+            q3.push({id: 'q3b', text: formatPolyFromTerms([{coeff:1, exp:2}, {coeff:b-d, exp:1}, {coeff:-b*d, exp:0}]), answer: `(x+${b})(x-${d})`});
+            // c: a=1, two negative
+            b=getRandomInt(2,8); d=getRandomInt(2,8);
+            q3.push({id: 'q3c', text: formatPolyFromTerms([{coeff:1, exp:2}, {coeff:-(b+d), exp:1}, {coeff:b*d, exp:0}]), answer: `(x-${b})(x-${d})`});
+            // d: a=1, two positive
+            b=getRandomInt(2,8); d=getRandomInt(2,8);
+            q3.push({id: 'q3d', text: formatPolyFromTerms([{coeff:1, exp:2}, {coeff:b+d, exp:1}, {coeff:b*d, exp:0}]), answer: `(x+${b})(x+${d})`});
+            // e: a>1, two negative
+            a=2; c=getRandomInt(3,5); b=getRandomInt(1,4); d=getRandomInt(1,4);
+            q3.push({id: 'q3e', text: formatPolyFromTerms([{coeff:a*c, exp:2}, {coeff:-(a*d+b*c), exp:1}, {coeff:b*d, exp:0}]), answer: `(${a}x-${b})(${c}x-${d})`});
+            // f: a>1 (prime), mixed signs
+            a=shuffle([3,5,7])[0]; b=getRandomInt(1,4); d=getRandomInt(1,4);
+            q3.push({id: 'q3f', text: formatPolyFromTerms([{coeff:a, exp:2}, {coeff:a*d-b, exp:1}, {coeff:-b*d, exp:0}]), answer: `(${a}x-${b})(x+${d})`});
+            questions.push({type: 'factor', id: 'q3', title: 'Factor each trinomial expression completely.', subQuestions: q3});
+
+            currentQuestions = questions;
+        }
+        
+        function renderQuizForm() {
+            let html = '<form id="quizForm">';
+            currentQuestions.forEach(q => {
+                const gridCols = q.id === 'q3' ? 'lg:grid-cols-2' : 'md:grid-cols-2';
+                html += `<div class="mb-10"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.id.slice(1)}. ${q.title}</h2>
+                         <div class="grid grid-cols-1 ${gridCols} gap-x-8 gap-y-6">`;
+                q.subQuestions.forEach((sq, i) => {
+                    html += `<div><label for="${sq.id}" class="block mb-1 font-mono">${String.fromCharCode(97+i)}) ${sq.text}</label>
+                             <input type="text" id="${sq.id}" class="w-full p-2 border rounded-lg"></div>`;
+                });
+                html += `</div></div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalizeFactored = str => {
+            if (!str) return '';
+            let s = str.replace(/\s+/g, '').toLowerCase();
+            // Split into factors (items in parens, or terms outside)
+            const factors = s.match(/(\([^)]+\)|[^-+()]+)/g) || [];
+            // Standardize factors internally and sort
+            return factors.map(f => {
+                // For terms like 3x, just return
+                if (!f.startsWith('(')) return f;
+                // For (x-4), return as is
+                return f;
+            }).sort().join('');
+        };
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach(q => {
+                 q.subQuestions.forEach(sq => {
+                    total++;
+                    const userInput = document.getElementById(sq.id).value;
+                    const isCorrect = normalizeFactored(userInput) === normalizeFactored(sq.answer);
+                    if (isCorrect) score++;
+                     resultsHTML += `<div class="p-4 border-l-4 ${isCorrect?'border-green-500 bg-green-50':'border-red-500 bg-red-50'}">
+                        <p class="font-mono">${sq.text}</p>
+                        <p>Your Answer: ${userInput || '<em>none</em>'}</p>
+                        ${!isCorrect ? `<p>Correct Answer: ${sq.answer}</p>` : ''}
+                    </div>`;
+                 });
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+

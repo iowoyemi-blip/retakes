@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Systems of Equations Word Problems</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-4xl">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Systems of Equations: Word Problems</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        // --- PROBLEM GENERATORS ---
+
+        function generateCoinsProblem() {
+            const d = getRandomInt(10, 30);
+            const q = getRandomInt(10, 30);
+            const totalCoins = d + q;
+            const totalValue = (d * 0.10 + q * 0.25).toFixed(2);
+            return {
+                id: 'q1',
+                text: `There were ${totalCoins} dimes and quarters in a money bag. Peggy counted them and found that their total value was $${totalValue}. How many coins of each type were there?`,
+                answers: {
+                    vars: 'd = number of dimes, q = number of quarters',
+                    system: `d + q = ${totalCoins}\n0.10d + 0.25q = ${totalValue}`,
+                    solution: `d=${d}, q=${q}`
+                }
+            };
+        }
+
+        function generateShoppingProblem() {
+            const pricePeach = (getRandomInt(5, 10) / 4).toFixed(2); // e.g., $1.25, $1.50...
+            const priceMango = (getRandomInt(6, 12) / 4).toFixed(2);
+            const p1 = getRandomInt(4, 8); const m1 = getRandomInt(4, 8);
+            let p2, m2;
+            do {
+                p2 = getRandomInt(4, 8); m2 = getRandomInt(4, 8);
+            } while (p1 === p2 || m1 === m2);
+            const cost1 = (p1 * pricePeach + m1 * priceMango).toFixed(2);
+            const cost2 = (p2 * pricePeach + m2 * priceMango).toFixed(2);
+            return {
+                id: 'q2',
+                text: `Madeline went into a grocery store and bought ${p1} peaches and ${m1} mangos, costing a total of $${cost1}. Jaya went into the same grocery store and bought ${p2} peaches and ${m2} mangos, costing a total of $${cost2}. Write and solve a system of equations to determine the price of each peach and the price of each mango.`,
+                answers: {
+                    vars: 'p = price of a peach, m = price of a mango',
+                    system: `${p1}p + ${m1}m = ${cost1}\n${p2}p + ${m2}m = ${cost2}`,
+                    solution: `p=${pricePeach}, m=${priceMango}`
+                }
+            };
+        }
+
+        function generateTicketsSnacksProblem() {
+            const ticketPrice = getRandomInt(8, 15);
+            const snackPrice = getRandomInt(4, 7);
+            const numTickets = getRandomInt(3, 6);
+            const diff = getRandomInt(2, 5);
+            const numSnacks = numTickets + diff;
+            const totalCost = ticketPrice * numTickets + snackPrice * numSnacks;
+            return {
+                id: 'q3',
+                text: `Ellie and Madi buy movie tickets and snacks. Each ticket costs $${ticketPrice}, and snacks cost $${snackPrice} each. They spend a total of $${totalCost}, and the number of snacks is ${diff} more than the number of tickets. How many tickets and snacks did they buy?`,
+                answers: {
+                    vars: 't = number of tickets, s = number of snacks',
+                    system: `${ticketPrice}t + ${snackPrice}s = ${totalCost}\ns = t + ${diff}`,
+                    solution: `t=${numTickets}, s=${numSnacks}`
+                }
+            };
+        }
+
+        function generateSumDifferenceProblem() {
+            const part1 = getRandomInt(500, 800);
+            const diff = getRandomInt(50, 100);
+            const part2 = part1 + diff;
+            const total = part1 + part2;
+            return {
+                id: 'q4',
+                text: `A particular Algebra text has a total of ${total} pages which is broken into two parts. The second part of the book has ${diff} more pages than the first part. How many pages are in each part of the book?`,
+                answers: {
+                    vars: 'x = pages in first part, y = pages in second part',
+                    system: `x + y = ${total}\ny = x + ${diff}`,
+                    solution: `x=${part1}, y=${part2}`
+                }
+            };
+        }
+
+        function generateMoreThanMultipleProblem() {
+            const kevin = getRandomInt(10, 20);
+            const multiple = getRandomInt(2, 3);
+            const moreThan = getRandomInt(2, 5);
+            const david = multiple * kevin + moreThan;
+            const total = kevin + david;
+            return {
+                id: 'q5',
+                text: `David and Kevin went on a fishing trip this past weekend. Together they caught ${total} trout. David caught ${moreThan} more than ${multiple === 2 ? 'twice' : 'three times'} as many trout as Kevin caught. How many trout did each person catch?`,
+                answers: {
+                    vars: 'd = trout David caught, k = trout Kevin caught',
+                    system: `d + k = ${total}\nd = ${multiple}k + ${moreThan}`,
+                    solution: `d=${david}, k=${kevin}`
+                }
+            };
+        }
+        
+        function generateRateTotalProblem() {
+            const justinRate = getRandomInt(30, 50);
+            const danielRate = getRandomInt(15, 25);
+            const justinHours = getRandomInt(3, 6);
+            const diffHours = getRandomInt(2, 5);
+            const danielHours = justinHours + diffHours;
+            const totalShirts = justinRate * justinHours + danielRate * danielHours;
+             return {
+                id: 'q6',
+                text: `Justin and Daniel work at a dry cleaners ironing shirts. Justin can iron ${justinRate} shirts per hour, and Daniel can iron ${danielRate} shirts per hour. Daniel worked ${diffHours} more hours than Justin. They ironed ${totalShirts} shirts between them. Determine the number of hours Justin worked and the number hours Daniel worked.`,
+                answers: {
+                    vars: 'j = hours Justin worked, d = hours Daniel worked',
+                    system: `${justinRate}j + ${danielRate}d = ${totalShirts}\nd = j + ${diffHours}`,
+                    solution: `j=${justinHours}, d=${danielHours}`
+                }
+            };
+        }
+
+        function generateQuizData() {
+            currentQuestions = shuffle([
+                generateCoinsProblem(),
+                generateShoppingProblem(),
+                generateTicketsSnacksProblem(),
+                generateSumDifferenceProblem(),
+                generateMoreThanMultipleProblem(),
+                generateRateTotalProblem()
+            ]);
+        }
+        
+        function renderQuizForm() {
+            let html = '<form id="quizForm" class="space-y-10">';
+            currentQuestions.forEach((q, i) => {
+                html += `<div>
+                            <p class="font-semibold text-lg mb-2">${i + 1}. ${q.text}</p>
+                            <div class="ml-4 space-y-3">
+                                <div>
+                                    <label for="${q.id}_vars" class="font-medium block">a. Define your variables.</label>
+                                    <textarea id="${q.id}_vars" rows="1" class="w-full p-2 border rounded-lg bg-gray-50"></textarea>
+                                </div>
+                                <div>
+                                    <label for="${q.id}_system" class="font-medium block">b. Set up your system of equations.</label>
+                                    <textarea id="${q.id}_system" rows="2" class="w-full p-2 border rounded-lg bg-gray-50"></textarea>
+                                </div>
+                                <div>
+                                    <label for="${q.id}_solution" class="font-medium block">c. Solve your system of equations.</label>
+                                    <input type="text" id="${q.id}_solution" class="w-full p-2 border rounded-lg" placeholder="e.g., x=value, y=value">
+                                </div>
+                            </div>
+                         </div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalizeSolution = str => {
+            return str.replace(/\s+/g, '').toLowerCase().split(',').sort().join(',');
+        }
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach((q, i) => {
+                total++;
+                const userInput = document.getElementById(`${q.id}_solution`).value;
+                const isCorrect = normalizeSolution(userInput) === normalizeSolution(q.answers.solution);
+                if (isCorrect) score++;
+
+                const varsInput = document.getElementById(`${q.id}_vars`).value;
+                const systemInput = document.getElementById(`${q.id}_system`).value;
+
+                resultsHTML += `<div class="p-4 border-l-4 ${isCorrect?'border-green-500 bg-green-50':'border-red-500 bg-red-50'}">
+                    <p class="font-bold">Question ${i+1}:</p>
+                    <p class="mt-2"><strong>a. Define Variables:</strong> ${varsInput || '<em>(no answer)</em>'}<br><span class="text-sm text-gray-600">Suggested Answer: ${q.answers.vars}</span></p>
+                    <p class="mt-2"><strong>b. System of Equations:</strong><pre class="whitespace-pre-wrap font-sans">${systemInput || '<em>(no answer)</em>'}</pre><span class="text-sm text-gray-600">Suggested Answer:<pre class="whitespace-pre-wrap font-sans">${q.answers.system}</pre></span></p>
+                    <p class="mt-2"><strong>c. Solution:</strong> ${userInput || '<em>(no answer)</em>'}<br><span class="text-sm ${isCorrect ? 'text-green-700' : 'text-gray-600'}">Correct Answer: ${q.answers.solution}</span></p>
+                </div>`;
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span> (based on final solution only)`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+

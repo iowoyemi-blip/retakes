@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Systems of Inequalities Word Problems</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        canvas {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Systems of Inequalities: Applications</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        function generateQuizData() {
+            let questions = [];
+
+            // Problem 1: Tickets
+            const sPrice = (getRandomInt(10, 15) / 2).toFixed(2);
+            const aPrice = getRandomInt(10, 15);
+            const maxPeople = getRandomInt(12, 18) * 10;
+            const minRevenue = getRandomInt(8, 12) * 100;
+            questions.push({
+                id: 'q1', type: 'tickets',
+                text: `The drama club is selling tickets to their play to raise money for the show's expenses. Each student ticket sells for $${sPrice}, and each adult ticket sells for $${aPrice}. The auditorium can hold no more than ${maxPeople} people. The drama club must make at least $${minRevenue} from ticket sales to cover the show's costs.`,
+                inequalities: [
+                    { expression: `x + y <= ${maxPeople}` },
+                    { expression: `${sPrice}x + ${aPrice}y >= ${minRevenue}` },
+                    { expression: `x >= 0`},
+                    { expression: `y >= 0`}
+                ],
+                graph: { xMax: maxPeople + 20, yMax: Math.ceil((maxPeople + 20)/1.5), xLabel: 'Student Tickets (x)', yLabel: 'Adult Tickets (y)'},
+                solutionContext: 'e.g., 50 student tickets and 80 adult tickets'
+            });
+
+            // Problem 2: Coins
+            const maxCoins = getRandomInt(20, 30);
+            const minValue = (getRandomInt(30, 50) / 100).toFixed(2);
+            const minPennies = getRandomInt(4, 8);
+            questions.push({
+                id: 'q2', type: 'coins',
+                text: `Landon has x pennies and y nickels, having at most ${maxCoins} coins worth at least $${minValue}. A minimum of ${minPennies} of the coins are pennies. Solve this system of inequalities graphically and determine one possible solution.`,
+                 inequalities: [
+                    { expression: `x + y <= ${maxCoins}` },
+                    { expression: `0.01x + 0.05y >= ${minValue}` },
+                    { expression: `x >= ${minPennies}` },
+                    { expression: `y >= 0` }
+                ],
+                graph: { xMax: maxCoins + 5, yMax: maxCoins + 5, xLabel: 'Pennies (x)', yLabel: 'Nickels (y)'},
+                solutionContext: 'e.g., 10 pennies and 8 nickels',
+                interpretationContext: 'Landon could have 10 pennies and 8 nickels.'
+            });
+
+            currentQuestions = questions;
+        }
+        
+        function drawInequalityGraph(canvasId, graphData) {
+            const { inequalities, graph } = graphData;
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            const { width, height, pad } = { width: 450, height: 350, pad: 40 };
+            canvas.width = width; canvas.height = height;
+            const originX = pad;
+            const originY = height - pad;
+            const plotWidth = width - pad * 1.5;
+            const plotHeight = height - pad * 1.5;
+            const scaleX = plotWidth / graph.xMax;
+            const scaleY = plotHeight / graph.yMax;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Draw grid and labels
+            ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
+            ctx.fillStyle = '#6b7280'; ctx.font = '10px Inter';
+            const xGridCount = 10;
+            for (let i = 0; i <= xGridCount; i++) {
+                const val = Math.round(i * graph.xMax / xGridCount);
+                const xPos = originX + val * scaleX;
+                ctx.beginPath(); ctx.moveTo(xPos, pad*0.5); ctx.lineTo(xPos, originY); ctx.stroke();
+                ctx.fillText(val, xPos, originY + 12);
+            }
+             const yGridCount = 10;
+            for (let i = 0; i <= yGridCount; i++) {
+                const val = Math.round(i * graph.yMax / yGridCount);
+                const yPos = originY - val * scaleY;
+                ctx.beginPath(); ctx.moveTo(originX, yPos); ctx.lineTo(width - pad*0.5, yPos); ctx.stroke();
+                ctx.fillText(val, originX - 20, yPos);
+            }
+
+            // Draw axes
+            ctx.strokeStyle = '#374151'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(originX, pad * 0.5); ctx.lineTo(originX, originY); ctx.lineTo(width - pad * 0.5, originY); ctx.stroke();
+            ctx.textAlign = 'center'; ctx.font = '12px Inter';
+            ctx.fillText(graph.xLabel, originX + plotWidth/2, originY + 30);
+            ctx.save(); ctx.translate(15, originY - plotHeight/2); ctx.rotate(-Math.PI/2); ctx.fillText(graph.yLabel, 0, 0); ctx.restore();
+
+            // Function to parse and get line points
+            const getLinePoints = (ineqStr) => {
+                const parts = ineqStr.replace(/\s/g, '').match(/(-?\d*\.?\d*)x([+-]\d*\.?\d*)y([<=>]=?)(\d*\.?\d*)/);
+                if (!parts) { // Handle x >= k or y >= k
+                     if(ineqStr.includes('x')) return {type: 'vertical', val: parseFloat(ineqStr.match(/-?\d+/)[0])};
+                     if(ineqStr.includes('y')) return {type: 'horizontal', val: parseFloat(ineqStr.match(/-?\d+/)[0])};
+                     return null;
+                }
+                const A = parseFloat(parts[1] || '1');
+                const B = parseFloat(parts[2] || '1');
+                const C = parseFloat(parts[4]);
+                
+                const y_at_x0 = (C - A * 0) / B;
+                const y_at_x_max = (C - A * graph.xMax) / B;
+                return { type: 'sloped', p1: {x:0, y:y_at_x0}, p2: {x:graph.xMax, y:y_at_x_max} };
+            };
+
+            // Create a path for the final solution area
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            ctx.lineTo(originX, 0);
+            ctx.lineTo(width, 0);
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.lineTo(0, originY);
+            ctx.closePath();
+
+            inequalities.forEach(ineq => {
+                 const symbol = ineq.expression.match(/[<=>]=?/)[0];
+                 const line = getLinePoints(ineq.expression);
+                 if(!line) return;
+                 
+                 ctx.save();
+                 ctx.beginPath();
+                 if (line.type === 'sloped') {
+                     const {p1, p2} = line;
+                     ctx.moveTo(originX + p1.x * scaleX, originY - p1.y * scaleY);
+                     ctx.lineTo(originX + p2.x * scaleX, originY - p2.y * scaleY);
+                     if (symbol.includes('>')) { // Shade above
+                         ctx.lineTo(originX + p2.x * scaleX, 0); ctx.lineTo(originX + p1.x * scaleX, 0);
+                     } else { // Shade below
+                         ctx.lineTo(originX + p2.x * scaleX, height); ctx.lineTo(originX + p1.x * scaleX, height);
+                     }
+                 } else if (line.type === 'vertical') {
+                     const xPos = originX + line.val * scaleX;
+                     ctx.moveTo(xPos, 0); ctx.lineTo(xPos, height);
+                     if (symbol.includes('>')) { ctx.lineTo(width, height); ctx.lineTo(width, 0); }
+                     else { ctx.lineTo(0, height); ctx.lineTo(0, 0); }
+                 } else { // horizontal
+                      const yPos = originY - line.val * scaleY;
+                      ctx.moveTo(0, yPos); ctx.lineTo(width, yPos);
+                      if (symbol.includes('>')) { ctx.lineTo(width, 0); ctx.lineTo(0, 0); }
+                      else { ctx.lineTo(width, height); ctx.lineTo(0, height); }
+                 }
+                 ctx.closePath();
+                 ctx.clip();
+            });
+            
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
+            ctx.fillRect(0,0,width,height);
+            ctx.restore();
+
+
+            // Draw boundary lines
+            inequalities.forEach(ineq => {
+                const symbol = ineq.expression.match(/[<=>]=?/)[0];
+                const line = getLinePoints(ineq.expression);
+                if(!line) return;
+                
+                ctx.strokeStyle = '#1e40af'; ctx.lineWidth = 2;
+                if(symbol === '<' || symbol === '>') ctx.setLineDash([6, 6]);
+                ctx.beginPath();
+                 if (line.type === 'sloped') {
+                     const {p1, p2} = line;
+                     ctx.moveTo(originX + p1.x * scaleX, originY - p1.y * scaleY);
+                     ctx.lineTo(originX + p2.x * scaleX, originY - p2.y * scaleY);
+                 } else if (line.type === 'vertical') {
+                      ctx.moveTo(originX + line.val * scaleX, 0);
+                      ctx.lineTo(originX + line.val * scaleX, height);
+                 } else {
+                      ctx.moveTo(0, originY - line.val * scaleY);
+                      ctx.lineTo(width, originY - line.val * scaleY);
+                 }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            });
+        }
+        
+        function renderQuizForm() {
+            let html = '<form id="quizForm" class="space-y-12">';
+            currentQuestions.forEach((q, i) => {
+                html += `<div><h2 class="text-xl font-semibold text-gray-700 mb-4">${i + 1}. ${q.text}</h2>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="font-medium">a. Write a system of inequalities graphically.</label>
+                                    <textarea id="${q.id}_system" class="w-full mt-1 p-2 border rounded-lg bg-gray-50" rows="3" placeholder="Inequality 1\nInequality 2..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="font-medium">b. Determine one possible solution.</label>
+                                    <input type="text" id="${q.id}_solution" class="w-full mt-1 p-2 border rounded-lg" placeholder="${q.solutionContext}">
+                                </div>`;
+                if (q.type === 'coins') {
+                     html += `<div>
+                                <label class="font-medium">c. What does the solution represent in the context of the given situation?</label>
+                                <textarea id="${q.id}_interp" class="w-full mt-1 p-2 border rounded-lg bg-gray-50" rows="2" placeholder="${q.interpretationContext}"></textarea>
+                              </div>`;
+                }
+                html += `       </div>
+                                <canvas id="${q.id}_canvas"></canvas>
+                         </div></div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            
+            currentQuestions.forEach(q => drawInequalityGraph(`${q.id}_canvas`, q));
+            
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalizeSystem = str => str.replace(/\s+/g, '').toLowerCase().split('\n').filter(l => l).sort().join('\n');
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach((q, i) => {
+                total++;
+                const systemInput = document.getElementById(`${q.id}_system`).value;
+                const correctSystem = q.inequalities.map(ineq => ineq.expression).join('\n');
+                
+                const isCorrect = normalizeSystem(systemInput) === normalizeSystem(correctSystem);
+                if (isCorrect) score++;
+
+                const solutionInput = document.getElementById(`${q.id}_solution`).value;
+                const interpInput = q.type === 'coins' ? document.getElementById(`${q.id}_interp`).value : '';
+
+                resultsHTML += `<div class="p-4 border-l-4 ${isCorrect?'border-green-500 bg-green-50':'border-red-500 bg-red-50'}">
+                    <p class="font-bold">Question ${i+1}:</p>
+                    <p class="mt-2"><strong>a. System of Inequalities:</strong><pre class="whitespace-pre-wrap font-sans">${systemInput || '<em>(no answer)</em>'}</pre><span class="text-sm text-gray-600">Suggested Answer:<pre class="whitespace-pre-wrap font-sans">${correctSystem}</pre></span></p>
+                    <p class="mt-2"><strong>b. Possible Solution:</strong> ${solutionInput || '<em>(no answer)</em>'}<br><span class="text-sm text-gray-600">Suggested Answer: ${q.solutionContext} (any point in the shaded region is valid)</span></p>`;
+                if (q.type === 'coins') {
+                    resultsHTML += `<p class="mt-2"><strong>c. Interpretation:</strong> ${interpInput || '<em>(no answer)</em>'}<br><span class="text-sm text-gray-600">Suggested Answer: ${q.interpretationContext}</span></p>`;
+                }
+                resultsHTML += `</div>`;
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span> (based on the system of inequalities only)`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,137 +1,513 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Quiz Retakes</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root{--ink:#2c3e50;--muted:#6b7280;--brand:#2563eb;--bg:#f0f4f8;--card:#fff;--border:#e5e7eb}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    header{padding:2rem 1rem 1rem;text-align:center;background:#eef2ff;border-bottom:1px solid #e0e7ff}
-    h1{margin:.25rem 0 .5rem}
-    .sub{margin:0;color:#374151}
-    .wrap{max-width:1000px;margin:0 auto;padding:1rem}
-    .toolbar{display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;margin:1rem 0}
-    .search{width:min(520px,100%);display:flex;gap:.5rem}
-    .search input{flex:1;padding:.7rem .9rem;border:1px solid var(--border);border-radius:10px}
-    .section{margin:1.25rem 0}
-    .section h2{margin:.25rem 0 .5rem}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,.06);padding:1.25rem;text-align:center;transition:transform .2s, box-shadow .2s}
-    .card:hover{transform:translateY(-3px);box-shadow:0 8px 16px rgba(0,0,0,.12)}
-    .card a{text-decoration:none;color:var(--brand);font-weight:700}
-    .meta{font-size:.9rem;color:var(--muted);margin-top:.35rem}
-    footer{margin:2rem 0;text-align:center;color:var(--muted)}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1.3 Radical Operations Quiz - Dynamic</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .quiz-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-left: 4px solid #e74c3c;
+            border-radius: 5px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .problem {
+            margin: 15px 0;
+            padding: 12px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .problem-text {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .answer-input {
+            padding: 8px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            width: 200px;
+        }
+        .check-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .check-btn:hover {
+            background: #c0392b;
+        }
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .solution {
+            background: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .score {
+            text-align: center;
+            font-size: 20px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #fdeaea;
+            border-radius: 10px;
+        }
+        .reset-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+            font-size: 16px;
+        }
+        .reset-btn:hover {
+            background: #219a52;
+        }
+        .quiz-info {
+            text-align: center;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .math {
+            font-family: 'Times New Roman', serif;
+            font-size: 18px;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1>Quiz Retakes</h1>
-    <p class="sub">Choose your unit and retake version.</p>
-  </header>
-
-  <div class="wrap">
-    <!-- Search -->
-    <div class="toolbar">
-      <div class="search">
-        <input id="q" type="search" placeholder="Search (e.g., 1.2 or Unit 3)…" aria-label="Search quizzes" />
-      </div>
+    <div class="quiz-container">
+        <h1>1.3 Radical Operations Quiz</h1>
+        <p style="text-align: center; font-style: italic;"><strong>Calculator Allowed</strong></p>
+        <div class="quiz-info">
+            🔄 <strong>Dynamic Quiz:</strong> New radical problems generated each time you reset!
+        </div>
+        
+        <div class="score" id="scoreDisplay">Score: 0/8</div>
+        
+        <div class="section">
+            <div class="section-title">1. Perform the indicated operations, if possible, and simplify.</div>
+            
+            <div class="problem">
+                <div class="problem-text math" id="problem-1a"><strong>a)</strong> Loading...</div>
+                <input type="text" class="answer-input" id="answer-1a" placeholder="Enter simplified form">
+                <button class="check-btn" onclick="checkAnswer('1a')">Check</button>
+                <div class="feedback" id="feedback-1a"></div>
+            </div>
+            
+            <div class="problem">
+                <div class="problem-text math" id="problem-1b"><strong>b)</strong> Loading...</div>
+                <input type="text" class="answer-input" id="answer-1b" placeholder="Enter simplified form">
+                <button class="check-btn" onclick="checkAnswer('1b')">Check</button>
+                <div class="feedback" id="feedback-1b"></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">2. Perform the indicated operations and simplify your answer.</div>
+            
+            <div class="problem">
+                <div class="problem-text math" id="problem-2a"><strong>a)</strong> Loading...</div>
+                <input type="text" class="answer-input" id="answer-2a" placeholder="Enter simplified form">
+                <button class="check-btn" onclick="checkAnswer('2a')">Check</button>
+                <div class="feedback" id="feedback-2a"></div>
+            </div>
+            
+            <div class="problem">
+                <div class="problem-text math" id="problem-2b"><strong>b)</strong> Loading...</div>
+                <input type="text" class="answer-input" id="answer-2b" placeholder="Enter simplified form">
+                <button class="check-btn" onclick="checkAnswer('2b')">Check</button>
+                <div class="feedback" id="feedback-2b"></div>
+            </div>
+            
+            <div class="problem">
+                <div class="problem-text math" id="problem-2c"><strong>c)</strong> Loading...</div>
+                <input type="text" class="answer-input" id="answer-2c" placeholder="Enter simplified form">
+                <button class="check-btn" onclick="checkAnswer('2c')">Check</button>
+                <div class="feedback" id="feedback-2c"></div>
+            </div>
+            
+            <div class="problem">
+                <div class="problem-text math" id="problem-2d"><strong>d)</strong> Loading...</div>
+                <input type="text" class="answer-input" id="answer-2d" placeholder="Enter simplified form">
+                <button class="check-btn" onclick="checkAnswer('2d')">Check</button>
+                <div class="feedback" id="feedback-2d"></div>
+            </div>
+            
+            <div class="problem">
+                <div class="problem-text math" id="problem-2e"><strong>e)</strong> Loading...</div>
+                <input type="text" class="answer-input" id="answer-2e" placeholder="Enter rationalized form">
+                <button class="check-btn" onclick="checkAnswer('2e')">Check</button>
+                <div class="feedback" id="feedback-2e"></div>
+            </div>
+            
+            <div class="problem">
+                <div class="problem-text math" id="problem-2f"><strong>f)</strong> Loading...</div>
+                <input type="text" class="answer-input" id="answer-2f" placeholder="Enter simplified form">
+                <button class="check-btn" onclick="checkAnswer('2f')">Check</button>
+                <div class="feedback" id="feedback-2f"></div>
+            </div>
+        </div>
+        
+        <button class="reset-btn" onclick="generateNewQuiz()">🔄 Generate New Quiz</button>
     </div>
-
-    <!-- Sections will render here -->
-    <div id="root"></div>
-
-    <footer>Tip: Add a new file and append one row to the list in the script below.</footer>
-  </div>
-
-  <script>
-    // ====== QUIZ LIST (from your repo screenshot) ============================
-    // title: what students see
-    // file:  exact filename in the repo (case-sensitive)
-    // unit:  numeric unit to group sections
-
-    const QUIZZES = [
-      // Unit 1
-      { title: "Quiz 1.1 Retake",              file: "1.1_Quiz_retake.html",  unit: 1 },
-      { title: "Quiz 1.2 Retake",              file: "1.2_Quiz_retake.html",  unit: 1 },
-      { title: "Quiz 1.3 Retake",              file: "1.3_Quiz_retake.html",  unit: 1 },
-
-      // Unit 2
-      { title: "Quiz 2.1 Retake",              file: "2.1_quiz_retake.html",  unit: 2 },
-      { title: "Quiz 2.2 Retake",              file: "2.2_quiz_retake.html",  unit: 2 },
-      { title: "Quiz 2.3 Retake",              file: "2.3_quiz_retake.html",  unit: 2 },
-      { title: "Quiz 2.4 Retake",              file: "2.4_quiz_retake.html",  unit: 2 },
-      { title: "Quiz 2.5 Retake",              file: "2.5_quiz_retake.html",  unit: 2 },
-      { title: "Quiz 2.6 Retake",              file: "2.6_quiz_retake.html",  unit: 2 },
-
-      // Unit 3
-      { title: "Quiz 3.1 Retake",              file: "3.1_quiz_retake.html",  unit: 3 },
-      { title: "Quiz 3.2 Retake",              file: "3.2_quiz_retake.html",  unit: 3 },
-      { title: "Quiz 3.3 Retake",              file: "3.3_quiz_retake.html",  unit: 3 },
-
-      // Unit 4
-      { title: "Quiz 4.1 Retake",              file: "4.1_quiz_retake.html",  unit: 4 },
-      { title: "Quiz 4.2 Retake",              file: "4.2_quiz_retake.html",  unit: 4 },
-      { title: "Quiz 4.3 Retake",              file: "4.3_quiz_retake.html",  unit: 4 },
-      { title: "Quiz 4.4 Retake",              file: "4.4_quiz_retake.html",  unit: 4 },
-    ];
-
-    // ====== RENDER ===========================================================
-    const root = document.getElementById("root");
-
-    function groupByUnit(list){
-      return list.reduce((acc, item)=>{
-        (acc[item.unit] ||= []).push(item);
-        return acc;
-      }, {});
-    }
-
-    function render(list){
-      root.innerHTML = "";
-      const byUnit = groupByUnit(list);
-      const units = Object.keys(byUnit).sort((a,b)=>Number(a)-Number(b));
-
-      units.forEach(u=>{
-        const section = document.createElement("section");
-        section.className = "section";
-        section.innerHTML = `<h2>Unit ${u}</h2>`;
-
-        const grid = document.createElement("div");
-        grid.className = "grid";
-
-        // sort within unit by the numeric in the filename if possible
-        const items = byUnit[u].slice().sort((A,B)=>A.title.localeCompare(B.title, undefined, {numeric:true}));
-
-        items.forEach(q=>{
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = `<a href="${q.file}">${q.title}</a>`;
-          grid.appendChild(card);
+    
+    <script>
+        let score = 0;
+        let attempted = new Set();
+        let currentProblems = {};
+        
+        // Random number generators
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        
+        function randomChoice(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+        
+        // Perfect square factors for radical generation
+        const perfectSquares = [4, 9, 16, 25, 36, 49];
+        const smallPrimes = [2, 3, 5, 6, 7, 11, 13];
+        
+        function findLargestSquareFactor(n) {
+            let largest = 1;
+            for (let i = 2; i * i <= n; i++) {
+                while (n % (i * i) === 0) {
+                    largest *= i;
+                    n /= (i * i);
+                }
+            }
+            return { square: largest, remaining: n };
+        }
+        
+        function gcd(a, b) {
+            while (b !== 0) {
+                let temp = b;
+                b = a % b;
+                a = temp;
+            }
+            return a;
+        }
+        
+        // Problem generators
+        function generateAddSubRadicals() {
+            // Generate problems like a√b ± c√d where b and d have common factors
+            const baseRadical = randomChoice([2, 3, 5, 6, 7]);
+            const coeff1 = randomInt(2, 8);
+            const coeff2 = randomInt(2, 6);
+            const mult1 = randomChoice(perfectSquares);
+            const mult2 = randomChoice(perfectSquares);
+            const operation = randomChoice(['+', '-']);
+            
+            const radical1 = baseRadical * mult1;
+            const radical2 = baseRadical * mult2;
+            
+            const expression = `${coeff1}√${radical1} ${operation} ${coeff2}√${radical2}`;
+            
+            // Simplify
+            const simp1 = findLargestSquareFactor(radical1);
+            const simp2 = findLargestSquareFactor(radical2);
+            
+            const newCoeff1 = coeff1 * simp1.square;
+            const newCoeff2 = coeff2 * simp2.square;
+            
+            let finalCoeff;
+            if (operation === '+') {
+                finalCoeff = newCoeff1 + newCoeff2;
+            } else {
+                finalCoeff = newCoeff1 - newCoeff2;
+            }
+            
+            const answer = finalCoeff === 0 ? '0' : 
+                          finalCoeff === 1 ? `√${baseRadical}` :
+                          finalCoeff === -1 ? `-√${baseRadical}` :
+                          `${finalCoeff}√${baseRadical}`;
+            
+            const solution = `${coeff1}√${radical1} ${operation} ${coeff2}√${radical2} = ${newCoeff1}√${baseRadical} ${operation} ${newCoeff2}√${baseRadical} = ${answer}`;
+            
+            return { expression, answer, solution };
+        }
+        
+        function generateMultiplyRadicals() {
+            const a = randomChoice(smallPrimes);
+            const b = randomChoice(smallPrimes);
+            const expression = `√${a} · √${b}`;
+            const product = a * b;
+            const simplified = findLargestSquareFactor(product);
+            
+            const answer = simplified.square === 1 ? `√${simplified.remaining}` : 
+                          simplified.remaining === 1 ? `${simplified.square}` :
+                          `${simplified.square}√${simplified.remaining}`;
+            
+            const solution = `√${a} · √${b} = √${product} = ${answer}`;
+            
+            return { expression, answer, solution };
+        }
+        
+        function generateMultiplyCoeffRadicals() {
+            const coeff1 = randomInt(2, 4);
+            const coeff2 = randomInt(2, 6);
+            const rad1 = randomChoice([2, 3, 5, 8, 12, 18]);
+            const rad2 = randomChoice([2, 3, 5, 8, 12, 18]);
+            
+            const expression = `${coeff1}√${rad1} · ${coeff2}√${rad2}`;
+            
+            const newCoeff = coeff1 * coeff2;
+            const newRadical = rad1 * rad2;
+            const simplified = findLargestSquareFactor(newRadical);
+            
+            const finalCoeff = newCoeff * simplified.square;
+            const answer = simplified.remaining === 1 ? `${finalCoeff}` : `${finalCoeff}√${simplified.remaining}`;
+            
+            const solution = `${coeff1}√${rad1} · ${coeff2}√${rad2} = ${newCoeff}√${newRadical} = ${answer}`;
+            
+            return { expression, answer, solution };
+        }
+        
+        function generateDivideRadicals() {
+            const numerator = randomChoice([18, 24, 32, 45, 50, 72, 98]);
+            const denominator = randomChoice([2, 3, 4, 6, 8]);
+            
+            const expression = `√${numerator}/√${denominator}`;
+            const quotient = numerator / denominator;
+            const simplified = findLargestSquareFactor(quotient);
+            
+            const answer = simplified.square === 1 ? `√${simplified.remaining}` : 
+                          simplified.remaining === 1 ? `${simplified.square}` :
+                          `${simplified.square}√${simplified.remaining}`;
+            
+            const solution = `√${numerator}/√${denominator} = √${quotient} = ${answer}`;
+            
+            return { expression, answer, solution };
+        }
+        
+        function generateRationalizeRadicals() {
+            const numerator = randomChoice(smallPrimes);
+            const denominator = randomChoice(smallPrimes.filter(x => x !== numerator));
+            
+            const expression = `√${numerator}/√${denominator}`;
+            
+            // Rationalize by multiplying by √denominator/√denominator
+            const rationalizedNum = numerator * denominator;
+            const simplified = findLargestSquareFactor(rationalizedNum);
+            
+            let answer;
+            if (simplified.square === 1) {
+                answer = `√${simplified.remaining}/${denominator}`;
+            } else if (simplified.remaining === 1) {
+                answer = `${simplified.square}/${denominator}`;
+            } else {
+                answer = `${simplified.square}√${simplified.remaining}/${denominator}`;
+            }
+            
+            // Check if we can simplify the fraction
+            if (simplified.square > 1) {
+                const commonFactor = gcd(simplified.square, denominator);
+                if (commonFactor > 1) {
+                    const newNum = simplified.square / commonFactor;
+                    const newDen = denominator / commonFactor;
+                    if (simplified.remaining === 1) {
+                        answer = newDen === 1 ? `${newNum}` : `${newNum}/${newDen}`;
+                    } else {
+                        answer = newDen === 1 ? `${newNum}√${simplified.remaining}` : `${newNum}√${simplified.remaining}/${newDen}`;
+                    }
+                }
+            }
+            
+            const solution = `√${numerator}/√${denominator} = (√${numerator} · √${denominator})/(√${denominator} · √${denominator}) = √${rationalizedNum}/${denominator} = ${answer}`;
+            
+            return { expression, answer, solution };
+        }
+        
+        function generateSimplifyFraction() {
+            const nums = [6, 10, 12, 15, 20, 21, 24];
+            const dens = [18, 24, 27, 36, 48, 54, 72];
+            
+            const numerator = randomChoice(nums);
+            const denominator = randomChoice(dens);
+            
+            const expression = `√${numerator}/√${denominator}`;
+            
+            // Simplify √(numerator/denominator)
+            const commonFactor = gcd(numerator, denominator);
+            const simpNum = numerator / commonFactor;
+            const simpDen = denominator / commonFactor;
+            
+            const numFactors = findLargestSquareFactor(simpNum);
+            const denFactors = findLargestSquareFactor(simpDen);
+            
+            let answer;
+            if (numFactors.square === 1 && denFactors.square === 1) {
+                answer = `√${simpNum}/√${simpDen}`;
+            } else if (denFactors.square === 1) {
+                answer = numFactors.remaining === 1 ? `${numFactors.square}/√${simpDen}` : `${numFactors.square}√${numFactors.remaining}/√${simpDen}`;
+            } else if (numFactors.square === 1) {
+                answer = numFactors.remaining === 1 ? `1/${denFactors.square}` : `√${numFactors.remaining}/${denFactors.square}`;
+            } else {
+                const finalNum = numFactors.square;
+                const finalDen = denFactors.square;
+                const finalGcd = gcd(finalNum, finalDen);
+                const reducedNum = finalNum / finalGcd;
+                const reducedDen = finalDen / finalGcd;
+                
+                if (numFactors.remaining === 1) {
+                    answer = reducedDen === 1 ? `${reducedNum}` : `${reducedNum}/${reducedDen}`;
+                } else {
+                    answer = reducedDen === 1 ? `${reducedNum}√${numFactors.remaining}` : `${reducedNum}√${numFactors.remaining}/${reducedDen}`;
+                }
+            }
+            
+            const solution = `√${numerator}/√${denominator} = √${simpNum}/√${simpDen} = ${answer}`;
+            
+            return { expression, answer, solution };
+        }
+        
+        function generateNewQuiz() {
+            // Generate new problems
+            currentProblems = {
+                '1a': generateAddSubRadicals(),
+                '1b': generateAddSubRadicals(),
+                '2a': generateMultiplyRadicals(),
+                '2b': generateMultiplyCoeffRadicals(),
+                '2c': generateDivideRadicals(),
+                '2d': generateDivideRadicals(),
+                '2e': generateRationalizeRadicals(),
+                '2f': generateSimplifyFraction()
+            };
+            
+            // Update problem displays
+            Object.keys(currentProblems).forEach(key => {
+                document.getElementById(`problem-${key}`).innerHTML = `<strong>${key.charAt(0) === '1' ? key : key})</strong> ${currentProblems[key].expression}`;
+            });
+            
+            // Reset quiz state
+            score = 0;
+            attempted.clear();
+            
+            // Clear all inputs and feedback
+            const inputs = document.querySelectorAll('.answer-input');
+            inputs.forEach(input => input.value = '');
+            
+            const feedbacks = document.querySelectorAll('.feedback');
+            feedbacks.forEach(feedback => feedback.innerHTML = '');
+            
+            updateScore();
+        }
+        
+        function normalizeAnswer(answer) {
+            return answer.replace(/\s+/g, '').toLowerCase();
+        }
+        
+        function checkAnswer(problem) {
+            const userInput = document.getElementById(`answer-${problem}`).value.trim();
+            const feedbackDiv = document.getElementById(`feedback-${problem}`);
+            const currentProblem = currentProblems[problem];
+            
+            if (userInput === '') {
+                feedbackDiv.innerHTML = '<div class="incorrect">Please enter an answer.</div>';
+                return;
+            }
+            
+            if (!attempted.has(problem)) {
+                attempted.add(problem);
+                
+                const normalizedUser = normalizeAnswer(userInput);
+                const normalizedCorrect = normalizeAnswer(currentProblem.answer);
+                
+                // Also check some common equivalent forms
+                const equivalentForms = [currentProblem.answer];
+                
+                // Add equivalent forms for radicals
+                if (currentProblem.answer.includes('√')) {
+                    equivalentForms.push(currentProblem.answer.replace('√', 'sqrt'));
+                    equivalentForms.push(currentProblem.answer.replace('√', '^(1/2)'));
+                }
+                
+                const isCorrect = equivalentForms.some(form => normalizeAnswer(form) === normalizedUser);
+                
+                if (isCorrect) {
+                    score++;
+                    feedbackDiv.innerHTML = `<div class="correct">✓ Correct! The answer is ${currentProblem.answer}.</div><div class="solution">Solution: ${currentProblem.solution}</div>`;
+                } else {
+                    feedbackDiv.innerHTML = `<div class="incorrect">✗ Incorrect. Your answer: ${userInput}, Correct answer: ${currentProblem.answer}</div><div class="solution">Solution: ${currentProblem.solution}</div>`;
+                }
+                updateScore();
+            }
+        }
+        
+        function updateScore() {
+            document.getElementById('scoreDisplay').textContent = `Score: ${score}/8`;
+            
+            if (score === 8) {
+                document.getElementById('scoreDisplay').innerHTML += '<br>🎉 Perfect Score! Excellent work with radicals!';
+            }
+        }
+        
+        // Allow Enter key to check answers
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.classList.contains('answer-input')) {
+                const problemId = e.target.id.split('-')[1];
+                checkAnswer(problemId);
+            }
         });
-
-        section.appendChild(grid);
-        root.appendChild(section);
-      });
-
-      if (!units.length){
-        root.innerHTML = `<p class="meta">No matches. Try searching “1.2” or “Unit 3”.</p>`;
-      }
-    }
-
-    // initial paint
-    render(QUIZZES);
-
-    // ====== SEARCH ===========================================================
-    const q = document.getElementById("q");
-    q.addEventListener("input", ()=>{
-      const needle = q.value.toLowerCase().trim();
-      const filtered = QUIZZES.filter(it=>{
-        const hay = `${it.title} unit ${it.unit}`.toLowerCase();
-        return !needle || hay.includes(needle);
-      });
-      render(filtered);
-    });
-  </script>
+        
+        // Generate initial quiz on page load
+        window.onload = function() {
+            generateNewQuiz();
+        };
+    </script>
 </body>
 </html>

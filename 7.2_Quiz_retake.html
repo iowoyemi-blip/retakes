@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solving Quadratic Equations Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Solving Quadratic Equations</h1>
+            <p class="text-gray-600 mt-2">Generate a new quiz anytime. Enter solutions separated by a comma (e.g., 5, -3/2). Use sqrt() for radicals (e.g., 2+sqrt(3)).</p>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            <!-- The quiz form will be dynamically generated and inserted here -->
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="detailedResults" class="space-y-4"></div>
+             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const quizContainer = document.getElementById('quizContainer');
+        const resultsSection = document.getElementById('resultsSection');
+        const scoreElement = document.getElementById('score');
+        const detailedResultsElement = document.getElementById('detailedResults');
+        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+        const generateNewBtn = document.getElementById('generateNewBtn');
+
+        let currentQuestions = [];
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const gcd = (a, b) => { a=Math.abs(a); b=Math.abs(b); return b === 0 ? a : gcd(b, a % b); }
+        const simplifyFrac = (n, d) => {
+            if (d < 0) { n = -n; d = -d; }
+            const common = gcd(n, d);
+            return d/common === 1 ? `${n/common}` : `${n/common}/${d/common}`;
+        };
+        const formatTerm = (c, p, isFirst=false) => {
+            if (c === 0) return '';
+            const sign = isFirst ? (c<0?'-':'') : (c<0?' - ':' + ');
+            const coeff = Math.abs(c) === 1 && p > 0 ? '' : Math.abs(c);
+            const x = p > 0 ? 'x' : '';
+            const exp = p > 1 ? `<sup>${p}</sup>` : '';
+            return `${sign}${coeff}${x}${exp}`;
+        };
+
+
+        function generateQuizData() {
+            let questions = [];
+            const factoringQuestions = [];
+            
+            // --- Q1: Factoring ---
+            let r1, r2, a, b, c;
+            // a,b: a=1 trinomial
+            r1 = getRandomInt(-9, -2); r2 = getRandomInt(-9, -2); if(r1===r2)r2++;
+            factoringQuestions.push({ id:'q1a', text:`x<sup>2</sup> = ${-r1*r2} ${formatTerm(-(r1+r2), 1)}`, answer: `${r1},${r2}` });
+            r1 = getRandomInt(-5, 5); r2 = getRandomInt(-5, 5);
+            a=1; b=-(r1+r2); c=r1*r2;
+            let moveX = getRandomInt(2,5); let moveC = getRandomInt(1,10);
+            factoringQuestions.push({ id:'q1b', text:`x<sup>2</sup> ${formatTerm(b+moveX,1)} ${formatTerm(c-moveC,0)} = ${moveX}x + ${moveC}`, answer: `${r1},${r2}` });
+            // c,d: a>1 trinomial
+            a=getRandomInt(2,3); r1=getRandomInt(1,4); r2=getRandomInt(-4,-1);
+            factoringQuestions.push({ id:'q1c', text:`${a}x<sup>2</sup> ${formatTerm(-a*(r1+r2),1)}x = ${-a*r1*r2}`, answer: `${r1},${r2}` });
+            a=getRandomInt(2,3); let d=getRandomInt(2,3); r1=getRandomInt(1,3); r2=simplifyFrac(getRandomInt(2,5),d);
+            const r2n = r2.includes('/') ? parseInt(r2.split('/')[0]) : parseInt(r2);
+            const r2d = r2.includes('/') ? parseInt(r2.split('/')[1]) : 1;
+            c = a*d; b = -(a*r1*r2d + c*r2n); let e = a*d*r1*r2n;
+            moveX = getRandomInt(2,5); moveC = getRandomInt(1,10);
+            factoringQuestions.push({ id:'q1d', text:`${c}x<sup>2</sup> ${formatTerm(b+moveX,1)}x = ${moveX}x ${formatTerm(-e,0)}`, answer: `${r1},${r2}` });
+            // e, f: GCF
+            a=getRandomInt(2,5); b=getRandomInt(2,5);
+            factoringQuestions.push({ id:'q1e', text:`${a}x<sup>2</sup> - ${a*b}x = 0`, answer: `0,${b}` });
+            a=getRandomInt(2,4); b=getRandomInt(2,4); c=getRandomInt(2,5);
+            factoringQuestions.push({ id:'q1f', text:`${a+c}x<sup>2</sup> ${formatTerm(b,1)} - ${c} = ${c}x<sup>2</sup> - ${c}`, answer: `0,${-b/a}` });
+            // g, h: Diff of Squares
+            a=getRandomInt(2,10); factoringQuestions.push({ id:'q1g', text:`x<sup>2</sup> - ${a*a} = 0`, answer: `${a},-${a}` });
+            a=getRandomInt(2,5); b=getRandomInt(6,10);
+            factoringQuestions.push({ id:'q1h', text:`${a*a}x<sup>2</sup> - ${b*b} = 0`, answer: `${simplifyFrac(b,a)},-${simplifyFrac(b,a)}` });
+            
+            questions.push({type: 'factoring', subQuestions: factoringQuestions });
+            
+            // --- Q2: Square Root Prop ---
+            const q2 = [];
+            a = getRandomInt(2,5); b = a*a + getRandomInt(1,10);
+            q2.push({id:'q2a', text: `x<sup>2</sup> + ${b-a*a} = ${b}`, answer: `${a},-${a}` });
+            a = getRandomInt(15,25); b = getRandomInt(1,10);
+            q2.push({id:'q2b', text: `x<sup>2</sup> - ${b} = ${a}`, answer: `sqrt(${a+b}),-sqrt(${a+b})` });
+            let h = getRandomInt(-5,5); a = getRandomInt(10,20); b = getRandomInt(1,5);
+            q2.push({id:'q2c', text: `(x ${formatTerm(-h,0)})<sup>2</sup> + ${b} = ${a}`, answer: `${h}+sqrt(${a-b}),${h}-sqrt(${a-b})` });
+            h = getRandomInt(-5,5); a = getRandomInt(20,30); b = getRandomInt(1,5);
+            q2.push({id:'q2d', text: `(x ${formatTerm(-h,0)})<sup>2</sup> - ${b} = ${a}`, answer: `${h}+sqrt(${a+b}),${h}-sqrt(${a+b})` });
+            questions.push({type: 'sqrt', subQuestions: q2});
+
+            // --- Q3: Quadratic Formula ---
+            const q3 = [];
+            a = getRandomInt(2,4); b = getRandomInt(2,8)*2; c = getRandomInt(1,5);
+            let discriminant = b*b - 4*a*c;
+            q3.push({id:'q3a', text: `${a}x<sup>2</sup> + ${b}x = ${-c}`, answer: `(${-b}+sqrt(${discriminant}))/${2*a},(${-b}-sqrt(${discriminant}))/${2*a}` });
+            a = getRandomInt(2,4); b = getRandomInt(2,8)*2; c = getRandomInt(1,5);
+            discriminant = b*b - 4*a*c;
+            q3.push({id:'q3b', text: `${a}x<sup>2</sup> + ${b}x + ${c+getRandomInt(1,5)} = ${getRandomInt(1,5)}`, answer: `(${-b}+sqrt(${discriminant}))/${2*a},(${-b}-sqrt(${discriminant}))/${2*a}` });
+            questions.push({type: 'quad-formula', subQuestions: q3});
+
+            currentQuestions = questions;
+        }
+        
+        function renderQuizForm() {
+            let html = '<form id="quizForm">';
+            const titles = ['Solve each equation by factoring.', 'Use the square root property to solve each equation.', 'Solve by using the quadratic formula:'];
+            currentQuestions.forEach((q_group, i) => {
+                html += `<div class="mb-10"><h2 class="text-xl font-semibold text-gray-700 mb-6">${i + 1}. ${titles[i]}</h2>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">`;
+                q_group.subQuestions.forEach((sq, j) => {
+                    html += `<div><label for="${sq.id}" class="block mb-1 font-mono">${String.fromCharCode(97+j)}) ${sq.text}</label>
+                             <input type="text" id="${sq.id}" class="w-full p-2 border rounded-lg"></div>`;
+                });
+                html += `</div></div>`;
+            });
+            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
+            quizContainer.innerHTML = html;
+            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+        }
+
+        const normalizeAnswer = str => {
+            return (str || '').replace(/\s+/g, '').toLowerCase().split(',').sort().join(',');
+        };
+
+        function gradeQuiz(event) {
+            event.preventDefault();
+            let score = 0, total = 0, resultsHTML = '';
+            
+            currentQuestions.forEach(q_group => {
+                 q_group.subQuestions.forEach(sq => {
+                    total++;
+                    const userInput = document.getElementById(sq.id).value;
+                    const isCorrect = normalizeAnswer(userInput) === normalizeAnswer(sq.answer);
+                    if (isCorrect) score++;
+                     resultsHTML += `<div class="p-4 border-l-4 ${isCorrect?'border-green-500 bg-green-50':'border-red-500 bg-red-50'}">
+                        <p class="font-mono">${sq.text}</p>
+                        <p>Your Answer: ${userInput || '<em>none</em>'}</p>
+                        ${!isCorrect ? `<p>Correct Answer: ${sq.answer}</p>` : ''}
+                    </div>`;
+                 });
+            });
+            
+            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
+            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-500');
+            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            detailedResultsElement.innerHTML = resultsHTML;
+            quizContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+        
+        retakeQuizBtn.addEventListener('click', () => {
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        generateNewBtn.addEventListener('click', () => {
+            generateQuizData();
+            renderQuizForm();
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+             generateQuizData();
+             renderQuizForm();
+        });
+    </script>
+</body>
+</html>
+

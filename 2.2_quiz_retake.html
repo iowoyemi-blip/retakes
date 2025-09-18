@@ -3,280 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Algebra I - Dynamic Quiz Generator</title>
+    <title>Algebra Expressions Practice</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-        .quiz-container {
-            transition: all 0.3s ease-in-out;
-        }
-        .result-item.correct {
-            background-color: #f0fdf4;
-            border-left-color: #22c55e;
-        }
-        .result-item.incorrect {
-            background-color: #fef2f2;
-            border-left-color: #ef4444;
-        }
-        /* Style for the code blocks within questions for better readability */
         code {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 0.95em;
+            font-size: 1.05em;
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .solution-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease-in-out;
         }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <main class="bg-white rounded-2xl shadow-lg w-full max-w-3xl quiz-container">
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-2xl">
         <div class="p-8 border-b border-gray-200">
-            <h1 class="text-3xl font-bold text-gray-800">Algebra Practice Quiz</h1>
-            <p class="text-gray-600 mt-2">Generate a new quiz anytime. Four-Function Calculator Allowed.</p>
+            <h1 class="text-3xl font-bold text-gray-800">Translating & Evaluating Expressions</h1>
+            <p class="text-gray-600 mt-2">Check your answer after each problem. Use 'n' for the variable.</p>
         </div>
 
         <div id="quizContainer" class="p-8">
-            <!-- The quiz form will be dynamically generated and inserted here -->
+            <!-- The quiz question will be dynamically generated and inserted here -->
         </div>
 
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
-            <div id="score" class="text-xl mb-6 font-semibold"></div>
-            <div id="detailedResults" class="space-y-4"></div>
-             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
-                    Try This Quiz Again
-                </button>
-                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
-                    Generate New Quiz
-                </button>
-            </div>
-        </div>
     </main>
 
     <script>
         const quizContainer = document.getElementById('quizContainer');
-        const resultsSection = document.getElementById('resultsSection');
-        const scoreElement = document.getElementById('score');
-        const detailedResultsElement = document.getElementById('detailedResults');
-        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
-        const generateNewBtn = document.getElementById('generateNewBtn');
+        let allQuestions = [];
+        let currentQuestionIndex = 0;
 
-        let currentQuestions = [];
-
-        // --- UTILITY FUNCTIONS ---
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const toWords = (num) => {
-            const words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
-            return words[num] || num.toString();
-        };
-        const toWordsCapitalized = (num) => {
-            const word = toWords(num);
-            return word.charAt(0).toUpperCase() + word.slice(1);
-        };
+        const toWords = (num) => ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"][num] || num.toString();
+        const toWordsCapitalized = (num) => { const w = toWords(num); return w.charAt(0).toUpperCase() + w.slice(1); };
 
-        // --- QUESTION GENERATORS ---
-        function generateExpressionQuestions() {
-            const questions = [];
+        function generateQuestions() {
+            allQuestions = [];
             
-            // 1a: Product
-            const num1a = getRandomInt(2, 12);
-            questions.push({
-                id: 'q1a',
-                text: `a. The product of a number and ${toWords(num1a)}.`,
-                answers: [`${num1a}n`, `${num1a}*n`]
-            });
-
-            // 1b: Fraction and sum
-            const num1b = getRandomInt(2, 12);
-            const fracOptions = [{text: "half", val: 2}, {text: "one-third", val: 3}, {text: "one-fourth", val: 4}];
-            const frac1b = fracOptions[getRandomInt(0, fracOptions.length - 1)];
-            questions.push({
-                id: 'q1b',
-                text: `b. ${toWordsCapitalized(num1b)} more than ${frac1b.text} of a number.`,
-                answers: [`n/${frac1b.val}+${num1b}`, `(1/${frac1b.val})n+${num1b}`, `${num1b}+n/${frac1b.val}`, `${num1b}+(1/${frac1b.val})n`]
-            });
-
-            // 1c: Sum in parentheses
-            const num1c1 = getRandomInt(2, 5);
-            const num1c2 = getRandomInt(2, 12);
-            questions.push({
-                id: 'q1c',
-                text: `c. ${toWordsCapitalized(num1c1)} times the sum of a number and ${toWords(num1c2)}.`,
-                answers: [`${num1c1}(n+${num1c2})`, `${num1c1}*(n+${num1c2})`]
-            });
-            
-            // 1d: Difference in parentheses
-            const num1d1 = getRandomInt(2, 5);
-            const num1d2 = getRandomInt(2, 12);
-            questions.push({
-                id: 'q1d',
-                text: `d. ${toWordsCapitalized(num1d1)} times the difference of a number and ${toWords(num1d2)}.`,
-                answers: [`${num1d1}(n-${num1d2})`, `${num1d1}*(n-${num1d2})`]
-            });
-
-            return questions;
-        }
-
-        function generateEvaluationQuestions() {
-            const questions = [];
-
-            // 2a: Simple evaluation
-            const coeff2a = getRandomInt(-5, 5) || 1; // ensure not 0
-            const const2a = getRandomInt(-10, 10);
-            const val2a = getRandomInt(-5, 5);
-            const sign2a = const2a >= 0 ? '+' : '-';
-            questions.push({
-                id: 'q2a',
-                text: `a. <code class="bg-gray-200 p-1 rounded">${coeff2a}m ${sign2a} ${Math.abs(const2a)}</code> for <code class="bg-gray-200 p-1 rounded">m = ${val2a}</code>`,
-                answers: [(coeff2a * val2a + const2a).toString()]
-            });
-
-            // 2b: Fraction evaluation (ensures whole number answer)
-            const den2b = getRandomInt(2, 5);
-            const val2b = den2b * getRandomInt(-5, 5); // val is a multiple of den
-            const const2b = getRandomInt(-7, 7);
-            const sign2b = const2b >= 0 ? '+' : '-';
-            questions.push({
-                id: 'q2b',
-                text: `b. <code class="bg-gray-200 p-1 rounded">(1/${den2b})x ${sign2b} ${Math.abs(const2b)}</code> for <code class="bg-gray-200 p-1 rounded">x = ${val2b}</code>`,
-                answers: [((val2b / den2b) + const2b).toString()]
-            });
-
-            // 2c: Quadratic evaluation
-            const a2c = getRandomInt(2, 5);
-            const b2c = getRandomInt(-5, 5) || 1;
-            const c2c = getRandomInt(-10, 10);
-            const val2c = getRandomInt(-3, 3);
-            const signB2c = b2c >= 0 ? '+' : '-';
-            const signC2c = c2c >= 0 ? '+' : '-';
-            questions.push({
-                id: 'q2c',
-                text: `c. <code class="bg-gray-200 p-1 rounded">${a2c}x² ${signB2c} ${Math.abs(b2c)}x ${signC2c} ${Math.abs(c2c)}</code> for <code class="bg-gray-200 p-1 rounded">x = ${val2c}</code>`,
-                answers: [(a2c * val2c * val2c + b2c * val2c + c2c).toString()]
-            });
-            
-            // 2d: Two-variable evaluation
-            const coeffA2d = getRandomInt(2, 10);
-            const coeffB2d = getRandomInt(2, 10);
-            const valA2d = getRandomInt(-5, 5);
-            const valB2d = getRandomInt(-5, 5);
-            const signOp2d = getRandomInt(0, 1) === 0 ? '+' : '-';
-            let answer2d = (signOp2d === '+') 
-                ? (coeffA2d * valA2d + coeffB2d * valB2d) 
-                : (coeffA2d * valA2d - coeffB2d * valB2d);
-            questions.push({
-                id: 'q2d',
-                text: `d. <code class="bg-gray-200 p-1 rounded">${coeffA2d}a ${signOp2d} ${coeffB2d}b</code> for <code class="bg-gray-200 p-1 rounded">a = ${valA2d}</code> and <code class="bg-gray-200 p-1 rounded">b = ${valB2d}</code>`,
-                answers: [answer2d.toString()]
-            });
-            
-            return questions;
-        }
-
-        // --- CORE QUIZ LOGIC ---
-        function generateAndRenderQuiz() {
-            currentQuestions = [...generateExpressionQuestions(), ...generateEvaluationQuestions()];
-            renderQuizForm(currentQuestions);
-            quizContainer.classList.remove('hidden');
-            resultsSection.classList.add('hidden');
-            window.scrollTo(0, 0);
-        }
-
-        function renderQuizForm(questions) {
-            const expressionsHTML = questions.slice(0, 4).map(q => `
-                <div class="flex flex-col md:flex-row md:items-center">
-                    <label for="${q.id}" class="md:w-1/2 text-gray-700 mb-2 md:mb-0">${q.text}</label>
-                    <input type="text" id="${q.id}" name="${q.id}" class="md:w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                </div>
-            `).join('');
-
-            const evaluationsHTML = questions.slice(4).map(q => `
-                <div class="flex flex-col md:flex-row md:items-center">
-                    <label for="${q.id}" class="md:w-1/2 text-gray-700 mb-2 md:mb-0">${q.text}</label>
-                    <input type="text" id="${q.id}" name="${q.id}" class="md:w-1/2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                </div>
-            `).join('');
-
-            quizContainer.innerHTML = `
-                <form id="quizForm">
-                    <div class="mb-10">
-                        <h2 class="text-xl font-semibold text-gray-700 mb-6">1. Represent each statement as an algebraic expression.</h2>
-                        <div class="space-y-6">${expressionsHTML}</div>
-                    </div>
-                    <div>
-                        <h2 class="text-xl font-semibold text-gray-700 mb-6">2. Evaluate each expression.</h2>
-                        <div class="space-y-6">${evaluationsHTML}</div>
-                    </div>
-                    <div class="mt-10 text-center">
-                        <button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-transform transform hover:scale-105">
-                            Grade My Quiz
-                        </button>
-                    </div>
-                </form>
-            `;
-            
-            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
-        }
-
-        function gradeQuiz(event) {
-            event.preventDefault();
-            
-            let score = 0;
-            let resultsHTML = '';
-
-            currentQuestions.forEach(q => {
-                const inputElement = document.getElementById(q.id);
-                const userAnswerRaw = inputElement.value.trim();
-                // Normalize answer: remove spaces, asterisks, and use 'n' for any variable for comparison
-                const userAnswer = userAnswerRaw.replace(/\s+/g, '').replace(/\*/g, '').replace(/[a-zA-Z]/g, 'n');
-                
-                // For expression questions, we allow multiple correct formats.
-                const correctAnswers = q.answers.map(ans => ans.replace(/\s+/g, '').replace(/\*/g, ''));
-                const isCorrect = correctAnswers.includes(userAnswer);
-
-                if (isCorrect) {
-                    score++;
+            // --- Expression Questions (Generate 4) ---
+            for(let i=0; i<4; i++){
+                const type = i % 4;
+                if (type === 0) {
+                     const num1a = getRandomInt(2, 12);
+                    allQuestions.push({
+                        type: 'expression',
+                        text: `Represent "The product of a number and ${toWords(num1a)}" as an algebraic expression.`,
+                        answers: [`${num1a}n`, `${num1a}*n`],
+                        solutionSteps: [`"Product" means multiplication.`,`The number is represented by 'n'.`,`So, the expression is <code>${num1a}n</code>.`]
+                    });
+                } else if (type === 1) {
+                    const num1b = getRandomInt(2, 12); const frac1b = {text: "one-third", val: 3};
+                    allQuestions.push({
+                        type: 'expression',
+                        text: `Represent "${toWordsCapitalized(num1b)} more than ${frac1b.text} of a number" as an algebraic expression.`,
+                        answers: [`n/${frac1b.val}+${num1b}`, `(1/${frac1b.val})n+${num1b}`],
+                        solutionSteps: [`"${frac1b.text} of a number" can be written as <code>n/${frac1b.val}</code> or <code>(1/${frac1b.val})n</code>.`, `"${toWords(num1b)} more than" means we add ${num1b}.`, `So, the expression is <code>n/${frac1b.val} + ${num1b}</code>.`]
+                    });
+                } else if (type === 2) {
+                     const num1c1 = getRandomInt(2, 5); const num1c2 = getRandomInt(2, 12);
+                     allQuestions.push({
+                        type: 'expression',
+                        text: `Represent "${toWordsCapitalized(num1c1)} times the sum of a number and ${toWords(num1c2)}" as an algebraic expression.`,
+                        answers: [`${num1c1}(n+${num1c2})`, `${num1c1}*(n+${num1c2})`],
+                        solutionSteps: [`"The sum of a number and ${toWords(num1c2)}" translates to <code>(n + ${num1c2})</code>.`, `"${toWordsCapitalized(num1c1)} times" means we multiply the entire sum.`, `So, the expression is <code>${num1c1}(n+${num1c2})</code>.`]
+                    });
+                } else {
+                    const num1d1 = getRandomInt(2, 5); const num1d2 = getRandomInt(2, 12);
+                    allQuestions.push({
+                        type: 'expression',
+                        text: `Represent "${toWordsCapitalized(num1d1)} times the difference of a number and ${toWords(num1d2)}" as an algebraic expression.`,
+                        answers: [`${num1d1}(n-${num1d2})`, `${num1d1}*(n-${num1d2})`],
+                        solutionSteps: [`"The difference of a number and ${toWords(num1d2)}" translates to <code>(n - ${num1d2})</code>.`, `"${toWordsCapitalized(num1d1)} times" means we multiply the entire difference.`, `So, the expression is <code>${num1d1}(n-${num1d2})</code>.`]
+                    });
                 }
-
-                resultsHTML += `
-                    <div class="result-item border-l-4 p-4 rounded-md ${isCorrect ? 'correct' : 'incorrect'}">
-                        <p class="font-semibold text-gray-800">${q.text}</p>
-                        <p class="mt-2 text-sm">Your answer: <span class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">${userAnswerRaw || '<i>No answer</i>'}</span></p>
-                        ${!isCorrect ? `<p class="mt-1 text-sm">Correct answer(s): <span class="font-medium text-green-700">${q.answers.join(' or ')}</span></p>` : ''}
-                    </div>
-                `;
-            });
-
-            const totalQuestions = currentQuestions.length;
-            const percentage = Math.round((score / totalQuestions) * 100);
-
-            let scoreColor;
-            if (percentage >= 80) scoreColor = 'text-green-600';
-            else if (percentage >= 60) scoreColor = 'text-yellow-600';
-            else scoreColor = 'text-red-600';
-
-            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${totalQuestions} (${percentage}%)</span>`;
-            detailedResultsElement.innerHTML = resultsHTML;
-
-            quizContainer.classList.add('hidden');
-            resultsSection.classList.remove('hidden');
-            window.scrollTo(0, 0);
+            }
+            
+            // --- Evaluation Questions (Generate 4) ---
+             for(let i=0; i<4; i++){
+                const type = i % 4;
+                if (type === 0) {
+                     const coeff2a = getRandomInt(-5, 5) || 1; const const2a = getRandomInt(-10, 10); const val2a = getRandomInt(-5, 5);
+                    allQuestions.push({
+                        type: 'evaluation',
+                        text: `Evaluate <code>${coeff2a}m ${const2a >= 0 ? '+' : '-'} ${Math.abs(const2a)}</code> for <code>m = ${val2a}</code>.`,
+                        answer: (coeff2a * val2a + const2a).toString(),
+                        solutionSteps: [`Substitute <code>${val2a}</code> for <code>m</code>: <code>${coeff2a}(${val2a}) ${const2a >= 0 ? '+' : '-'} ${Math.abs(const2a)}</code>.`, `Multiply first: <code>${coeff2a * val2a} ${const2a >= 0 ? '+' : '-'} ${Math.abs(const2a)}</code>.`, `Then add/subtract: <code>${coeff2a * val2a + const2a}</code>.`]
+                    });
+                } else if (type === 1) {
+                    const den2b = getRandomInt(2, 5); const val2b = den2b * getRandomInt(-5, 5); const const2b = getRandomInt(-7, 7);
+                    allQuestions.push({
+                        type: 'evaluation',
+                        text: `Evaluate <code>(1/${den2b})x ${const2b >= 0 ? '+' : '-'} ${Math.abs(const2b)}</code> for <code>x = ${val2b}</code>.`,
+                        answer: ((val2b / den2b) + const2b).toString(),
+                        solutionSteps: [`Substitute <code>${val2b}</code> for <code>x</code>: <code>(1/${den2b})(${val2b}) ${const2b >= 0 ? '+' : '-'} ${Math.abs(const2b)}</code>.`, `Multiply/Divide first: <code>${val2b/den2b} ${const2b >= 0 ? '+' : '-'} ${Math.abs(const2b)}</code>.`, `Then add/subtract: <code>${(val2b/den2b) + const2b}</code>.`]
+                    });
+                } else if (type === 2) {
+                     const a2c = getRandomInt(2, 5); const b2c = getRandomInt(-5, 5) || 1; const c2c = getRandomInt(-10, 10); const val2c = getRandomInt(-3, 3);
+                    allQuestions.push({
+                        type: 'evaluation',
+                        text: `Evaluate <code>${a2c}x² ${b2c >= 0 ? '+' : '-'} ${Math.abs(b2c)}x ${c2c >= 0 ? '+' : '-'} ${Math.abs(c2c)}</code> for <code>x = ${val2c}</code>.`,
+                        answer: (a2c * val2c**2 + b2c * val2c + c2c).toString(),
+                        solutionSteps: [`Substitute <code>${val2c}</code> for each <code>x</code>: <code>${a2c}(${val2c})² ${b2c >= 0 ? '+' : '-'} ${Math.abs(b2c)}(${val2c}) ${c2c >= 0 ? '+' : '-'} ${Math.abs(c2c)}</code>.`, `Evaluate the exponent first: <code>${a2c}(${val2c**2}) ${b2c >= 0 ? '+' : '-'} ${Math.abs(b2c)}(${val2c}) ${c2c >= 0 ? '+' : '-'} ${Math.abs(c2c)}</code>.`, `Perform multiplication: <code>${a2c * val2c**2} ${b2c < 0 ? '-' : '+'} ${Math.abs(b2c*val2c)} ${c2c < 0 ? '-' : '+'} ${Math.abs(c2c)}</code>.`, `Add and subtract from left to right: <code>${a2c * val2c**2 + b2c * val2c + c2c}</code>.`]
+                    });
+                } else {
+                    const coeffA2d = getRandomInt(2, 10); const coeffB2d = getRandomInt(2, 10); const valA2d = getRandomInt(-5, 5); const valB2d = getRandomInt(-5, 5); const signOp2d = getRandomInt(0, 1) === 0 ? '+' : '-';
+                    const answer2d = (signOp2d === '+') ? (coeffA2d * valA2d + coeffB2d * valB2d) : (coeffA2d * valA2d - coeffB2d * valB2d);
+                    allQuestions.push({
+                        type: 'evaluation',
+                        text: `Evaluate <code>${coeffA2d}a ${signOp2d} ${coeffB2d}b</code> for <code>a = ${valA2d}</code> and <code>b = ${valB2d}</code>.`,
+                        answer: answer2d.toString(),
+                        solutionSteps: [`Substitute the values for <code>a</code> and <code>b</code>: <code>${coeffA2d}(${valA2d}) ${signOp2d} ${coeffB2d}(${valB2d})</code>.`, `Multiply first: <code>${coeffA2d*valA2d} ${signOp2d} ${coeffB2d*valB2d}</code>.`, `Then add/subtract: <code>${answer2d}</code>.`]
+                    });
+                }
+            }
         }
 
-        // --- EVENT LISTENERS ---
-        retakeQuizBtn.addEventListener('click', function() {
-            renderQuizForm(currentQuestions); // Renders the same quiz again
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-        });
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            generateQuestions();
+            renderCurrentQuestion();
+        }
 
-        generateNewBtn.addEventListener('click', generateAndRenderQuiz); // Generates a new quiz
+        function renderCurrentQuestion() {
+            if (currentQuestionIndex >= allQuestions.length) {
+                quizContainer.innerHTML = `<div class="text-center">
+                    <h2 class="text-2xl font-bold text-gray-800">Practice Complete!</h2>
+                    <p class="mt-2 text-gray-600">You've finished all the questions for this session.</p>
+                    <button id="startOverBtn" class="mt-6 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Start Over with New Questions</button>
+                </div>`;
+                document.getElementById('startOverBtn').addEventListener('click', startQuiz);
+                return;
+            }
 
-        // --- INITIALIZE ---
-        document.addEventListener('DOMContentLoaded', generateAndRenderQuiz);
+            const q = allQuestions[currentQuestionIndex];
+            quizContainer.innerHTML = `
+                <div class="mb-4">
+                    <h2 class="text-xl font-semibold text-gray-700">Question ${currentQuestionIndex + 1} of ${allQuestions.length}</h2>
+                </div>
+                <div class="text-center text-xl my-8">${q.text}</div>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <input type="text" id="userAnswer" class="p-3 border border-gray-300 rounded-lg text-center text-lg w-full sm:w-auto" autofocus>
+                    <button id="checkBtn" class="bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 w-full sm:w-auto">Check</button>
+                </div>
+                <div id="feedbackContainer" class="mt-6"></div>
+            `;
+
+            document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+            document.getElementById('userAnswer').addEventListener('keypress', e => { if (e.key === 'Enter') checkAnswer(); });
+        }
+
+        function checkAnswer() {
+            const userAnswerRaw = document.getElementById('userAnswer').value.trim();
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const q = allQuestions[currentQuestionIndex];
+            
+            let isCorrect;
+            if (q.type === 'expression') {
+                const userAnswer = userAnswerRaw.replace(/\s+/g, '').replace(/\*/g, '').replace(/[a-zA-Z]/g, 'n');
+                const correctAnswers = q.answers.map(ans => ans.replace(/\s+/g, '').replace(/\*/g, ''));
+                isCorrect = correctAnswers.includes(userAnswer);
+            } else { // evaluation
+                isCorrect = userAnswerRaw === q.answer;
+            }
+
+            let feedbackHTML = `<div class="p-4 rounded-lg solution-box">`;
+            if (isCorrect) {
+                feedbackHTML += `<h3 class="text-lg font-bold text-green-700">Correct!</h3>`;
+            } else {
+                const correctAnswerDisplay = q.type === 'expression' ? q.answers.join(' or ') : q.answer;
+                feedbackHTML += `<h3 class="text-lg font-bold text-red-700">Not quite.</h3>
+                                 <p class="mt-1">Your answer was <strong>${userAnswerRaw || "empty"}</strong>. The correct answer is <strong>${correctAnswerDisplay}</strong>.</p>`;
+            }
+            
+            feedbackHTML += `<div class="mt-4"><h4 class="font-semibold">Here's how to solve it:</h4><div class="mt-2 space-y-2 text-sm text-gray-700">${q.solutionSteps.join('<br>')}</div></div>`;
+            feedbackHTML += `</div><div class="text-center mt-6">
+                                <button id="nextBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Next Question</button>
+                             </div>`;
+            
+            feedbackContainer.innerHTML = feedbackHTML;
+            document.getElementById('checkBtn').disabled = true;
+            document.getElementById('userAnswer').disabled = true;
+            document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+            document.getElementById('nextBtn').focus();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            renderCurrentQuestion();
+        }
+        
+        document.addEventListener('DOMContentLoaded', startQuiz);
     </script>
 </body>
 </html>

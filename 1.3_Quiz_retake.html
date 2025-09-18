@@ -10,12 +10,17 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+        .solution-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
         .fraction {
             display: inline-flex;
             flex-direction: column;
             align-items: center;
             vertical-align: middle;
             margin: 0 0.2em;
+            line-height: 1.2;
         }
         .numerator {
             border-bottom: 1px solid black;
@@ -28,39 +33,23 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <main class="bg-white rounded-2xl shadow-lg w-full max-w-4xl">
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-2xl">
         <div class="p-8 border-b border-gray-200">
             <h1 class="text-3xl font-bold text-gray-800">Operations with Radicals Practice</h1>
-            <p class="text-gray-600 mt-2">Use the &radic; button or type 'sqrt()' for the square root symbol, e.g., 3sqrt(2).</p>
+            <p class="text-gray-600 mt-2">Check your answer after each problem. Use 'sqrt()' or the &radic; button.</p>
         </div>
 
         <div id="quizContainer" class="p-8">
-            <!-- The quiz form will be dynamically generated and inserted here -->
+            <!-- The quiz question will be dynamically generated and inserted here -->
         </div>
 
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
-            <div id="score" class="text-xl mb-6 font-semibold"></div>
-            <div id="detailedResults" class="space-y-4"></div>
-             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
-                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
-            </div>
-        </div>
     </main>
 
     <script>
         const quizContainer = document.getElementById('quizContainer');
-        const resultsSection = document.getElementById('resultsSection');
-        const scoreElement = document.getElementById('score');
-        const detailedResultsElement = document.getElementById('detailedResults');
-        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
-        const generateNewBtn = document.getElementById('generateNewBtn');
+        let allQuestions = [];
+        let currentQuestionIndex = 0;
 
-        let currentQuestions = [];
-
-        // --- UTILITY FUNCTIONS ---
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
         const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); return b === 0 ? a : gcd(b, a % b); };
@@ -77,20 +66,23 @@
         }
 
         function simplifyRadical(n) {
-            if (n === 0) return { coeff: 0, rad: 1 };
-            if (n === 1) return { coeff: 1, rad: 1 };
+            if (n === 0) return { coeff: 1, rad: 0, factors: [] };
+            if (n === 1) return { coeff: 1, rad: 1, factors: [] };
             let coeff = 1;
             let rad = n;
+            const factors = [];
             for (let i = Math.floor(Math.sqrt(n)); i > 1; i--) {
                 if (rad % (i * i) === 0) {
                     coeff *= i;
                     rad /= (i * i);
+                    factors.push(i*i);
                 }
             }
-            return { coeff, rad };
+            return { coeff, rad, factors };
         }
 
         function formatRadical({ coeff, rad, den = 1 }) {
+            if (rad === 0) return '0';
             if (coeff === 0) return '0';
             
             if (den !== 1) {
@@ -111,141 +103,168 @@
                  return `${coeffPart}${radPart}/${den}`;
             }
         }
-
-        // --- QUESTION GENERATORS ---
-        function generateRadicalOperationsQuestions() {
-            const questions = [];
+        
+        function generateQuestions() {
+            allQuestions = [];
             const perfectSquares = [4, 9, 16, 25];
             const radicands = [2, 3, 5, 6, 7];
 
-            // 1a & 1b: Add/Subtract
-            let commonRad = shuffle(radicands)[0];
-            let sq = shuffle(perfectSquares).slice(0, 2);
-            let c1 = getRandomInt(2, 9); let c2 = getRandomInt(2, 9);
-            let r1 = sq[0] * commonRad; let r2 = sq[1] * commonRad;
-            let ans_c = c1 * Math.sqrt(sq[0]) - c2 * Math.sqrt(sq[1]);
-            questions.push({ id: 'q1a', text: `${c1}&radic;${r1} - ${c2}&radic;${r2}`, answer: formatRadical({coeff: ans_c, rad: commonRad})});
+            // Add/Subtract
+            for(let i=0; i<2; i++){
+                let commonRad = shuffle(radicands)[0];
+                let sq = shuffle(perfectSquares).slice(0, 2);
+                let c1 = getRandomInt(2, 9); let c2 = getRandomInt(2, 9) * (i===0 ? 1 : -1);
+                let r1 = sq[0] * commonRad; let r2 = sq[1] * commonRad;
+                let s1 = Math.sqrt(sq[0]); let s2 = Math.sqrt(sq[1]);
+                let final_coeff = c1 * s1 + c2 * s2;
+                allQuestions.push({
+                    text: `${c1}&radic;${r1} ${c2>=0?'+':'-'} ${Math.abs(c2)}&radic;${r2}`,
+                    answer: formatRadical({coeff: final_coeff, rad: commonRad}),
+                    solutionSteps: [
+                        `<strong>Step 1: Simplify each radical.</strong> Both radicals must have the same radicand to be combined.`,
+                        `<code>${c1}&radic;${r1} = ${c1}&radic;(${sq[0]}&middot;${commonRad}) = ${c1}&middot;${s1}&radic;${commonRad} = ${c1*s1}&radic;${commonRad}</code>`,
+                        `<code>${Math.abs(c2)}&radic;${r2} = ${Math.abs(c2)}&radic;(${sq[1]}&middot;${commonRad}) = ${Math.abs(c2)}&middot;${s2}&radic;${commonRad} = ${Math.abs(c2*s2)}&radic;${commonRad}</code>`,
+                        `<strong>Step 2: Combine like terms.</strong> Now that the radicands are the same, add or subtract the coefficients.`,
+                        `<code>${c1*s1}&radic;${commonRad} ${c2>=0?'+':'-'} ${Math.abs(c2*s2)}&radic;${commonRad} = (${c1*s1} ${c2>=0?'+':'-'} ${Math.abs(c2*s2)})&radic;${commonRad} = ${final_coeff}&radic;${commonRad}</code>`
+                    ]
+                });
+            }
 
-            commonRad = shuffle(radicands)[0];
-            sq = shuffle(perfectSquares).slice(0, 2);
-            c1 = getRandomInt(-5, -2); c2 = getRandomInt(2, 5);
-            r1 = sq[0] * commonRad; r2 = sq[1] * commonRad;
-            ans_c = c1 * Math.sqrt(sq[0]) + c2 * Math.sqrt(sq[1]);
-            questions.push({ id: 'q1b', text: `${c1}&radic;${r1} + ${c2}&radic;${r2}`, answer: formatRadical({coeff: ans_c, rad: commonRad})});
-
-            // 2a & 2b: Multiply
-            let r_a = shuffle(radicands)[0] * 2; let r_b = shuffle(perfectSquares)[0] * r_a / 2;
-            questions.push({ id: 'q2a', text: `&radic;${r_a} &middot; &radic;${r_b}`, answer: formatRadical(simplifyRadical(r_a * r_b)) });
-
-            let c_b1 = getRandomInt(2,7); let c_b2 = getRandomInt(2,7);
-            let r_b1 = shuffle([8,12,18,20])[0]; let r_b2 = shuffle([8,12,18,20])[0];
-            const simplified = simplifyRadical(r_b1 * r_b2);
-            questions.push({ id: 'q2b', text: `${c_b1}&radic;${r_b1} &middot; ${c_b2}&radic;${r_b2}`, answer: formatRadical({coeff: c_b1 * c_b2 * simplified.coeff, rad: simplified.rad}) });
-            
-            // 2c & 2d: Divide (simple cases)
-            let den_c = shuffle(radicands)[0]; let num_c = den_c * shuffle(perfectSquares)[0];
-            questions.push({ id: 'q2c', text: `&radic;${num_c} / &radic;${den_c}`, answer: `${Math.sqrt(num_c/den_c)}` });
-            
-            let den_d = shuffle(perfectSquares)[0];
-            let { coeff: num_d_coeff, rad: num_d_rad } = simplifyRadical(getRandomInt(20, 80));
-            questions.push({ id: 'q2d', text: `&radic;${num_d_coeff**2 * num_d_rad} / &radic;${den_d}`, answer: formatRadical({coeff: num_d_coeff, rad: num_d_rad, den: Math.sqrt(den_d)}) });
-
-            // 2e & 2f: Divide (rationalize)
-            let r_e_num = shuffle(radicands)[0]; let r_e_den = shuffle(radicands.filter(r => r !== r_e_num))[0];
-            questions.push({ id: 'q2e', text: `&radic;${r_e_num} / &radic;${r_e_den}`, answer: formatRadical({coeff: 1, rad: r_e_num * r_e_den, den: r_e_den}) });
-
-            let r_f_num = shuffle(radicands)[0];
-            let r_f_mult = shuffle([2,3,5,6,7].filter(r => r !== r_f_num))[0];
-            const simplified_f = simplifyRadical(r_f_mult);
-            questions.push({ id: 'q2f', text: `&radic;${r_f_num} / &radic;${r_f_num*r_f_mult}`, answer: formatRadical({coeff: simplified_f.coeff, rad: simplified_f.rad, den: r_f_mult})});
-
-            return questions;
+            // Multiply/Divide
+            for(let i=0; i<6; i++){
+                if(i===0) { // Multiply
+                    let r_a = shuffle(radicands)[0] * 2; let r_b = shuffle(perfectSquares)[0] * r_a / 2;
+                    const simplified = simplifyRadical(r_a * r_b);
+                    allQuestions.push({ 
+                        text: `&radic;${r_a} &middot; &radic;${r_b}`, 
+                        answer: formatRadical(simplified),
+                        solutionSteps: [
+                            `<strong>Step 1: Multiply the radicands.</strong> <code>&radic;${r_a} &middot; &radic;${r_b} = &radic;${r_a * r_b}</code>`,
+                            `<strong>Step 2: Simplify the result.</strong> Find the largest perfect square that divides ${r_a*r_b}, which is ${simplified.coeff**2}.`,
+                            `<code>&radic;${r_a * r_b} = &radic;(${simplified.coeff**2} &middot; ${simplified.rad}) = ${simplified.coeff}&radic;${simplified.rad}</code>`
+                        ]
+                    });
+                } else if (i===1) { // Multiply with coefficients
+                    let c1 = getRandomInt(2,7); let c2 = getRandomInt(2,7);
+                    let r1 = shuffle([8,12,18,20])[0]; let r2 = shuffle([8,12,18,20])[0];
+                    const simplified = simplifyRadical(r1 * r2);
+                    const finalCoeff = c1 * c2 * simplified.coeff;
+                     allQuestions.push({
+                        text: `${c1}&radic;${r1} &middot; ${c2}&radic;${r2}`,
+                        answer: formatRadical({coeff: finalCoeff, rad: simplified.rad}),
+                        solutionSteps: [
+                            `<strong>Step 1: Multiply coefficients and radicands separately.</strong>`,
+                            `<code>(${c1} &middot; ${c2}) &middot; (&radic;${r1} &middot; &radic;${r2}) = ${c1*c2}&radic;${r1*r2}</code>`,
+                            `<strong>Step 2: Simplify the resulting radical.</strong>`,
+                            `<code>&radic;${r1*r2} = &radic;(${simplified.coeff**2} &middot; ${simplified.rad}) = ${simplified.coeff}&radic;${simplified.rad}</code>`,
+                             `<strong>Step 3: Combine.</strong> <code>${c1*c2} &middot; ${simplified.coeff}&radic;${simplified.rad} = ${finalCoeff}&radic;${simplified.rad}</code>`
+                        ]
+                    });
+                } else if (i===2 || i===3) { // Simple division
+                     let den = shuffle(radicands)[0]; let num = den * shuffle(perfectSquares)[0];
+                     allQuestions.push({
+                        text: `<div class="fraction"><span class="numerator">&radic;${num}</span><span class="denominator">&radic;${den}</span></div>`,
+                        answer: `${Math.sqrt(num/den)}`,
+                        solutionSteps: [
+                            `<strong>Step 1: Combine under one radical.</strong> <code>&radic;(${num}/${den})</code>`,
+                            `<strong>Step 2: Divide the numbers.</strong> <code>${num}/${den} = ${num/den}</code>`,
+                            `<strong>Step 3: Take the square root.</strong> <code>&radic;${num/den} = ${Math.sqrt(num/den)}</code>`
+                        ]
+                    });
+                } else { // Rationalize
+                     let num = shuffle(radicands)[0]; let den = shuffle(radicands.filter(r => r !== num))[0];
+                     const common = gcd(num, den);
+                     const simp_num_rad = num/common; const simp_den_rad = den/common;
+                     const final_den = simp_den_rad;
+                     const final_num_rad = simp_num_rad * simp_den_rad;
+                     const final_simp = simplifyRadical(final_num_rad);
+                     allQuestions.push({
+                        text: `<div class="fraction"><span class="numerator">&radic;${num}</span><span class="denominator">&radic;${den}</span></div>`,
+                        answer: formatRadical({coeff: final_simp.coeff, rad: final_simp.rad, den: final_den}),
+                        solutionSteps: [
+                            `<strong>Step 1: Rationalize the denominator.</strong> Multiply the numerator and denominator by <code>&radic;${den}</code>.`,
+                            `<code><div class="fraction"><span class="numerator">&radic;${num} &middot; &radic;${den}</span><span class="denominator">&radic;${den} &middot; &radic;${den}</span></div> = <div class="fraction"><span class="numerator">&radic;${num*den}</span><span class="denominator">${den}</span></div></code>`,
+                            `<strong>Step 2: Simplify the numerator's radical.</strong> <code>&radic;${num*den} = ${final_simp.coeff}&radic;${final_simp.rad}</code>`,
+                            `<strong>Step 3: Combine and simplify the fraction.</strong> <code><div class="fraction"><span class="numerator">${final_simp.coeff}&radic;${final_simp.rad}</span><span class="denominator">${den}</span></div></code> which simplifies to <code>${formatRadical({coeff: final_simp.coeff, rad: final_simp.rad, den: den})}</code>`
+                        ]
+                    });
+                }
+            }
+            allQuestions = shuffle(allQuestions);
         }
 
-        function renderQuizForm() {
-            const prefixes_1 = ['a)', 'b)'];
-            const prefixes_2 = ['a)', 'b)', 'c)', 'd)', 'e)', 'f)'];
-            const q1 = currentQuestions.slice(0, 2);
-            const q2 = currentQuestions.slice(2);
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            generateQuestions();
+            renderCurrentQuestion();
+        }
 
-            const createQuestionHTML = (q, i, prefixes) => {
-                let text = q.text;
-                if(text.includes(' / ')){
-                    const parts = text.split(' / ');
-                    text = `<div class="fraction"><span class="numerator">${parts[0]}</span><span class="denominator">${parts[1]}</span></div>`;
-                }
-                return `
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-                    <p class="flex items-center gap-4 text-xl"><span class="font-semibold">${prefixes[i]}</span>${text}</p>
-                    <div class="relative w-full">
-                         <input type="text" id="${q.id}" class="w-full p-2 border border-gray-300 rounded-lg pr-10">
-                         <button type="button" onclick="insertSymbolAtCursor('${q.id}', 'sqrt()', 5)" class="absolute inset-y-0 right-0 flex items-center justify-center w-10 h-full text-gray-600 hover:bg-gray-200 rounded-r-lg text-2xl font-semibold focus:outline-none" title="Insert Square Root">&radic;</button>
-                    </div>
+        function renderCurrentQuestion() {
+            if (currentQuestionIndex >= allQuestions.length) {
+                quizContainer.innerHTML = `<div class="text-center">
+                    <h2 class="text-2xl font-bold text-gray-800">Practice Complete!</h2>
+                    <p class="mt-2 text-gray-600">You've finished all the questions for this session.</p>
+                    <button id="startOverBtn" class="mt-6 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Start Over with New Questions</button>
                 </div>`;
+                document.getElementById('startOverBtn').addEventListener('click', startQuiz);
+                return;
             }
-            const q1HTML = q1.map((q, i) => createQuestionHTML(q, i, prefixes_1)).join('<hr class="my-4 border-dashed">');
-            const q2HTML = q2.map((q, i) => createQuestionHTML(q, i, prefixes_2)).join('<hr class="my-4 border-dashed">');
-            
+
+            const q = allQuestions[currentQuestionIndex];
             quizContainer.innerHTML = `
-                <form id="quizForm">
-                    <div class="mb-10"><h2 class="text-xl font-semibold text-gray-700 mb-6">1. Perform the indicated operations, if possible, and simplify.</h2><div class="space-y-4">${q1HTML}</div></div>
-                    <div><h2 class="text-xl font-semibold text-gray-700 mb-6">2. Perform the indicated operations and simplify your answer.</h2><div class="space-y-4">${q2HTML}</div></div>
-                    <div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div>
-                </form>
+                <div class="mb-4">
+                    <h2 class="text-xl font-semibold text-gray-700">Question ${currentQuestionIndex + 1} of ${allQuestions.length}</h2>
+                    <p class="mt-1 text-gray-600">Perform the indicated operation and simplify completely.</p>
+                </div>
+                <div class="text-center text-3xl my-8">${q.text}</div>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
+                    <div class="relative w-full sm:w-auto">
+                        <input type="text" id="userAnswer" class="p-3 border border-gray-300 rounded-lg text-center text-lg w-full sm:w-64 pr-12" autofocus>
+                        <button type="button" onclick="insertSymbolAtCursor('userAnswer', 'sqrt()', 5)" class="absolute inset-y-0 right-0 flex items-center justify-center w-12 h-full text-gray-600 hover:bg-gray-200 rounded-r-lg text-2xl font-semibold focus:outline-none" title="Insert Square Root">&radic;</button>
+                    </div>
+                    <button id="checkBtn" class="bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 w-full sm:w-auto">Check</button>
+                </div>
+                <div id="feedbackContainer" class="mt-6"></div>
             `;
-            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+
+            document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+            document.getElementById('userAnswer').addEventListener('keypress', e => { if (e.key === 'Enter') checkAnswer(); });
         }
         
         const normalizeAnswer = str => (str || '').replace(/\s+/g, '').replace('*','').toLowerCase();
         
-        function gradeQuiz(event) {
-            event.preventDefault();
-            let score = 0; let resultsHTML = '';
+        function checkAnswer() {
+            const userAnswerRaw = document.getElementById('userAnswer').value.trim();
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const q = allQuestions[currentQuestionIndex];
+            const isCorrect = normalizeAnswer(userAnswerRaw) === normalizeAnswer(q.answer);
+
+            let feedbackHTML = `<div class="p-4 rounded-lg solution-box">`;
+            if (isCorrect) {
+                feedbackHTML += `<h3 class="text-lg font-bold text-green-700">Correct!</h3>`;
+            } else {
+                feedbackHTML += `<h3 class="text-lg font-bold text-red-700">Not quite.</h3>
+                                 <p class="mt-1">Your answer was <strong>${userAnswerRaw || "empty"}</strong>. The correct answer is <strong>${q.answer}</strong>.</p>`;
+            }
             
-            currentQuestions.forEach(q => {
-                const userInput = document.getElementById(q.id).value;
-                const isCorrect = normalizeAnswer(userInput) === normalizeAnswer(q.answer);
-                if (isCorrect) score++;
-                let text = q.text;
-                 if(text.includes(' / ')){
-                    const parts = text.split(' / ');
-                    text = `<div class="fraction"><span class="numerator">${parts[0]}</span><span class="denominator">${parts[1]}</span></div>`;
-                }
-                resultsHTML += `<div class="p-4 border-l-4 ${isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50'}">
-                    <div class="font-semibold text-gray-800 flex items-center gap-4 text-xl">${text}</div>
-                    <p class="mt-2 text-sm">Your answer: <span class="font-medium">${userInput || '<i>No answer</i>'}</span></p>
-                    ${!isCorrect ? `<p class="mt-1 text-sm">Correct answer: <span class="font-medium text-green-700">${q.answer}</span></p>` : ''}
-                </div>`;
-            });
+            feedbackHTML += `<div class="mt-4"><h4 class="font-semibold">Here's how to solve it:</h4><div class="mt-2 space-y-2 text-sm text-gray-700">${q.solutionSteps.join('<br>')}</div></div>`;
+            feedbackHTML += `</div><div class="text-center mt-6">
+                                <button id="nextBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Next Question</button>
+                             </div>`;
             
-            const totalQuestions = currentQuestions.length;
-            const percentage = Math.round((score / totalQuestions) * 100);
-            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-500');
-            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${totalQuestions} (${percentage}%)</span>`;
-            detailedResultsElement.innerHTML = resultsHTML;
-            quizContainer.classList.add('hidden');
-            resultsSection.classList.remove('hidden');
-            window.scrollTo(0, 0);
+            feedbackContainer.innerHTML = feedbackHTML;
+            document.getElementById('checkBtn').disabled = true;
+            document.getElementById('userAnswer').disabled = true;
+            document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+            document.getElementById('nextBtn').focus();
         }
 
-        retakeQuizBtn.addEventListener('click', () => {
-            renderQuizForm();
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-        });
-
-        function generateAndRenderQuiz(){
-             currentQuestions = generateRadicalOperationsQuestions();
-             renderQuizForm();
+        function nextQuestion() {
+            currentQuestionIndex++;
+            renderCurrentQuestion();
         }
-
-        generateNewBtn.addEventListener('click', () => {
-            generateAndRenderQuiz();
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-        });
-
-        document.addEventListener('DOMContentLoaded', generateAndRenderQuiz);
+        
+        document.addEventListener('DOMContentLoaded', startQuiz);
     </script>
 </body>
 </html>

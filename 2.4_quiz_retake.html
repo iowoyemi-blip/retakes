@@ -10,253 +10,238 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        .quiz-container {
-            transition: all 0.3s ease-in-out;
+        .solution-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
         }
-        .result-item.correct {
-            background-color: #f0fdf4;
-            border-left-color: #22c55e;
-        }
-        .result-item.incorrect {
-            background-color: #fef2f2;
-            border-left-color: #ef4444;
-        }
-        .question-prefix {
-            font-weight: 500;
-            flex-shrink: 0;
-        }
-        .answer-field {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        .answer-field input {
-            width: 100%;
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <main class="bg-white rounded-2xl shadow-lg w-full max-w-4xl quiz-container">
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-2xl">
         <div class="p-8 border-b border-gray-200">
-            <h1 class="text-3xl font-bold text-gray-800">2.4 Quiz Word Problem Retake</h1>
-            <p class="text-gray-600 mt-2">Translate each situation into an algebraic equation and then solve. Four-Function Calculator Allowed.</p>
+            <h1 class="text-3xl font-bold text-gray-800">Algebra Word Problem Practice</h1>
+            <p class="text-gray-600 mt-2">Check your answer after each problem. Four-Function Calculator Allowed.</p>
         </div>
 
         <div id="quizContainer" class="p-8">
-            <!-- The quiz form will be dynamically generated and inserted here -->
+            <!-- The quiz question will be dynamically generated and inserted here -->
         </div>
 
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
-            <div id="score" class="text-xl mb-6 font-semibold"></div>
-            <div id="detailedResults" class="space-y-4"></div>
-             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
-                    Try This Quiz Again
-                </button>
-                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
-                    Generate New Quiz
-                </button>
-            </div>
-        </div>
     </main>
 
     <script>
         const quizContainer = document.getElementById('quizContainer');
-        const resultsSection = document.getElementById('resultsSection');
-        const scoreElement = document.getElementById('score');
-        const detailedResultsElement = document.getElementById('detailedResults');
-        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
-        const generateNewBtn = document.getElementById('generateNewBtn');
+        let allQuestions = [];
+        let currentQuestionIndex = 0;
 
-        let currentQuestions = [];
-
-        // --- UTILITY FUNCTIONS ---
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const toWords = (num) => {
-             const words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
-             return words[num] || num.toString();
-        };
+        const toWords = (num) => ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][num] || num.toString();
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
 
-        // --- QUESTION GENERATORS ---
-        function generateFractionProblem() {
-            const den = getRandomInt(3, 8);
-            const num = getRandomInt(2, den - 1);
-            const solution = den * getRandomInt(5, 20);
-            const result = (num * solution) / den;
-            const denWords = ["", "", "halves", "thirds", "fourths", "fifths", "sixths", "sevenths", "eighths"];
-
-            return {
-                id: 'q_frac',
-                text: `${toWords(num).charAt(0).toUpperCase() + toWords(num).slice(1)} ${denWords[den]} of a number is ${result}. What is the number?`,
-                fields: [{ id: 'q_frac_ans', label: 'The number is' }],
-                answers: [solution.toString()]
+        function generateQuestions() {
+            const fractionProblem = () => {
+                const den = getRandomInt(3, 8);
+                const num = getRandomInt(2, den - 1);
+                const solution = den * getRandomInt(5, 20);
+                const result = (num * solution) / den;
+                const denWords = ["", "", "halves", "thirds", "fourths", "fifths", "sixths", "sevenths", "eighths"];
+                return {
+                    text: `${toWords(num).charAt(0).toUpperCase() + toWords(num).slice(1)} ${denWords[den]} of a number is ${result}. What is the number?`,
+                    fields: [{ id: 'ans', label: 'The number is' }],
+                    answers: [solution.toString()],
+                    solutionSteps: [
+                        `<strong>Step 1: Set up the equation.</strong> Let 'n' be the number. "${toWords(num)} ${denWords[den]}" translates to <code>(${num}/${den})</code>.`,
+                        `Equation: <code>(${num}/${den})n = ${result}</code>`,
+                        `<strong>Step 2: Solve for n.</strong> Multiply both sides by the reciprocal of the fraction, which is <code>(${den}/${num})</code>.`,
+                        `<code>n = ${result} * (${den}/${num})</code>`,
+                        `<code>n = ${solution}</code>`
+                    ]
+                };
             };
-        }
-
-        function generateConsecutiveIntProblem() {
-            const start = getRandomInt(10, 50);
-            const sum = start + (start + 1);
-            return {
-                id: 'q_consec',
-                text: `The sum of two consecutive integers is ${sum}. What are the numbers?`,
-                fields: [{ id: 'q_consec_1', label: 'First number' }, { id: 'q_consec_2', label: 'Second number' }],
-                answers: [start.toString(), (start + 1).toString()]
-            };
-        }
-
-        function generatePerimeterProblem() {
-            const width = getRandomInt(5, 15);
-            const diff = getRandomInt(2, 10);
-            const length = width + diff;
-            const perimeter = 2 * (length + width);
-            const area = length * width;
-            return {
-                id: 'q_perim',
-                text: `The length of a rectangle is ${diff} inches longer than the width. The perimeter is ${perimeter} inches. Find the length, width, and area of the rectangle.`,
-                fields: [
-                    { id: 'q_perim_w', label: 'Width (in)' },
-                    { id: 'q_perim_l', label: 'Length (in)' },
-                    { id: 'q_perim_a', label: 'Area (in²)' }
-                ],
-                answers: [width.toString(), length.toString(), area.toString()]
-            };
-        }
-
-        function generateSimpleSystemProblem() {
-            const names = ["Jen", "Mike", "Sarah", "Chris"];
-            const items = [["apples", "oranges"], ["pens", "pencils"], ["shirts", "shorts"]];
-            const selected = items[getRandomInt(0, items.length - 1)];
-            const name = names[getRandomInt(0, names.length - 1)];
-
-            const item2Count = getRandomInt(5, 15);
-            const diff = getRandomInt(2, 5);
-            const item1Count = item2Count + diff;
-            const total = item1Count + item2Count;
-
-            return {
-                id: 'q_sys',
-                text: `${name} bought ${diff} more ${selected[0]} than ${selected[1]}. They bought ${total} items in total. How many ${selected[1]} did ${name} buy?`,
-                fields: [{ id: 'q_sys_ans', label: `Number of ${selected[1]}` }],
-                answers: [item2Count.toString()]
-            };
-        }
-
-        function generateLinearCostProblem() {
-            const names = ["Gavin", "Maria", "Liam", "Zoe"];
-            const items = ["gigabytes of data", "miles driven", "hours of service"];
             
-            const name = names[getRandomInt(0, names.length - 1)];
-            const item = items[getRandomInt(0, items.length-1)];
-
-            const flatCost = (getRandomInt(20, 50) + 0.5).toFixed(2);
-            const perItemCost = getRandomInt(3, 10);
-            const quantity = getRandomInt(5, 15);
-            const totalCost = (parseFloat(flatCost) + perItemCost * quantity).toFixed(2);
-
-            return {
-                id: 'q_cost',
-                text: `Under their plan, ${name} pays a flat cost of $${flatCost} per month and $${perItemCost} per ${item.split(' ')[0]}. They want to keep the bill at $${totalCost} per month. How many ${item} can they use?`,
-                fields: [{ id: 'q_cost_ans', label: `Number of ${item}` }],
-                answers: [quantity.toString()]
+            const consecutiveIntProblem = () => {
+                const start = getRandomInt(10, 50);
+                const sum = start + (start + 1);
+                return {
+                    text: `The sum of two consecutive integers is ${sum}. What are the numbers?`,
+                    fields: [{ id: 'ans1', label: 'First number' }, { id: 'ans2', label: 'Second number' }],
+                    answers: [start.toString(), (start + 1).toString()],
+                    solutionSteps: [
+                        `<strong>Step 1: Define variables.</strong> Let the first integer be 'n'. Since they are consecutive, the second integer is 'n + 1'.`,
+                        `<strong>Step 2: Set up the equation.</strong> Their sum is ${sum}.`,
+                        `<code>n + (n + 1) = ${sum}</code>`,
+                        `<strong>Step 3: Solve for n.</strong> Combine like terms: <code>2n + 1 = ${sum}</code>.`,
+                        `Subtract 1 from both sides: <code>2n = ${sum - 1}</code>.`,
+                        `Divide by 2: <code>n = ${start}</code>.`,
+                        `<strong>Step 4: Find the second number.</strong> The second number is n + 1, so <code>${start} + 1 = ${start + 1}</code>.`
+                    ]
+                };
             };
-        }
-        
-        // --- CORE QUIZ LOGIC ---
-        function generateAndRenderQuiz() {
-            currentQuestions = [
-                generateFractionProblem(),
-                generateConsecutiveIntProblem(),
-                generatePerimeterProblem(),
-                generateSimpleSystemProblem(),
-                generateLinearCostProblem()
-            ];
-            renderQuizForm(currentQuestions);
-            quizContainer.classList.remove('hidden');
-            resultsSection.classList.add('hidden');
-            window.scrollTo(0, 0);
+
+            const perimeterProblem = () => {
+                const width = getRandomInt(5, 15);
+                const diff = getRandomInt(2, 10);
+                const length = width + diff;
+                const perimeter = 2 * (length + width);
+                const area = length * width;
+                return {
+                    text: `The length of a rectangle is ${diff} inches longer than the width. The perimeter is ${perimeter} inches. Find the length, width, and area.`,
+                    fields: [{ id: 'ans_w', label: 'Width (in)' }, { id: 'ans_l', label: 'Length (in)' }, { id: 'ans_a', label: 'Area (in²)' }],
+                    answers: [width.toString(), length.toString(), area.toString()],
+                    solutionSteps: [
+                        `<strong>Step 1: Set up equations.</strong> Let W be width and L be length.`,
+                        `<code>L = W + ${diff}</code>`,
+                        `<code>2L + 2W = ${perimeter}</code> (Perimeter formula)`,
+                        `<strong>Step 2: Solve for W using substitution.</strong> Substitute the first equation into the second:`,
+                        `<code>2(W + ${diff}) + 2W = ${perimeter}</code>`,
+                        `<code>2W + ${2*diff} + 2W = ${perimeter}</code> => <code>4W + ${2*diff} = ${perimeter}</code>`,
+                        `<code>4W = ${perimeter - 2*diff}</code> => <code>W = ${width}</code>`,
+                        `<strong>Step 3: Solve for L.</strong> <code>L = ${width} + ${diff} = ${length}</code>.`,
+                        `<strong>Step 4: Calculate Area.</strong> Area = L * W => <code>${length} * ${width} = ${area}</code>.`
+                    ]
+                };
+            };
+            
+            const simpleSystemProblem = () => {
+                const item2Count = getRandomInt(5, 15);
+                const diff = getRandomInt(2, 5);
+                const item1Count = item2Count + diff;
+                const total = item1Count + item2Count;
+                 return {
+                    text: `Jen bought ${diff} more apples than oranges. She bought ${total} items in total. How many oranges did Jen buy?`,
+                    fields: [{ id: 'ans_o', label: `Number of oranges` }],
+                    answers: [item2Count.toString()],
+                    solutionSteps: [
+                         `<strong>Step 1: Define variables.</strong> Let 'a' be apples and 'o' be oranges.`,
+                         `<strong>Step 2: Set up the system.</strong>`,
+                         `<code>a = o + ${diff}</code> (more apples than oranges)`,
+                         `<code>a + o = ${total}</code> (total items)`,
+                         `<strong>Step 3: Solve using substitution.</strong>`,
+                         `<code>(o + ${diff}) + o = ${total}</code>`,
+                         `<code>2o + ${diff} = ${total}</code> => <code>2o = ${total - diff}</code>`,
+                         `<code>o = ${item2Count}</code>`
+                    ]
+                };
+            };
+
+            const linearCostProblem = () => {
+                const flatCost = (getRandomInt(20, 50) + 0.5).toFixed(2);
+                const perItemCost = getRandomInt(3, 10);
+                const quantity = getRandomInt(5, 15);
+                const totalCost = (parseFloat(flatCost) + perItemCost * quantity).toFixed(2);
+                return {
+                    text: `Under his cell phone plan, Gavin pays a flat cost of $${flatCost} per month and $${perItemCost} per gigabyte. He wants to keep his bill at $${totalCost} per month. How many gigabytes of data can he use?`,
+                    fields: [{ id: 'ans_gb', label: `Gigabytes of data` }],
+                    answers: [quantity.toString()],
+                     solutionSteps: [
+                         `<strong>Step 1: Set up the equation.</strong> Let 'g' be the number of gigabytes.`,
+                         `The total cost is the flat cost plus the per-gigabyte cost.`,
+                         `<code>${flatCost} + ${perItemCost}g = ${totalCost}</code>`,
+                         `<strong>Step 2: Solve for g.</strong>`,
+                         `Subtract the flat cost: <code>${perItemCost}g = ${totalCost} - ${flatCost}</code> => <code>${perItemCost}g = ${(totalCost - flatCost).toFixed(2)}</code>`,
+                         `Divide by the per-item cost: <code>g = ${(totalCost - flatCost).toFixed(2)} / ${perItemCost}</code>`,
+                         `<code>g = ${quantity}</code>`
+                    ]
+                };
+            };
+
+            allQuestions = shuffle([
+                fractionProblem(),
+                consecutiveIntProblem(),
+                perimeterProblem(),
+                simpleSystemProblem(),
+                linearCostProblem()
+            ]);
         }
 
-        function renderQuizForm(questions) {
-            const prefixes = ['a.', 'b.', 'c.', 'd.', 'e.'];
-            const questionsHTML = questions.map((q, i) => `
-                <div class="flex flex-col md:flex-row md:items-start gap-4">
-                    <div class="md:w-2/3 text-gray-700">
-                        <p><span class="question-prefix mr-2">${prefixes[i]}</span>${q.text}</p>
-                    </div>
-                    <div class="w-full md:w-1/3 space-y-3">
-                        ${q.fields.map(field => `
-                            <div class="answer-field">
-                                <label for="${field.id}" class="text-sm font-medium text-gray-600">${field.label}:</label>
-                                <input type="text" id="${field.id}" name="${field.id}" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                            </div>
-                        `).join('')}
-                    </div>
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            generateQuestions();
+            renderCurrentQuestion();
+        }
+
+        function renderCurrentQuestion() {
+            if (currentQuestionIndex >= allQuestions.length) {
+                quizContainer.innerHTML = `<div class="text-center">
+                    <h2 class="text-2xl font-bold text-gray-800">Practice Complete!</h2>
+                    <p class="mt-2 text-gray-600">You've finished all the questions for this session.</p>
+                    <button id="startOverBtn" class="mt-6 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Start Over with New Questions</button>
+                </div>`;
+                document.getElementById('startOverBtn').addEventListener('click', startQuiz);
+                return;
+            }
+
+            const q = allQuestions[currentQuestionIndex];
+            const fieldsHTML = q.fields.map(f => `
+                <div class="flex items-center gap-2">
+                    <label for="${f.id}" class="font-medium whitespace-nowrap">${f.label}:</label>
+                    <input type="text" id="${f.id}" class="p-2 border border-gray-300 rounded-lg text-lg w-full">
                 </div>
-            `).join('<hr class="my-6">');
+            `).join('');
 
             quizContainer.innerHTML = `
-                <form id="quizForm">
-                    <div class="space-y-6">${questionsHTML}</div>
-                    <div class="mt-10 text-center">
-                        <button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-transform transform hover:scale-105">
-                            Grade My Quiz
-                        </button>
-                    </div>
-                </form>
+                <div class="mb-4">
+                    <h2 class="text-xl font-semibold text-gray-700">Question ${currentQuestionIndex + 1} of ${allQuestions.length}</h2>
+                </div>
+                <p class="text-xl my-8">${q.text}</p>
+                <div class="flex flex-col gap-4 max-w-sm mx-auto">${fieldsHTML}</div>
+                <div class="text-center mt-6">
+                     <button id="checkBtn" class="bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700">Check</button>
+                </div>
+                <div id="feedbackContainer" class="mt-6"></div>
             `;
-            
-            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
-        }
 
-        function gradeQuiz(event) {
-            event.preventDefault();
-            let score = 0;
-            let resultsHTML = '';
-            
-            currentQuestions.forEach(q => {
-                const userAnswers = q.fields.map(field => document.getElementById(field.id).value.trim());
-                
-                // For multi-answer questions, sort to ignore order.
-                const sortedUserAnswers = [...userAnswers].sort();
-                const sortedCorrectAnswers = [...q.answers].sort();
-                
-                const isCorrect = JSON.stringify(sortedUserAnswers) === JSON.stringify(sortedCorrectAnswers);
-
-                if (isCorrect) score++;
-
-                resultsHTML += `
-                    <div class="result-item border-l-4 p-4 rounded-md ${isCorrect ? 'correct' : 'incorrect'}">
-                        <div class="font-semibold text-gray-800">${q.text}</div>
-                        <p class="mt-2 text-sm">Your answer(s): <span class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">${userAnswers.join(', ') || '<i>No answer</i>'}</span></p>
-                        ${!isCorrect ? `<p class="mt-1 text-sm">Correct answer(s): <span class="font-medium text-green-700">${q.answers.join(', ')}</span></p>` : ''}
-                    </div>
-                `;
+            document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+            q.fields.forEach(f => {
+                document.getElementById(f.id).addEventListener('keypress', e => { if (e.key === 'Enter') checkAnswer(); });
             });
+        }
+        
+        function checkAnswer() {
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const q = allQuestions[currentQuestionIndex];
+            const userAnswers = q.fields.map(f => document.getElementById(f.id).value.trim());
+            
+            // For multi-answer questions, sort to ignore order.
+            const sortedUser = [...userAnswers].sort();
+            const sortedCorrect = [...q.answers].sort();
+            const isCorrect = JSON.stringify(sortedUser) === JSON.stringify(sortedCorrect);
 
-            const totalQuestions = currentQuestions.length;
-            const percentage = Math.round((score / totalQuestions) * 100);
-            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
-
-            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${totalQuestions} (${percentage}%)</span>`;
-            detailedResultsElement.innerHTML = resultsHTML;
-
-            quizContainer.classList.add('hidden');
-            resultsSection.classList.remove('hidden');
-            window.scrollTo(0, 0);
+            let feedbackHTML = `<div class="p-4 rounded-lg solution-box">`;
+            if (isCorrect) {
+                feedbackHTML += `<h3 class="text-lg font-bold text-green-700">Correct!</h3>`;
+            } else {
+                const userAnswerDisplay = userAnswers.map(a => a || "empty").join(', ');
+                const correctAnswerDisplay = q.answers.join(', ');
+                feedbackHTML += `<h3 class="text-lg font-bold text-red-700">Not quite.</h3>
+                                 <p class="mt-1">Your answer was <strong>${userAnswerDisplay}</strong>. The correct answer is <strong>${correctAnswerDisplay}</strong>.</p>`;
+            }
+            
+            feedbackHTML += `<div class="mt-4"><h4 class="font-semibold">Here's how to solve it:</h4><div class="mt-2 space-y-2 text-sm text-gray-700">${q.solutionSteps.join('<br>')}</div></div>`;
+            feedbackHTML += `</div><div class="text-center mt-6">
+                                <button id="nextBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Next Question</button>
+                             </div>`;
+            
+            feedbackContainer.innerHTML = feedbackHTML;
+            document.getElementById('checkBtn').disabled = true;
+            q.fields.forEach(f => document.getElementById(f.id).disabled = true);
+            document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+            document.getElementById('nextBtn').focus();
         }
 
-        // --- EVENT LISTENERS ---
-        retakeQuizBtn.addEventListener('click', () => {
-            renderQuizForm(currentQuestions);
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-        });
-
-        generateNewBtn.addEventListener('click', generateAndRenderQuiz);
-        document.addEventListener('DOMContentLoaded', generateAndRenderQuiz);
+        function nextQuestion() {
+            currentQuestionIndex++;
+            renderCurrentQuestion();
+        }
+        
+        document.addEventListener('DOMContentLoaded', startQuiz);
     </script>
 </body>
 </html>

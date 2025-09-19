@@ -10,249 +10,189 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        .quiz-container {
-            transition: all 0.3s ease-in-out;
-        }
-        .result-item.correct {
-            background-color: #f0fdf4;
-            border-left-color: #22c55e;
-        }
-        .result-item.incorrect {
-            background-color: #fef2f2;
-            border-left-color: #ef4444;
-        }
         code {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 1.1em;
+            font-size: 1.05em;
             background-color: #f3f4f6;
             padding: 2px 6px;
             border-radius: 4px;
         }
-        .question-prefix {
-            font-weight: 500;
-            flex-shrink: 0;
+        .solution-box {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
         }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <main class="bg-white rounded-2xl shadow-lg w-full max-w-4xl quiz-container">
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-2xl">
         <div class="p-8 border-b border-gray-200">
-            <h1 class="text-3xl font-bold text-gray-800">2.5 Quiz Literal Equations Retake</h1>
-            <p class="text-gray-600 mt-2">Solve each equation for the indicated variable. Four-Function Calculator Allowed.</p>
+            <h1 class="text-3xl font-bold text-gray-800">Literal Equations Practice</h1>
+            <p class="text-gray-600 mt-2">Check your answer after each problem. Solve for the indicated variable.</p>
         </div>
 
         <div id="quizContainer" class="p-8">
-            <!-- The quiz form will be dynamically generated and inserted here -->
+            <!-- The quiz question will be dynamically generated and inserted here -->
         </div>
 
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
-            <div id="score" class="text-xl mb-6 font-semibold"></div>
-            <div id="detailedResults" class="space-y-4"></div>
-             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
-                    Try This Quiz Again
-                </button>
-                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
-                    Generate New Quiz
-                </button>
-            </div>
-        </div>
     </main>
 
     <script>
         const quizContainer = document.getElementById('quizContainer');
-        const resultsSection = document.getElementById('resultsSection');
-        const scoreElement = document.getElementById('score');
-        const detailedResultsElement = document.getElementById('detailedResults');
-        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
-        const generateNewBtn = document.getElementById('generateNewBtn');
+        let allQuestions = [];
+        let currentQuestionIndex = 0;
 
-        let currentQuestions = [];
-
-        // --- UTILITY FUNCTIONS ---
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
-        
-        const getUniqueVars = (count) => {
-            const vars = ['a','b','c','d','k','m','n','p','q','r','s','t','u','v','w','x','y','z','L','W','P'];
-            return shuffle(vars).slice(0, count);
-        };
+        const getUniqueVars = (count) => shuffle(['a','b','c','d','k','m','n','p','q','r','s','t','u','v','w','x','y','z','L','W','P']).slice(0, count);
 
-        // --- QUESTION GENERATORS ---
-        function generateLiteralQuestions() {
-            const questions = [];
-            let v; // for variables
+        function generateQuestions() {
+            allQuestions = [];
+            let v;
 
-            // a. x + a = b
-            v = getUniqueVars(3);
-            const solveFor_a = v[0];
-            const ans_a = `${v[2]}-${v[1]}`;
-            questions.push({
-                text: `Solve for ${solveFor_a}: <code>${v[0]} + ${v[1]} = ${v[2]}</code>`,
-                answers: [ans_a, `${solveFor_a}=${ans_a}`]
-            });
-
-            // b. b/k = r
-            v = getUniqueVars(3);
-            const solveFor_b = v[0];
-            const ans1_b = `${v[2]}*${v[1]}`;
-            const ans2_b = `${v[1]}*${v[2]}`;
-            questions.push({
-                text: `Solve for ${solveFor_b}: <code>${v[0]} / ${v[1]} = ${v[2]}</code>`,
-                answers: [ans1_b, ans2_b, `${solveFor_b}=${ans1_b}`, `${solveFor_b}=${ans2_b}`]
-            });
-
-            // c. zt = u
-            v = getUniqueVars(3);
-            const solveFor_c = v[0];
-            const ans_c = `${v[2]}/${v[1]}`;
-            questions.push({
-                text: `Solve for ${solveFor_c}: <code>${v[0]}${v[1]} = ${v[2]}</code>`,
-                answers: [ans_c, `${solveFor_c}=${ans_c}`]
-            });
-
-            // d. ax + b = c
-            v = getUniqueVars(4);
-            const solveFor_d = v[1];
-            const ans_d = `(${v[3]}-${v[2]})/${v[0]}`;
-            questions.push({
-                text: `Solve for ${solveFor_d}: <code>${v[0]}${v[1]} + ${v[2]} = ${v[3]}</code>`,
-                answers: [ans_d, `${solveFor_d}=${ans_d}`]
-            });
-            
-            // e. dk - r = s
-            v = getUniqueVars(4);
-            const solveFor_e = v[1];
-            const ans_e = `(${v[3]}+${v[2]})/${v[0]}`;
-            questions.push({
-                text: `Solve for ${solveFor_e}: <code>${v[0]}${v[1]} - ${v[2]} = ${v[3]}</code>`,
-                answers: [ans_e, `${solveFor_e}=${ans_e}`]
-            });
-            
-            // f. 2L + 2W = P
-            v = getUniqueVars(3);
-            const solveFor_f = v[0];
-            const ans1_f = `(${v[2]}-2*${v[1]})/2`;
-            const ans2_f = `${v[2]}/2-${v[1]}`;
-            questions.push({
-                text: `Solve for ${solveFor_f}: <code>2${v[0]} + 2${v[1]} = ${v[2]}</code>`,
-                answers: [ans1_f, ans2_f, `${solveFor_f}=${ans1_f}`, `${solveFor_f}=${ans2_f}`]
-            });
-
-            // g. 5x - 6y = 24 -> solve for y
-            let n1 = getRandomInt(2,9), n2 = getRandomInt(2,9), n3 = getRandomInt(10,30);
-            v = getUniqueVars(2);
-            const solveFor_g = v[1];
-            const ans1_g = `(${n3}-${n1}${v[0]})/-${n2}`;
-            const ans2_g = `(${n1}${v[0]}-${n3})/${n2}`;
-            questions.push({
-                text: `Solve for ${solveFor_g}: <code>${n1}${v[0]} - ${n2}${v[1]} = ${n3}</code>`,
-                answers: [ans1_g, ans2_g, `${solveFor_g}=${ans1_g}`, `${solveFor_g}=${ans2_g}`]
-            });
-
-            // h. -2x + 8y = 12 -> solve for x
-            n1 = getRandomInt(2,9), n2 = getRandomInt(2,9), n3 = getRandomInt(10,30);
-            v = getUniqueVars(2);
-            const solveFor_h = v[0];
-            const ans1_h = `(${n3}-${n2}${v[1]})/-${n1}`;
-            const ans2_h = `(${n2}${v[1]}-${n3})/${n1}`;
-            questions.push({
-                text: `Solve for ${solveFor_h}: <code>-${n1}${v[0]} + ${n2}${v[1]} = ${n3}</code>`,
-                answers: [ans1_h, ans2_h, `${solveFor_h}=${ans1_h}`, `${solveFor_h}=${ans2_h}`]
-            });
-
-            return questions;
-        }
-        
-        // --- CORE QUIZ LOGIC ---
-        function generateAndRenderQuiz() {
-            currentQuestions = generateLiteralQuestions();
-            renderQuizForm(currentQuestions);
-            quizContainer.classList.remove('hidden');
-            resultsSection.classList.add('hidden');
-            window.scrollTo(0, 0);
+            // Generate 8 unique literal equation problems
+            for (let i = 0; i < 8; i++) {
+                const type = i % 8;
+                if (type === 0) { // x + a = b
+                    v = getUniqueVars(3);
+                    const [solveFor, p1, p2] = v;
+                    allQuestions.push({
+                        text: `Solve for ${solveFor}: <code>${solveFor} + ${p1} = ${p2}</code>`,
+                        answers: [`${p2}-${p1}`, `${solveFor}=${p2}-${p1}`],
+                        solutionSteps: [`To isolate ${solveFor}, subtract ${p1} from both sides of the equation.`,`<code>${solveFor} = ${p2} - ${p1}</code>`]
+                    });
+                } else if (type === 1) { // b/k = r
+                    v = getUniqueVars(3);
+                    const [solveFor, p1, p2] = v;
+                    allQuestions.push({
+                        text: `Solve for ${solveFor}: <code>${solveFor} / ${p1} = ${p2}</code>`,
+                        answers: [`${p2}*${p1}`, `${p1}*${p2}`, `${solveFor}=${p2}*${p1}`],
+                        solutionSteps: [`To isolate ${solveFor}, multiply both sides by ${p1}.`,`<code>${solveFor} = ${p2} * ${p1}</code>`]
+                    });
+                } else if (type === 2) { // zt = u
+                    v = getUniqueVars(3);
+                    const [solveFor, p1, p2] = v;
+                    allQuestions.push({
+                        text: `Solve for ${solveFor}: <code>${solveFor}${p1} = ${p2}</code>`,
+                        answers: [`${p2}/${p1}`, `${solveFor}=${p2}/${p1}`],
+                        solutionSteps: [`To isolate ${solveFor}, divide both sides by ${p1}.`,`<code>${solveFor} = ${p2} / ${p1}</code>`]
+                    });
+                } else if (type === 3) { // ax + b = c
+                    v = getUniqueVars(4);
+                    const [p1, solveFor, p2, p3] = v;
+                    allQuestions.push({
+                        text: `Solve for ${solveFor}: <code>${p1}${solveFor} + ${p2} = ${p3}</code>`,
+                        answers: [`(${p3}-${p2})/${p1}`, `${solveFor}=(${p3}-${p2})/${p1}`],
+                        solutionSteps: [`First, subtract ${p2} from both sides: <code>${p1}${solveFor} = ${p3} - ${p2}</code>`,`Then, divide both sides by ${p1}: <code>${solveFor} = (${p3} - ${p2}) / ${p1}</code>`]
+                    });
+                } else if (type === 4) { // dk - r = s
+                    v = getUniqueVars(4);
+                    const [p1, solveFor, p2, p3] = v;
+                    allQuestions.push({
+                        text: `Solve for ${solveFor}: <code>${p1}${solveFor} - ${p2} = ${p3}</code>`,
+                        answers: [`(${p3}+${p2})/${p1}`, `${solveFor}=(${p3}+${p2})/${p1}`],
+                        solutionSteps: [`First, add ${p2} to both sides: <code>${p1}${solveFor} = ${p3} + ${p2}</code>`,`Then, divide both sides by ${p1}: <code>${solveFor} = (${p3} + ${p2}) / ${p1}</code>`]
+                    });
+                } else if (type === 5) { // 2L + 2W = P
+                    v = getUniqueVars(3);
+                    const [solveFor, p1, p2] = v;
+                    allQuestions.push({
+                        text: `Solve for ${solveFor}: <code>2${solveFor} + 2${p1} = ${p2}</code>`,
+                        answers: [`(${p2}-2*${p1})/2`, `${p2}/2-${p1}`, `${solveFor}=(${p2}-2*${p1})/2`, `${solveFor}=${p2}/2-${p1}`],
+                        solutionSteps: [`Subtract 2${p1} from both sides: <code>2${solveFor} = ${p2} - 2${p1}</code>`,`Divide both sides by 2: <code>${solveFor} = (${p2} - 2${p1}) / 2</code>`,`Which can also be written as: <code>${solveFor} = ${p2}/2 - ${p1}</code>`]
+                    });
+                } else if (type === 6) { // Ax - By = C -> solve for y
+                    const n1 = getRandomInt(2,9), n2 = getRandomInt(2,9), n3 = getRandomInt(10,30);
+                    v = getUniqueVars(2);
+                    const [p1, solveFor] = v;
+                    allQuestions.push({
+                        text: `Solve for ${solveFor}: <code>${n1}${p1} - ${n2}${solveFor} = ${n3}</code>`,
+                        answers: [`(${n3}-${n1}${p1})/-${n2}`, `(${n1}${p1}-${n3})/${n2}`, `${solveFor}=(${n3}-${n1}${p1})/-${n2}`, `${solveFor}=(${n1}${p1}-${n3})/${n2}`],
+                        solutionSteps: [`Subtract ${n1}${p1} from both sides: <code>-${n2}${solveFor} = ${n3} - ${n1}${p1}</code>`,`Divide both sides by -${n2}: <code>${solveFor} = (${n3} - ${n1}${p1}) / -${n2}</code>`, `This is equivalent to multiplying the numerator by -1 and making the denominator positive: <code>${solveFor} = (${n1}${p1} - ${n3}) / ${n2}</code>`]
+                    });
+                } else { // -Ax + By = C -> solve for x
+                    const n1 = getRandomInt(2,9), n2 = getRandomInt(2,9), n3 = getRandomInt(10,30);
+                    v = getUniqueVars(2);
+                    const [solveFor, p1] = v;
+                    allQuestions.push({
+                        text: `Solve for ${solveFor}: <code>-${n1}${solveFor} + ${n2}${p1} = ${n3}</code>`,
+                        answers: [`(${n3}-${n2}${p1})/-${n1}`, `(${n2}${p1}-${n3})/${n1}`, `${solveFor}=(${n3}-${n2}${p1})/-${n1}`, `${solveFor}=(${n2}${p1}-${n3})/${n1}`],
+                        solutionSteps: [`Subtract ${n2}${p1} from both sides: <code>-${n1}${solveFor} = ${n3} - ${n2}${p1}</code>`,`Divide both sides by -${n1}: <code>${solveFor} = (${n3} - ${n2}${p1}) / -${n1}</code>`, `This is equivalent to: <code>${solveFor} = (${n2}${p1} - ${n3}) / ${n1}</code>`]
+                    });
+                }
+            }
+            allQuestions = shuffle(allQuestions);
         }
 
-        function renderQuizForm(questions) {
-            const prefixes = ['a.', 'b.', 'c.', 'd.', 'e.', 'f.', 'g.', 'h.'];
-            const questionsHTML = questions.map((q, i) => `
-                <div class="flex flex-col md:flex-row md:items-center gap-4">
-                    <div class="md:w-1/2 text-gray-700">
-                        <label for="q_${i}" class="flex items-center gap-4">
-                            <span class="question-prefix">${prefixes[i]}</span>
-                            <span>${q.text}</span>
-                        </label>
-                    </div>
-                    <div class="w-full md:w-1/2">
-                         <input type="text" id="q_${i}" name="q_${i}" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Type your answer here...">
-                    </div>
-                </div>
-            `).join('<hr class="my-4 md:my-2 border-dashed">');
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            generateQuestions();
+            renderCurrentQuestion();
+        }
 
+        function renderCurrentQuestion() {
+            if (currentQuestionIndex >= allQuestions.length) {
+                quizContainer.innerHTML = `<div class="text-center">
+                    <h2 class="text-2xl font-bold text-gray-800">Practice Complete!</h2>
+                    <p class="mt-2 text-gray-600">You've finished all the questions for this session.</p>
+                    <button id="startOverBtn" class="mt-6 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Start Over with New Questions</button>
+                </div>`;
+                document.getElementById('startOverBtn').addEventListener('click', startQuiz);
+                return;
+            }
+
+            const q = allQuestions[currentQuestionIndex];
             quizContainer.innerHTML = `
-                <form id="quizForm">
-                    <div class="space-y-4">${questionsHTML}</div>
-                    <div class="mt-10 text-center">
-                        <button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-transform transform hover:scale-105">
-                            Grade My Quiz
-                        </button>
-                    </div>
-                </form>
+                <div class="mb-4">
+                    <h2 class="text-xl font-semibold text-gray-700">Question ${currentQuestionIndex + 1} of ${allQuestions.length}</h2>
+                </div>
+                <div class="text-center text-2xl my-8">${q.text}</div>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <input type="text" id="userAnswer" class="p-3 border border-gray-300 rounded-lg text-center text-lg w-full sm:w-auto" autofocus>
+                    <button id="checkBtn" class="bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 w-full sm:w-auto">Check</button>
+                </div>
+                <div id="feedbackContainer" class="mt-6"></div>
             `;
+
+            document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+            document.getElementById('userAnswer').addEventListener('keypress', e => { if (e.key === 'Enter') checkAnswer(); });
+        }
+        
+        const normalizeAnswer = str => (str || '').replace(/\s+/g, '').replace(/\*/g, '').toLowerCase();
+        
+        function checkAnswer() {
+            const userAnswerRaw = document.getElementById('userAnswer').value.trim();
+            const feedbackContainer = document.getElementById('feedbackContainer');
+            const q = allQuestions[currentQuestionIndex];
+            const isCorrect = q.answers.some(ans => normalizeAnswer(userAnswerRaw) === normalizeAnswer(ans));
+
+            let feedbackHTML = `<div class="p-4 rounded-lg solution-box">`;
+            if (isCorrect) {
+                feedbackHTML += `<h3 class="text-lg font-bold text-green-700">Correct!</h3>`;
+            } else {
+                feedbackHTML += `<h3 class="text-lg font-bold text-red-700">Not quite.</h3>
+                                 <p class="mt-1">Your answer was <strong>${userAnswerRaw || "empty"}</strong>. The correct answer is <strong>${q.answers[0]}</strong>.</p>`;
+            }
             
-            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+            feedbackHTML += `<div class="mt-4"><h4 class="font-semibold">Here's how to solve it:</h4><div class="mt-2 space-y-2 text-sm text-gray-700">${q.solutionSteps.join('<br>')}</div></div>`;
+            feedbackHTML += `</div><div class="text-center mt-6">
+                                <button id="nextBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Next Question</button>
+                             </div>`;
+            
+            feedbackContainer.innerHTML = feedbackHTML;
+            document.getElementById('checkBtn').disabled = true;
+            document.getElementById('userAnswer').disabled = true;
+            document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+            document.getElementById('nextBtn').focus();
         }
 
-        function gradeQuiz(event) {
-            event.preventDefault();
-            let score = 0;
-            let resultsHTML = '';
-            
-            currentQuestions.forEach((q, i) => {
-                const inputElement = document.getElementById(`q_${i}`);
-                const userAnswer = inputElement.value.replace(/\s+/g, '').replace(/\*/g, '').toLowerCase();
-                
-                // Check if the user's answer matches any of the possible correct answers
-                const isCorrect = q.answers.some(ans => userAnswer === ans.replace(/\s+/g, '').replace(/\*/g, '').toLowerCase());
-
-                if (isCorrect) score++;
-
-                resultsHTML += `
-                    <div class="result-item border-l-4 p-4 rounded-md ${isCorrect ? 'correct' : 'incorrect'}">
-                        <div class="font-semibold text-gray-800">${q.text}</div>
-                        <p class="mt-2 text-sm">Your answer: <span class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">${inputElement.value || '<i>No answer</i>'}</span></p>
-                        ${!isCorrect ? `<p class="mt-1 text-sm">Correct answer: <span class="font-medium text-green-700">${q.answers[0]}</span></p>` : ''}
-                    </div>
-                `;
-            });
-
-            const totalQuestions = currentQuestions.length;
-            const percentage = Math.round((score / totalQuestions) * 100);
-            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
-
-            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${totalQuestions} (${percentage}%)</span>`;
-            detailedResultsElement.innerHTML = resultsHTML;
-
-            quizContainer.classList.add('hidden');
-            resultsSection.classList.remove('hidden');
-            window.scrollTo(0, 0);
+        function nextQuestion() {
+            currentQuestionIndex++;
+            renderCurrentQuestion();
         }
-
-        // --- EVENT LISTENERS ---
-        retakeQuizBtn.addEventListener('click', () => {
-            renderQuizForm(currentQuestions);
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-        });
-
-        generateNewBtn.addEventListener('click', generateAndRenderQuiz);
-        document.addEventListener('DOMContentLoaded', generateAndRenderQuiz);
+        
+        document.addEventListener('DOMContentLoaded', startQuiz);
     </script>
 </body>
 </html>
-
-
 

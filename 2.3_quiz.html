@@ -58,25 +58,40 @@
       <legend><strong>2. State whether each equation has one solution, no solution, or infinitely many solutions.</strong></legend>
   <div class="explain">Enter: <em>one</em>, <em>none</em>, or <em>infinitely many</em>. (You can type "one", "none", or "infinitely many".)</div>
 
-      <label for="q2a"><span class="qnum">2a.</span> <span id="q2a-text">2 - 7x + 4 + 5x = -2(x + 3) + 12</span>
-        <input id="q2a" type="text" name="q2a" aria-label="classification for equation 2a" />
-      </label>
+      <fieldset class="radios" aria-labelledby="q2a-label">
+        <legend id="q2a-label"><span class="qnum">2a.</span> <span id="q2a-text">2 - 7x + 4 + 5x = -2(x + 3) + 12</span></legend>
+        <label><input type="radio" name="q2a" value="one"> one</label>
+        <label><input type="radio" name="q2a" value="none"> none</label>
+        <label><input type="radio" name="q2a" value="infinitely many"> infinitely many</label>
+      </fieldset>
 
-      <label for="q2b"><span class="qnum">2b.</span> <span id="q2b-text">7(x - 2) - 6x = 6x + 5 - 5(x + 3)</span>
-        <input id="q2b" type="text" name="q2b" aria-label="classification for equation 2b" />
-      </label>
+      <fieldset class="radios" aria-labelledby="q2b-label">
+        <legend id="q2b-label"><span class="qnum">2b.</span> <span id="q2b-text">7(x - 2) - 6x = 6x + 5 - 5(x + 3)</span></legend>
+        <label><input type="radio" name="q2b" value="one"> one</label>
+        <label><input type="radio" name="q2b" value="none"> none</label>
+        <label><input type="radio" name="q2b" value="infinitely many"> infinitely many</label>
+      </fieldset>
 
-      <label for="q2c"><span class="qnum">2c.</span> <span id="q2c-text">4(x + 2) - 4(3x + 2) = 2x + 4x</span>
-        <input id="q2c" type="text" name="q2c" aria-label="classification for equation 2c" />
-      </label>
+      <fieldset class="radios" aria-labelledby="q2c-label">
+        <legend id="q2c-label"><span class="qnum">2c.</span> <span id="q2c-text">4(x + 2) - 4(3x + 2) = 2x + 4x</span></legend>
+        <label><input type="radio" name="q2c" value="one"> one</label>
+        <label><input type="radio" name="q2c" value="none"> none</label>
+        <label><input type="radio" name="q2c" value="infinitely many"> infinitely many</label>
+      </fieldset>
 
-      <label for="q2d"><span class="qnum">2d.</span> <span id="q2d-text">-4(x + 6) + 8 = 3(5 - x) - x + 2</span>
-        <input id="q2d" type="text" name="q2d" aria-label="classification for equation 2d" />
-      </label>
+      <fieldset class="radios" aria-labelledby="q2d-label">
+        <legend id="q2d-label"><span class="qnum">2d.</span> <span id="q2d-text">-4(x + 6) + 8 = 3(5 - x) - x + 2</span></legend>
+        <label><input type="radio" name="q2d" value="one"> one</label>
+        <label><input type="radio" name="q2d" value="none"> none</label>
+        <label><input type="radio" name="q2d" value="infinitely many"> infinitely many</label>
+      </fieldset>
 
-      <label for="q2e"><span class="qnum">2e.</span> <span id="q2e-text">5(x + 1) - x = 6x - 2(x - 3) - 1</span>
-        <input id="q2e" type="text" name="q2e" aria-label="classification for equation 2e" />
-      </label>
+      <fieldset class="radios" aria-labelledby="q2e-label">
+        <legend id="q2e-label"><span class="qnum">2e.</span> <span id="q2e-text">5(x + 1) - x = 6x - 2(x - 3) - 1</span></legend>
+        <label><input type="radio" name="q2e" value="one"> one</label>
+        <label><input type="radio" name="q2e" value="none"> none</label>
+        <label><input type="radio" name="q2e" value="infinitely many"> infinitely many</label>
+      </fieldset>
     </fieldset>
 
     <div class="actions">
@@ -251,12 +266,22 @@
       const classQs = ['q2a','q2b','q2c','q2d','q2e'];
       classQs.forEach(id=>{
         total++;
-        const val = normalizeClassAnswer(form[id].value);
+        // read selected radio
+        const radios = form[id];
+        let val = '';
+        if(radios){
+          if(radios.length !== undefined){
+            for(let r of radios){ if(r.checked){ val = r.value; break; } }
+          } else {
+            // single element
+            val = radios.value || '';
+          }
+        }
         const expected = answers[id];
         const ok = val === expected;
         const div = document.createElement('div');
         div.className = ok ? 'result pass' : 'result fail';
-        div.innerHTML = `<strong>Question ${id.replace('q','').replace(/([0-9])(.*)/,'$1')}</strong>: ` + (ok ? 'Correct' : `Incorrect — your answer: <span class="answer">${form[id].value||'(blank)'}</span>; correct: <span class="answer">${expected}</span>`);
+        div.innerHTML = `<strong>Question ${id.replace('q','').replace(/([0-9])(.*)/,'$1')}</strong>: ` + (ok ? 'Correct' : `Incorrect — your answer: <span class="answer">${val||'(blank)'}</span>; correct: <span class="answer">${expected}</span>`);
         out.appendChild(div);
         if(ok) correct++;
       });

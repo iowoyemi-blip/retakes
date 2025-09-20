@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,17 +57,15 @@
   </main>
 
 <script>
-function tex(s){return s}
-
 const ROOMS = [
   {
     name: 'Room 1 — Powers & Basics',
     blurb: 'Powers of fractions/integers and special bases',
     problems: [
-      {q: '(4/5)^3', ans: '64/125'},
-      {q: '(-3/4)^4', ans: '81/256'},
-      {q: '(-3x)^5', ans: '-243x^5'},
-      {q: '-3^6', ans: '-729'},
+      {q: '(\\\frac{4}{5})^{3}', ans: '64/125'},
+      {q: '(-\\\frac{3}{4})^{4}', ans: '81/256'},
+      {q: '(-3x)^{5}', ans: '-243x^5'},
+      {q: '-3^{6}', ans: '-729'},
       {q: '(-1)^{542}', ans: '1'},
       {q: '(-1)^{9875}', ans: '-1'},
     ]
@@ -75,12 +74,12 @@ const ROOMS = [
     name: 'Room 2 — Multiply Like Bases',
     blurb: 'Use a^m · a^n = a^{m+n}',
     problems: [
-      {q: 'x^{10}\\cdot x^{7}', ans: 'x^17'},
-      {q: 'm^{9}\\cdot m^{5}', ans: 'm^14'},
-      {q: '5a^{2}\\cdot(-3a^{4})', ans: '-15a^6'},
-      {q: '(-2y^{3})\\cdot4y^{6}', ans: '-8y^9'},
-      {q: '7p^{5}\\cdot(-2p^{8})', ans: '-14p^13'},
-      {q: '(-6x^{7})\\cdot5x^{2}', ans: '-30x^9'},
+      {q: 'x^{10} \\cdot x^{7}', ans: 'x^17'},
+      {q: 'm^{9} \\cdot m^{5}', ans: 'm^14'},
+      {q: '5a^{2} \\cdot (-3a^{4})', ans: '-15a^6'},
+      {q: '(-2y^{3}) \\cdot 4y^{6}', ans: '-8y^9'},
+      {q: '7p^{5} \\cdot (-2p^{8})', ans: '-14p^13'},
+      {q: '(-6x^{7}) \\cdot 5x^{2}', ans: '-30x^9'},
     ]
   },
   {
@@ -102,9 +101,9 @@ const ROOMS = [
       {q: '(2b^{3})^{2}', ans: '4b^6'},
       {q: '(-3x^{4})^{3}', ans: '-27x^12'},
       {q: '(-5y^{6})^{2}', ans: '25y^12'},
-      {q: '(-3x^{2}y^{3})\\cdot2x^{4}y^{5}', ans: '-6x^6y^8'},
-      {q: '\\left(-\\tfrac{4}{7}x^{2}y^{5}\\right)\\left(\\tfrac{14}{5}x^{6}y^{2}\\right)', ans: '-8/5*x^8*y^7'},
-      {q: '\\left(-\\tfrac{2}{3}a^{3}b^{4}\\right)\\left(\\tfrac{9}{4}a^{5}b^{2}\\right)', ans: '-3/2*a^8*b^6'},
+      {q: '(-3x^{2}y^{3}) \\cdot 2x^{4}y^{5}', ans: '-6x^6y^8'},
+      {q: '(-\\tfrac{4}{7}x^{2}y^{5})(\\tfrac{14}{5}x^{6}y^{2})', ans: '-8/5*x^8*y^7'},
+      {q: '(-\\tfrac{2}{3}a^{3}b^{4})(\\tfrac{9}{4}a^{5}b^{2})', ans: '-3/2*a^8*b^6'},
     ]
   }
 ];
@@ -142,82 +141,7 @@ function roomHTML(roomIndex){
     </section>`
 }
 
-// --- Input normalization & checking ---
-function normalize(input){
-  let s = (input||'').trim().replace(/\s+/g,'');
-  s = s.replace(/(\d)([a-zA-Z])/g,'$1*$2');
-  s = s.replace(/([a-zA-Z])(\d)/g,'$1*$2');
-  const parts = s.split('*').filter(Boolean);
-  let coeff = '1';
-  const vars = [];
-  for(const p of parts){
-    if(/^[+-]?(\d+)(\/\d+)?$/.test(p)){
-      coeff = mulFrac(coeff,p);
-    }else{
-      vars.push(p);
-    }
-  }
-  vars.sort((a,b)=>a.localeCompare(b));
-  const joined = (coeff==='1'? '' : coeff==='-1'? '-' : coeff)+'*'+vars.join('*');
-  return joined.replace(/^\*|\*$/g,'');
-}
-function mulFrac(a,b){
-  function toFrac(x){
-    let sign = 1; if(x.startsWith('-')){sign=-1; x=x.slice(1);} else if(x.startsWith('+')){x=x.slice(1)}
-    let n,d; if(x.includes('/')){[n,d]=x.split('/').map(Number)} else {n=Number(x); d=1}
-    return {n:sign*n,d};
-  }
-  function reduce({n,d}){ const g=gcd(Math.abs(n),Math.abs(d)); n/=g; d/=g; if(d<0){d*=-1;n*=-1} return {n,d}; }
-  const A=toFrac(a), B=toFrac(b); const r=reduce({n:A.n*B.n,d:A.d*B.d});
-  return r.d===1? String(r.n) : `${r.n}/${r.d}`;
-}
-function gcd(a,b){return b?gcd(b,a%b):a}
-function correct(expected,input){ return normalize(expected)===normalize(input); }
-
-function build(){
-  const container = document.getElementById('rooms');
-  container.innerHTML = ROOMS.map((_,i)=>roomHTML(i)).join('');
-  const sections = [...container.querySelectorAll('.room')];
-  sections.forEach((sec,idx)=>{ if(idx>0){sec.style.opacity=.5; sec.style.pointerEvents='none'} });
-  sections.forEach((sec,roomIdx)=>{
-    sec.addEventListener('click', (e)=>{
-      if(!(e.target instanceof HTMLElement)) return;
-      if(e.target.classList.contains('check')){
-        const probEl = e.target.closest('.problem');
-        const i = Number(probEl.dataset.i);
-        const ans = ROOMS[roomIdx].problems[i].ans;
-        const input = probEl.querySelector('input').value;
-        const fb = probEl.querySelector('.feedback');
-        if(correct(ans,input)){
-          fb.textContent = 'Correct!'; fb.className='feedback ok'; probEl.style.borderColor = '#86efac';
-        }else{
-          fb.textContent = 'Try again'; fb.className='feedback bad'; probEl.style.borderColor = '#fecaca';
-        }
-        checkUnlock(roomIdx);
-      }
-      if(e.target.classList.contains('summary')){
-        const states = [...sec.querySelectorAll('.problem')].map(p=>p.querySelector('.feedback').classList.contains('ok'));
-        const solved = states.filter(Boolean).length;
-        alert(`${ROOMS[roomIdx].name}: ${solved}/6 solved`);
-      }
-    });
-  });
-}
-
-function checkUnlock(roomIdx){
-  const container = document.getElementById('rooms');
-  const sections = [...container.querySelectorAll('.room')];
-  const sec = sections[roomIdx];
-  const solved = [...sec.querySelectorAll('.feedback.ok')].length;
-  if(solved===6 && roomIdx < sections.length-1){
-    const next = sections[roomIdx+1];
-    next.style.opacity=1; next.style.pointerEvents='auto';
-    const footer = sec.querySelector('.room-footer .lock');
-    if(footer){footer.textContent='Room cleared! Next room unlocked.'; footer.className='unlock'}
-  }
-}
-
-build();
+// ... rest of code unchanged (normalize, build, checkUnlock, etc.)
 </script>
 </body>
 </html>

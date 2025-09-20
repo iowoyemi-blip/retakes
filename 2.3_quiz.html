@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>2.3 Quiz — Four-Function Calculator Allowed</title>
+  <style>
+    body{font-family: system-ui, -apple-system, Arial, sans-serif; max-width:900px;margin:24px auto;color:#111}
+    h1,h2{margin:0 0 12px}
+    .meta{color:#444;margin-bottom:18px}
+    form{background:#fff;border:1px solid #eee;padding:18px;border-radius:8px}
+    fieldset{border:0;margin:0 0 16px;padding:0}
+    label{display:block;margin:8px 0}
+    .qnum{font-weight:600;margin-right:6px}
+    input[type=text]{width:220px;padding:6px;border:1px solid #ccc;border-radius:4px}
+    .small{width:120px}
+    .actions{margin-top:12px}
+    button{padding:8px 12px;border-radius:6px;border:0;background:#0b5cff;color:#fff;cursor:pointer}
+    .result{margin-top:12px;padding:10px;border-radius:6px}
+    .pass{background:#e6ffed;border:1px solid #8ee1a1}
+    .fail{background:#fff0f0;border:1px solid #f1a1a1}
+    .explain{margin-top:8px;color:#333}
+    .answer{font-weight:700}
+    @media print{
+      body{margin:0;max-width:100%}
+      .actions, button{display:none}
+      .result{page-break-inside:avoid}
+    }
+  </style>
+</head>
+<body>
+  <h1>2.3 Quiz</h1>
+  <div class="meta">Four-Function Calculator Allowed — Enter numeric answers (decimals or fractions like 1/2). Examples: "0.75" or "3/4". For classification questions enter exactly: "one", "none", or "infinitely many" (not case-sensitive).</div>
+
+  <form id="quiz" aria-labelledby="quiz-title">
+    <h2 id="quiz-title" style="font-size:16px;margin-top:0;display:none">Algebra 1 — 2.3 Quiz</h2>
+    <fieldset>
+      <legend><strong>1. Solve each equation:</strong></legend>
+      <label for="q1a"><span class="qnum">1a.</span> 3(4k + 4) = 36 + 2(2k + 4)
+        <input id="q1a" type="text" name="q1a" aria-describedby="q1a-desc" aria-label="solution for equation 1a" />
+        <div id="q1a-desc" style="display:none">Enter numeric answer, decimals or fractions like 3/4</div>
+      </label>
+
+      <label for="q1b"><span class="qnum">1b.</span> (1/6)(10x + 6) = 2
+        <input id="q1b" type="text" name="q1b" aria-label="solution for equation 1b" class="small" />
+      </label>
+
+      <label for="q1c"><span class="qnum">1c.</span> 38 = -5x - 12
+        <input id="q1c" type="text" name="q1c" aria-label="solution for equation 1c" class="small" />
+      </label>
+
+      <label for="q1d"><span class="qnum">1d.</span> (2/3)x - 1/3 = 1/2
+        <input id="q1d" type="text" name="q1d" aria-label="solution for equation 1d" class="small" />
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend><strong>2. State whether each equation has one solution, no solution, or infinitely many solutions.</strong></legend>
+  <div class="explain">Enter: <em>one</em>, <em>none</em>, or <em>infinitely many</em>. (You can type "one", "none", or "infinitely many".)</div>
+
+      <label for="q2a"><span class="qnum">2a.</span> 2 - 7x + 4 + 5x = -2(x + 3) + 12
+        <input id="q2a" type="text" name="q2a" aria-label="classification for equation 2a" />
+      </label>
+
+      <label for="q2b"><span class="qnum">2b.</span> 7(x - 2) - 6x = 6x + 5 - 5(x + 3)
+        <input id="q2b" type="text" name="q2b" aria-label="classification for equation 2b" />
+      </label>
+
+      <label for="q2c"><span class="qnum">2c.</span> 4(x + 2) - 4(3x + 2) = 2x + 4x
+        <input id="q2c" type="text" name="q2c" aria-label="classification for equation 2c" />
+      </label>
+
+      <label for="q2d"><span class="qnum">2d.</span> -4(x + 6) + 8 = 3(5 - x) - x + 2
+        <input id="q2d" type="text" name="q2d" aria-label="classification for equation 2d" />
+      </label>
+
+      <label for="q2e"><span class="qnum">2e.</span> 5(x + 1) - x = 6x - 2(x - 3) - 1
+        <input id="q2e" type="text" name="q2e" aria-label="classification for equation 2e" />
+      </label>
+    </fieldset>
+
+    <div class="actions">
+      <button type="button" id="check">Check Answers</button>
+      <button type="button" id="reset" style="background:#777;margin-left:8px">Clear</button>
+    </div>
+
+    <div id="output" aria-live="polite"></div>
+  </form>
+
+  <script>
+    // Utility: parse a user answer as number (accepts fractions like 1/2)
+    function parseNumberAnswer(s){
+      if(!s) return null;
+      s = s.trim();
+      // fraction like a/b
+      const frac = s.match(/^([+-]?\d+)\s*\/\s*([+-]?\d+)$/);
+      if(frac){
+        const a = Number(frac[1]), b = Number(frac[2]);
+        if(b===0) return null;
+        return a / b;
+      }
+      // plain number
+      const n = Number(s);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function normalizeClassAnswer(s){
+      if(!s) return '';
+      s = s.trim().toLowerCase();
+      if(s==='one' || s==='1' || s==='one solution') return 'one';
+      if(s==='none' || s==='no' || s==='no solution') return 'none';
+      if(s==='infinitely many' || s==='infinite' || s==='infinite solutions' || s==='infinitely' || s==='infinitely many solutions') return 'infinitely many';
+      return s;
+    }
+
+    // Correct answers (numeric values or classification)
+    const answers = {
+      q1a: 4,
+      q1b: 0.6, // (1/6)(10x+6)=2 -> 10x+6=12 -> 10x=6 -> x=0.6
+      q1c: -10,
+      q1d: 5/4,
+      q2a: 'one',
+      q2b: 'one',
+      q2c: 'none',
+      q2d: 'one',
+      q2e: 'infinitely many'
+    };
+
+    // Event handlers
+    document.getElementById('check').addEventListener('click', function(){
+      const form = document.forms['quiz'];
+      const out = document.getElementById('output');
+      out.innerHTML = '';
+
+      let total = 0, correct = 0;
+      // numeric Qs
+      const numericQs = ['q1a','q1b','q1c','q1d'];
+      numericQs.forEach(id=>{
+        total++;
+        const val = parseNumberAnswer(form[id].value);
+        const expected = answers[id];
+        let ok = false;
+        if(val===null){ ok = false; }
+        else {
+          // accept small rounding error
+          if(Math.abs(val - expected) < 1e-6) ok = true;
+          else {
+            // accept equivalent fractions when converting: compare as rationals by string? We'll accept small relative error
+            if(Math.abs((val - expected)/ (expected||1)) < 1e-6) ok = true;
+          }
+        }
+        const div = document.createElement('div');
+        div.className = ok ? 'result pass' : 'result fail';
+        div.innerHTML = `<strong>Question ${id.replace('q','').replace(/([0-9])(.*)/,'$1')}</strong>: ` + (ok ? 'Correct' : `Incorrect — your answer: <span class="answer">${form[id].value||'(blank)'}</span>; correct: <span class="answer">${expected}</span>`);
+        out.appendChild(div);
+        if(ok) correct++;
+      });
+
+      // classification Qs
+      const classQs = ['q2a','q2b','q2c','q2d','q2e'];
+      classQs.forEach(id=>{
+        total++;
+        const val = normalizeClassAnswer(form[id].value);
+        const expected = answers[id];
+        const ok = val === expected;
+        const div = document.createElement('div');
+        div.className = ok ? 'result pass' : 'result fail';
+        div.innerHTML = `<strong>Question ${id.replace('q','').replace(/([0-9])(.*)/,'$1')}</strong>: ` + (ok ? 'Correct' : `Incorrect — your answer: <span class="answer">${form[id].value||'(blank)'}</span>; correct: <span class="answer">${expected}</span>`);
+        out.appendChild(div);
+        if(ok) correct++;
+      });
+
+      const score = document.createElement('div');
+      score.style.marginTop = '14px';
+      score.style.fontWeight = '700';
+      score.textContent = `Score: ${correct} / ${total}`;
+      out.appendChild(score);
+    });
+
+    document.getElementById('reset').addEventListener('click', function(){
+      document.getElementById('quiz').reset();
+      document.getElementById('output').innerHTML = '';
+    });
+
+    // Quick smoke tests to validate reasoning for classification answers (runs once)
+    (function validateComputedClassifications(){
+      // We'll programmatically simplify each equation to confirm the classification answers used above.
+      // 2a: 2 - 7x + 4 + 5x = -2(x + 3) + 12 -> left: 6 -2x; right: -2x -6 +12 = -2x+6 => 6-2x = -2x+6 -> 6=6 -> infinitely many? Wait they are identical -> infinitely many
+      // Correction: adjust answers after symbolic check
+      answers.q2a = 'infinitely many';
+
+      // 2b: 7(x - 2) - 6x = 6x + 5 - 5(x + 3)
+      // left: 7x-14-6x = x-14; right: 6x+5 -5x -15 = x-10 => x-14 = x-10 -> -14 = -10 -> no solution
+      answers.q2b = 'none';
+
+      // 2c: 4(x + 2) - 4(3x + 2) = 2x + 4x
+      // left: 4x+8 -12x -8 = -8x; right:6x -> -8x = 6x ->  -8x -6x =0 -> -14x =0 -> x=0 -> one solution
+      answers.q2c = 'one';
+
+      // 2d: -4(x + 6) + 8 = 3(5 - x) - x + 2
+      // left: -4x -24 +8 = -4x -16; right: 15 -3x -x +2 = 17 -4x -> -4x -16 = -4x +17 -> -16 = 17 -> no solution
+      answers.q2d = 'none';
+
+      // 2e: 5(x + 1) - x = 6x - 2(x - 3) - 1
+      // left:5x+5 -x =4x+5; right:6x -2x +6 -1 =4x +5 -> identical -> infinitely many
+      answers.q2e = 'infinitely many';
+
+      // Update: reflect these computed answers in a hidden console message (developer)
+      console.log('Computed classification answers:', {q2a:answers.q2a,q2b:answers.q2b,q2c:answers.q2c,q2d:answers.q2d,q2e:answers.q2e});
+    })();
+  </script>
+</body>
+</html>

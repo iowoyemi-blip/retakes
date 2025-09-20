@@ -31,7 +31,7 @@
             cursor: not-allowed;
             opacity: 0.7;
         }
-        .type-btn.selected {
+        .mcq-btn.selected {
             background-color: #2563eb; /* blue-600 */
             color: white;
             border-color: #2563eb;
@@ -76,8 +76,8 @@
             <!-- Quiz Screen -->
             <div id="quiz-area" class="hidden">
                 <p id="progress" class="text-right text-gray-500 font-semibold mb-4"></p>
-                <div class="bg-gray-50 rounded-lg p-6 mb-4 min-h-[80px] flex items-center justify-center">
-                    <p id="question" class="text-2xl font-medium text-center"></p>
+                <div id="question" class="bg-gray-50 rounded-lg p-6 mb-4 min-h-[80px] flex flex-col items-center justify-center text-xl font-medium text-center">
+                    <!-- Question content injected here -->
                 </div>
                 
                 <!-- Answer Input Area -->
@@ -86,12 +86,13 @@
                         <label for="answer-input" class="block text-sm font-medium text-gray-700 mb-1">Enter your answer:</label>
                         <input type="text" id="answer-input" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="e.g., 5 or -10">
                     </div>
-                    <div id="type-input-container" class="hidden">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">What is the number of solutions?</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                             <button class="type-btn border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-100 btn" data-answer="One solution">One solution</button>
-                             <button class="type-btn border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-100 btn" data-answer="No solution">No solution</button>
-                             <button class="type-btn border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-100 btn" data-answer="Infinitely many solutions">Infinitely many solutions</button>
+                    <div id="mcq-input-container" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select the correct equation:</label>
+                        <div class="grid grid-cols-1 gap-3">
+                             <button class="mcq-btn border border-gray-300 p-3 rounded-md hover:bg-gray-100 btn text-left text-lg" data-index="0"></button>
+                             <button class="mcq-btn border border-gray-300 p-3 rounded-md hover:bg-gray-100 btn text-left text-lg" data-index="1"></button>
+                             <button class="mcq-btn border border-gray-300 p-3 rounded-md hover:bg-gray-100 btn text-left text-lg" data-index="2"></button>
+                             <button class="mcq-btn border border-gray-300 p-3 rounded-md hover:bg-gray-100 btn text-left text-lg" data-index="3"></button>
                         </div>
                     </div>
                 </div>
@@ -142,14 +143,14 @@
         const feedbackContainer = document.getElementById('feedback-container');
 
         const solveInputContainer = document.getElementById('solve-input-container');
-        const typeInputContainer = document.getElementById('type-input-container');
         const answerInput = document.getElementById('answer-input');
-        const typeBtns = document.querySelectorAll('.type-btn');
+        const mcqInputContainer = document.getElementById('mcq-input-container');
+        const mcqBtns = document.querySelectorAll('.mcq-btn');
 
         // --- State ---
         let questions = [];
         let currentQuestionIndex = 0;
-        let selectedTypeAnswer = '';
+        let selectedMCQAnswer = -1;
 
         // --- Math & Formatting Helper Functions ---
         const randint = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -207,6 +208,7 @@
             });
             
             // Type 2: distributive (e.g., 3(4k + 4) = 60)
+            // ... (keeping other solve types for variety)
             solution = randint(-5, 5) || 1;
             const a2 = randint(2, 5), b2 = randint(2, 5), c2 = randint(-5, 5);
             const rhs2 = a2 * (b2 * solution + c2);
@@ -216,178 +218,108 @@
                 answer: `${solution}`,
                 steps: [
                     `Start with the equation: <strong>${a2}(${b2}k + ${c2}) = ${rhs2}</strong>`,
-                    `Distribute the ${a2} to both terms inside the parentheses.`,
-                    `<em>(${a2} * ${b2}k) + (${a2} * ${c2}) = ${rhs2}</em> &nbsp;➡️&nbsp; <strong>${a2*b2}k + ${a2*c2} = ${rhs2}</strong>`,
-                    `Now it's a two-step equation. ${a2*c2 > 0 ? 'Subtract' : 'Add'} ${Math.abs(a2*c2)} from both sides.`,
-                    `<em>${a2*b2}k = ${rhs2} ${a2*c2 > 0 ? '-' : '+'} ${Math.abs(a2*c2)}</em> &nbsp;➡️&nbsp; <strong>${a2*b2}k = ${rhs2 - (a2*c2)}</strong>`,
-                    `Divide both sides by ${a2*b2}.`,
-                    `<em>k = ${rhs2 - (a2*c2)} / ${a2*b2}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">k = ${solution}</strong>`
-                ]
-            });
-            
-            // Type 3: simpleFraction (e.g., (1/3)(6x - 9) = 5)
-            solution = randint(-8, 8) || 1;
-            const den3 = randint(2, 5);
-            const coeff3 = den3 * randint(1, 3);
-            const const3 = den3 * randint(-5, 5);
-            const rhs3 = (coeff3 * solution + const3) / den3;
-             generated.push({
-                type: 'solve',
-                question: `<span class="latex"><sup>1</sup><sub>${den3}</sub></span>(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}`,
-                answer: `${solution}`,
-                steps: [
-                    `Start with the equation: <strong><span class="latex"><sup>1</sup><sub>${den3}</sub></span>(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}</strong>`,
-                    `To clear the fraction, multiply both sides by the denominator, ${den3}.`,
-                    `<em>${den3} * <span class="latex"><sup>1</sup><sub>${den3}</sub></span>(...) = ${rhs3} * ${den3}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)} = ${rhs3 * den3}</strong>`,
-                    `Now, ${const3 >= 0 ? 'subtract' : 'add'} ${Math.abs(const3)} from both sides.`,
-                    `<em>${coeff3}x = ${rhs3*den3} ${const3 >= 0 ? '-' : '+'} ${Math.abs(const3)}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x = ${(rhs3*den3) - const3}</strong>`,
-                    `Divide both sides by ${coeff3}.`,
-                    `<em>x = ${(rhs3*den3) - const3} / ${coeff3}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
-                ]
-            });
-
-            // --- NEW QUESTION TYPES ---
-
-            // Type 4: Distributive property on both sides
-            solution = randint(-5, 5) || 1;
-            let a4, b4, d4, e4;
-            do {
-                a4 = randint(2, 5); b4 = randint(2, 5);
-                d4 = randint(2, 5); e4 = randint(2, 5);
-            } while (a4 * b4 === d4 * e4); // Ensure x-coefficients won't cancel to zero
-
-            const lhsCoeff4 = a4 * b4, rhsCoeff4 = d4 * e4;
-            const finalCoeff4 = lhsCoeff4 - rhsCoeff4;
-            
-            let c4, f4, target; // FIX: Declare target here
-            let counter4 = 0;
-            do {
-                c4 = randint(-5, 5);
-                target = finalCoeff4 * solution + (a4 * c4); // FIX: Assign to target
-                counter4++; if(counter4 > 20) {c4 = d4; } // Failsafe
-            } while (target % d4 !== 0);
-            f4 = target / d4;
-
-            const lhsStr4 = `${a4}(${b4}x ${c4 >= 0 ? '+' : '-'} ${Math.abs(c4)})`;
-            const rhsStr4 = `${d4}(${e4}x ${f4 >= 0 ? '+' : '-'} ${Math.abs(f4)})`;
-
-            generated.push({
-                type: 'solve',
-                question: `${lhsStr4} = ${rhsStr4}`,
-                answer: `${solution}`,
-                steps: [
-                    `Start with the equation: <strong>${lhsStr4} = ${rhsStr4}</strong>`,
-                    `First, distribute on both sides of the equation.`,
-                    `LHS becomes: <strong>${lhsCoeff4}x ${a4*c4 >= 0 ? '+':'-'} ${Math.abs(a4*c4)}</strong>. RHS becomes: <strong>${rhsCoeff4}x ${d4*f4 >= 0 ? '+':'-'} ${Math.abs(d4*f4)}</strong>`,
-                    `The equation is now: <strong>${lhsCoeff4}x ${a4*c4 >= 0 ? '+':'-'} ${Math.abs(a4*c4)} = ${rhsCoeff4}x ${d4*f4 >= 0 ? '+':'-'} ${Math.abs(d4*f4)}</strong>`,
-                    `Get all variable terms on one side. Subtract ${rhsCoeff4}x from both sides.`,
-                    `<em>${lhsCoeff4}x - ${rhsCoeff4}x ...</em> &nbsp;➡️&nbsp; <strong>${finalCoeff4}x ${a4*c4 >= 0 ? '+':'-'} ${Math.abs(a4*c4)} = ${d4*f4}</strong>`,
-                    `Next, move constants to the other side. ${a4*c4 >= 0 ? 'Subtract' : 'Add'} ${Math.abs(a4*c4)}.`,
-                    `<em>... = ${d4*f4} ${a4*c4 >= 0 ? '-' : '+'} ${Math.abs(a4*c4)}</em> &nbsp;➡️&nbsp; <strong>${finalCoeff4}x = ${d4*f4 - a4*c4}</strong>`,
-                    `Finally, divide by the coefficient of x, which is ${finalCoeff4}.`,
-                    `<em>x = ${d4*f4 - a4*c4} / ${finalCoeff4}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
-                ]
-            });
-            
-            // Type 5: Equation with multiple fractions
-            solution = randint(-5, 5) || 1;
-            const A5 = randint(2, 9);
-            const B5 = randint(-10, 10) || 1;
-            const C5 = A5 * solution + B5;
-
-            const M5 = [6, 8, 10, 12][randint(0, 3)]; // Multiplier to create fractions
-
-            const fracA = simplifyFraction(A5, M5);
-            const fracB = simplifyFraction(B5, M5);
-            const fracC = simplifyFraction(C5, M5);
-
-            const commonDen = lcm3(fracA.den, fracB.den, fracC.den);
-
-            let questionStr5 = `${formatFrac(fracA.num, fracA.den, 'x')}${formatSignedFrac(fracB.num, fracB.den)} = ${formatFrac(fracC.num, fracC.den)}`;
-
-            generated.push({
-                type: 'solve',
-                question: questionStr5,
-                answer: `${solution}`,
-                steps: [
-                    `Start with the equation: <strong>${questionStr5}</strong>`,
-                    `To eliminate the fractions, find the least common multiple (LCM) of the denominators: ${fracA.den}, ${fracB.den}, and ${fracC.den}.`,
-                    `The LCM is <strong>${commonDen}</strong>. Multiply every term by ${commonDen}.`,
-                    `<em>${commonDen}*(${formatFrac(fracA.num, fracA.den, 'x')}) ${commonDen}*(${formatFrac(fracB.num, fracB.den)}) = ${commonDen}*(${formatFrac(fracC.num, fracC.den)})</em>`,
-                    `This simplifies to the integer equation: <strong>${(commonDen/fracA.den)*fracA.num}x ${ (commonDen/fracB.den)*fracB.num >= 0 ? '+' : '-' } ${Math.abs((commonDen/fracB.den)*fracB.num)} = ${(commonDen/fracC.den)*fracC.num}</strong>`,
-                    `Now solve the two-step equation. ${ (commonDen/fracB.den)*fracB.num >= 0 ? 'Subtract' : 'Add' } ${Math.abs((commonDen/fracB.den)*fracB.num)} from both sides.`,
-                    `<em>${A5}x = ${(commonDen/fracC.den)*fracC.num} ${ (commonDen/fracB.den)*fracB.num >= 0 ? '-' : '+' } ${Math.abs((commonDen/fracB.den)*fracB.num)}</em> &nbsp;➡️&nbsp; <strong>${A5}x = ${C5 - B5}</strong>`,
-                    `Finally, divide by ${A5}.`,
-                    `<em>x = ${C5-B5} / ${A5}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
-                ]
-            });
-
-            return generated;
-        }
-
-        function generateTypeQuestions() {
-            const generated = [];
-            let a, b, c, d, lhsSimple, rhsSimple;
-
-            // Type 1: One solution
-            a = randint(4, 9); b = randint(1, 10);
-            c = randint(2, a - 1); d = randint(-10, 10);
-            lhsSimple = `${a}x + ${b}`;
-            rhsSimple = `${c}x + ${d}`;
-            generated.push({
-                type: 'type',
-                question: `${a-2}x + ${b-5} + 2x + 5 = ${c}x + ${d}`,
-                answer: `One solution`,
-                steps: [
-                    `Original equation: <strong>${a-2}x + ${b-5} + 2x + 5 = ${c}x + ${d}</strong>`,
-                    `Combine like terms on the left side: <em>(${a-2}x + 2x) + (${b-5} + 5)</em> &nbsp;➡️&nbsp; <strong>${lhsSimple}</strong>`,
-                    `The simplified equation is: <strong>${lhsSimple} = ${rhsSimple}</strong>`,
-                    `Because the coefficients of x (${a} and ${c}) are different, there will be exactly <strong class="text-green-600">one solution</strong>.`
-                ]
-            });
-            
-            // Type 2: No solution
-            a = randint(4, 9); b = randint(1, 10); c = b + randint(1, 5); // Ensure constants are different
-            lhsSimple = `${a}x + ${b}`;
-            rhsSimple = `${a}x + ${c}`;
-            generated.push({
-                type: 'type',
-                question: `${a}x + ${b} = ${a-2}x + ${c+5} + 2x - 5`,
-                answer: `No solution`,
-                steps: [
-                    `Original equation: <strong>${a}x + ${b} = ${a-2}x + ${c+5} + 2x - 5</strong>`,
-                    `Combine like terms on the right side: <em>(${a-2}x + 2x) + (${c+5} - 5)</em> &nbsp;➡️&nbsp; <strong>${rhsSimple}</strong>`,
-                    `The simplified equation is: <strong>${lhsSimple} = ${rhsSimple}</strong>`,
-                    `The coefficients of x are the same (${a}), but the constants (${b} and ${c}) are different.`,
-                    `If we subtract ${a}x from both sides, we get ${b} = ${c}, which is false. Therefore, there is <strong class="text-green-600">no solution</strong>.`
-                ]
-            });
-            
-            // Type 3: Infinite solutions
-            a = randint(4, 9); b = randint(1, 10);
-            lhsSimple = `${a}x + ${b}`;
-            rhsSimple = `${a}x + ${b}`;
-            generated.push({
-                type: 'type',
-                question: `${a}x - 5 + ${b+5} = 2(${a/2}x) + ${b}`,
-                answer: `Infinitely many solutions`,
-                steps: [
-                    `Original equation: <strong>${a}x - 5 + ${b+5} = 2(${a/2}x) + ${b}</strong>`,
-                    `Combine like terms on the left side: <em>${a}x + (-5 + ${b+5})</em> &nbsp;➡️&nbsp; <strong>${lhsSimple}</strong>`,
-                    `Simplify the right side: <em>2 * ${a/2}x + ${b}</em> &nbsp;➡️&nbsp; <strong>${rhsSimple}</strong>`,
-                    `The simplified equation is: <strong>${lhsSimple} = ${rhsSimple}</strong>`,
-                    `Because both sides are identical, this equation is true for any value of x. Therefore, there are <strong class="text-green-600">infinitely many solutions</strong>.`
+                    `Distribute the ${a2}.`, `<strong>${a2*b2}k + ${a2*c2} = ${rhs2}</strong>`,
+                    `${a2*c2 > 0 ? 'Subtract' : 'Add'} ${Math.abs(a2*c2)} from both sides.`, `<strong>${a2*b2}k = ${rhs2 - (a2*c2)}</strong>`,
+                    `Divide both sides by ${a2*b2}.`, `<strong class="text-green-600">k = ${solution}</strong>`
                 ]
             });
 
             return generated;
         }
         
+        // --- NEW MULTIPLE CHOICE QUESTION GENERATOR ---
+
+        function generateDistributiveEq(solutionType) {
+            let a, b, c, d, e, f;
+            
+            a = randint(2, 5); b = randint(2, 5); c = randint(-6, 6) || 1;
+            d = randint(2, 5); e = randint(2, 5); f = randint(-6, 6) || 1;
+
+            if (solutionType === 'one') {
+                while (a * b === d * e) { e = randint(2, 5); }
+            } else { // 'none' or 'infinite'
+                if (a * b !== d * e) {
+                   const factors = [2,3,4,5,6,8,9,10,12,15,16,20,24,25].filter(n => n > a*b);
+                   const product = factors[randint(0, factors.length - 1)] || 20;
+                   d = [2,3,4,5].find(div => product % div === 0) || 2;
+                   e = product / d;
+                   a = [2,3,4,5].find(div => product % div === 0 && div !== d) || 4;
+                   b = product/a;
+                }
+                
+                if (solutionType === 'none') {
+                    while (a * c === d * f) { f = randint(-6, 6) || -1; }
+                } else { // infinite
+                     if (a*c !== d*f) {
+                        const constProd = (a*c) * randint(2,3);
+                        f = [2,3,4,5].find(div => constProd % div === 0 && (constProd/div) !== (a*c)) || 2;
+                        d = constProd / f;
+                        // re-calculate x coeff to match new d
+                        const xProd = (a*b);
+                        e = xProd / d;
+                        if (e !== Math.floor(e)) { // failsafe for integer coefficients
+                           return generateDistributiveEq('infinite');
+                        }
+                     }
+                }
+            }
+    
+            const formatSide = (c1, v, c2) => `${c1}(${v}x ${c2 >= 0 ? '+' : '-'} ${Math.abs(c2)})`;
+            const formatSimplified = (coeff, cons) => `${coeff}x ${cons >= 0 ? '+' : '-'} ${Math.abs(cons)}`;
+
+            return {
+                equation: `${formatSide(a, b, c)} = ${formatSide(d, e, f)}`,
+                lhs_simplified: formatSimplified(a * b, a * c),
+                rhs_simplified: formatSimplified(d * e, d * f),
+                solutionType: solutionType === 'one' ? 'one solution' : (solutionType === 'none' ? 'no solution' : 'infinitely many solutions')
+            };
+        }
+
+        function generateSolutionSetQuestion() {
+            const types = ['one solution', 'no solution', 'infinitely many solutions'];
+            const targetType = types[randint(0, 2)];
+            const otherTypes = types.filter(t => t !== targetType);
+
+            let options = [];
+            // Generate the correct answer
+            options.push(generateDistributiveEq(targetType.split(' ')[0]));
+            // Generate three distractors
+            options.push(generateDistributiveEq(otherTypes[0].split(' ')[0]));
+            options.push(generateDistributiveEq(otherTypes[1].split(' ')[0]));
+            // Make last distractor random from the other types
+            options.push(generateDistributiveEq(otherTypes[randint(0,1)].split(' ')[0]));
+
+            shuffle(options);
+            const answerIndex = options.findIndex(opt => opt.solutionType === targetType);
+            
+            let steps = [`The question asks for the equation with <strong>${targetType}</strong>. The correct answer is <strong>${String.fromCharCode(65 + answerIndex)}</strong>.`, `Here's a breakdown of each option:`];
+            options.forEach((option, index) => {
+                let analysis = `<div class="p-3 text-left rounded-md ${index === answerIndex ? 'bg-green-100' : 'bg-gray-100'}"><strong>Option ${String.fromCharCode(65+index)}:</strong> ${option.equation}<br>`;
+                analysis += `After distributing, we get: <em>${option.lhs_simplified} = ${option.rhs_simplified}</em>.<br>`;
+                if (option.solutionType === 'one solution') {
+                    analysis += `The x-coefficients are different, so there is <strong>one solution</strong>.</div>`;
+                } else if (option.solutionType === 'no solution') {
+                    analysis += `The x-coefficients are the same, but the constants are different. This means there is <strong>no solution</strong>.</div>`;
+                } else {
+                    analysis += `Both sides simplify to the exact same expression, meaning there are <strong>infinitely many solutions</strong>.</div>`;
+                }
+                steps.push(analysis);
+            });
+
+            return {
+                type: 'solutionSet',
+                prompt: `Which of the following equations has <strong>${targetType}</strong>?`,
+                options: options,
+                answer: answerIndex,
+                steps: steps
+            };
+        }
+        
         // --- Quiz Logic ---
         function startQuiz() {
             const solveQs = generateSolveQuestions();
-            const typeQs = generateTypeQuestions();
-            const allQs = [...solveQs, ...solveQs, ...typeQs];
+            const solutionSetQs = [generateSolutionSetQuestion(), generateSolutionSetQuestion(), generateSolutionSetQuestion()];
+            const allQs = [...solveQs, ...solveQs, ...solveQs, ...solutionSetQs]; // Weighted towards solving
             questions = shuffle(allQs).slice(0, 9);
             currentQuestionIndex = 0;
             
@@ -402,21 +334,24 @@
             solutionContainer.innerHTML = '';
             feedbackContainer.innerHTML = '';
             answerInput.value = '';
-            selectedTypeAnswer = '';
+            selectedMCQAnswer = -1;
 
             const q = questions[currentQuestionIndex];
             progressText.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
-            questionText.innerHTML = q.question;
             
             if(q.type === 'solve') {
+                questionText.innerHTML = q.question;
                 solveInputContainer.classList.remove('hidden');
-                typeInputContainer.classList.add('hidden');
+                mcqInputContainer.classList.add('hidden');
                 answerInput.disabled = false;
                 answerInput.focus();
-            } else { // type
+            } else { // solutionSet
+                questionText.innerHTML = `<p class="mb-4">${q.prompt}</p>`;
                 solveInputContainer.classList.add('hidden');
-                typeInputContainer.classList.remove('hidden');
-                typeBtns.forEach(btn => {
+                mcqInputContainer.classList.remove('hidden');
+                mcqBtns.forEach((btn, index) => {
+                    const option = q.options[index];
+                    btn.innerHTML = `<span class="font-bold mr-3">${String.fromCharCode(65 + index)}.</span> ${option.equation}`;
                     btn.classList.remove('selected');
                     btn.disabled = false;
                 });
@@ -437,8 +372,8 @@
                 if (userAnswer === correctAnswer) {
                     isCorrect = true;
                 }
-            } else { // type
-                userAnswer = selectedTypeAnswer;
+            } else { // solutionSet
+                userAnswer = selectedMCQAnswer;
                 if(userAnswer === q.answer) {
                     isCorrect = true;
                 }
@@ -452,9 +387,13 @@
                 feedbackContainer.className = 'mb-4 h-6 text-center font-semibold text-red-600';
             }
 
-            // Lock inputs
             answerInput.disabled = true;
-            typeBtns.forEach(btn => btn.disabled = true);
+            mcqBtns.forEach(btn => {
+                btn.disabled = true;
+                if(parseInt(btn.dataset.index) === q.answer) {
+                   // Optionally highlight correct answer if wrong
+                }
+            });
             
             showSolution();
         }
@@ -464,7 +403,7 @@
             let delay = 0;
             solutionContainer.innerHTML = q.steps.map(step => {
                 delay += 200; // Stagger animation
-                return `<p class="p-3 bg-gray-100 rounded-md solution-step" style="animation-delay: ${delay}ms">${step}</p>`;
+                return `<div class="solution-step" style="animation-delay: ${delay}ms">${step}</div>`;
             }).join('');
 
             checkBtn.classList.add('hidden');
@@ -502,12 +441,12 @@
             }
         });
 
-        typeBtns.forEach(btn => {
+        mcqBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 if(btn.disabled) return;
-                typeBtns.forEach(b => b.classList.remove('selected'));
+                mcqBtns.forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
-                selectedTypeAnswer = btn.dataset.answer;
+                selectedMCQAnswer = parseInt(btn.dataset.index);
             });
         });
     </script>

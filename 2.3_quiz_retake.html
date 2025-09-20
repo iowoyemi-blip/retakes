@@ -3,260 +3,389 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Algebra Word Problem Practice</title>
+    <title>Algebra I: Equation Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-        .quiz-container {
-            transition: all 0.3s ease-in-out;
+        .solution-step {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 0.5s ease forwards;
         }
-        .result-item.correct {
-            background-color: #f0fdf4;
-            border-left-color: #22c55e;
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        .result-item.incorrect {
-            background-color: #fef2f2;
-            border-left-color: #ef4444;
+        .btn {
+            transition: all 0.2s ease;
         }
-        .question-prefix {
-            font-weight: 500;
-            flex-shrink: 0;
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
         }
-        .answer-field {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
         }
-        .answer-field input {
-            width: 100%;
+        .type-btn.selected {
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+            border-color: #2563eb;
+        }
+        .latex {
+            font-family: "Times New Roman", Times, serif;
+        }
+        #quiz-area.hidden, #start-area.hidden, #end-area.hidden {
+            display: none;
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 text-gray-800 antialiased flex items-center justify-center min-h-screen">
+    <div class="container mx-auto p-4 md:p-8 max-w-2xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">Algebra I Quiz</h1>
+            <p class="text-lg text-gray-600 mt-2">One Question at a Time</p>
+        </header>
 
-    <main class="bg-white rounded-2xl shadow-lg w-full max-w-4xl quiz-container">
-        <div class="p-8 border-b border-gray-200">
-            <h1 class="text-3xl font-bold text-gray-800">2.4 Quiz Word Problem Retake</h1>
-            <p class="text-gray-600 mt-2">Translate each situation into an algebraic equation and then solve. Four-Function Calculator Allowed.</p>
-        </div>
-
-        <div id="quizContainer" class="p-8">
-            <!-- The quiz form will be dynamically generated and inserted here -->
-        </div>
-
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
-            <div id="score" class="text-xl mb-6 font-semibold"></div>
-            <div id="detailedResults" class="space-y-4"></div>
-             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
-                    Try This Quiz Again
+        <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+            
+            <!-- Start Screen -->
+            <div id="start-area" class="text-center">
+                <h2 class="text-2xl font-bold mb-4">Ready to practice solving equations?</h2>
+                <p class="text-gray-600 mb-6">You'll get 9 questions covering different equation types. Work them out, check your answer, then review the step-by-step solution.</p>
+                <button id="start-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn">
+                    🚀 Start Quiz
                 </button>
-                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
-                    Generate New Quiz
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="quiz-area" class="hidden">
+                <p id="progress" class="text-right text-gray-500 font-semibold mb-4"></p>
+                <div class="bg-gray-50 rounded-lg p-6 mb-4 min-h-[80px] flex items-center justify-center">
+                    <p id="question" class="text-2xl font-medium text-center"></p>
+                </div>
+                
+                <!-- Answer Input Area -->
+                <div id="answer-area" class="mb-4">
+                    <div id="solve-input-container">
+                        <label for="answer-input" class="block text-sm font-medium text-gray-700 mb-1">Enter your answer:</label>
+                        <input type="text" id="answer-input" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="e.g., 5 or -10">
+                    </div>
+                    <div id="type-input-container" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">What is the number of solutions?</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                             <button class="type-btn border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-100 btn" data-answer="One solution">One solution</button>
+                             <button class="type-btn border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-100 btn" data-answer="No solution">No solution</button>
+                             <button class="type-btn border border-gray-300 py-2 px-4 rounded-md hover:bg-gray-100 btn" data-answer="Infinitely many solutions">Infinitely many solutions</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="feedback-container" class="mb-4 h-6 text-center font-semibold"></div>
+
+                <div id="solution-container" class="space-y-3 mb-6"></div>
+
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button id="check-btn" class="w-full sm:w-auto flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 btn">
+                        ✅ Check Answer
+                    </button>
+                    <button id="next-btn" class="w-full sm:w-auto flex-1 bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 btn hidden">
+                        ➡️ Next Question
+                    </button>
+                </div>
+            </div>
+
+            <!-- End Screen -->
+            <div id="end-area" class="hidden text-center">
+                 <h2 class="text-2xl font-bold mb-4">🎉 Quiz Complete! 🎉</h2>
+                <p class="text-gray-600 mb-6">Great job working through those problems. Practice is key to mastering algebra!</p>
+                <button id="restart-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn">
+                    🔄 Practice Again
                 </button>
             </div>
         </div>
-    </main>
+
+        <footer class="text-center mt-8 text-gray-500">
+            <p>A collaborative creation to help students master algebra.</p>
+        </footer>
+    </div>
 
     <script>
-        const quizContainer = document.getElementById('quizContainer');
-        const resultsSection = document.getElementById('resultsSection');
-        const scoreElement = document.getElementById('score');
-        const detailedResultsElement = document.getElementById('detailedResults');
-        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
-        const generateNewBtn = document.getElementById('generateNewBtn');
-
-        let currentQuestions = [];
-
-        // --- UTILITY FUNCTIONS ---
-        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const toWords = (num) => {
-             const words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
-             return words[num] || num.toString();
-        };
-
-        // --- QUESTION GENERATORS ---
-        function generateFractionProblem() {
-            const den = getRandomInt(3, 8);
-            const num = getRandomInt(2, den - 1);
-            const solution = den * getRandomInt(5, 20);
-            const result = (num * solution) / den;
-            const denWords = ["", "", "halves", "thirds", "fourths", "fifths", "sixths", "sevenths", "eighths"];
-
-            return {
-                id: 'q_frac',
-                text: `${toWords(num).charAt(0).toUpperCase() + toWords(num).slice(1)} ${denWords[den]} of a number is ${result}. What is the number?`,
-                fields: [{ id: 'q_frac_ans', label: 'The number is' }],
-                answers: [solution.toString()]
-            };
-        }
-
-        function generateConsecutiveIntProblem() {
-            const start = getRandomInt(10, 50);
-            const sum = start + (start + 1);
-            return {
-                id: 'q_consec',
-                text: `The sum of two consecutive integers is ${sum}. What are the numbers?`,
-                fields: [{ id: 'q_consec_1', label: 'First number' }, { id: 'q_consec_2', label: 'Second number' }],
-                answers: [start.toString(), (start + 1).toString()]
-            };
-        }
-
-        function generatePerimeterProblem() {
-            const width = getRandomInt(5, 15);
-            const diff = getRandomInt(2, 10);
-            const length = width + diff;
-            const perimeter = 2 * (length + width);
-            const area = length * width;
-            return {
-                id: 'q_perim',
-                text: `The length of a rectangle is ${diff} inches longer than the width. The perimeter is ${perimeter} inches. Find the length, width, and area of the rectangle.`,
-                fields: [
-                    { id: 'q_perim_w', label: 'Width (in)' },
-                    { id: 'q_perim_l', label: 'Length (in)' },
-                    { id: 'q_perim_a', label: 'Area (in²)' }
-                ],
-                answers: [width.toString(), length.toString(), area.toString()]
-            };
-        }
-
-        function generateSimpleSystemProblem() {
-            const names = ["Jen", "Mike", "Sarah", "Chris"];
-            const items = [["apples", "oranges"], ["pens", "pencils"], ["shirts", "shorts"]];
-            const selected = items[getRandomInt(0, items.length - 1)];
-            const name = names[getRandomInt(0, names.length - 1)];
-
-            const item2Count = getRandomInt(5, 15);
-            const diff = getRandomInt(2, 5);
-            const item1Count = item2Count + diff;
-            const total = item1Count + item2Count;
-
-            return {
-                id: 'q_sys',
-                text: `${name} bought ${diff} more ${selected[0]} than ${selected[1]}. They bought ${total} items in total. How many ${selected[1]} did ${name} buy?`,
-                fields: [{ id: 'q_sys_ans', label: `Number of ${selected[1]}` }],
-                answers: [item2Count.toString()]
-            };
-        }
-
-        function generateLinearCostProblem() {
-            const names = ["Gavin", "Maria", "Liam", "Zoe"];
-            const items = ["gigabytes of data", "miles driven", "hours of service"];
-            
-            const name = names[getRandomInt(0, names.length - 1)];
-            const item = items[getRandomInt(0, items.length-1)];
-
-            const flatCost = (getRandomInt(20, 50) + 0.5).toFixed(2);
-            const perItemCost = getRandomInt(3, 10);
-            const quantity = getRandomInt(5, 15);
-            const totalCost = (parseFloat(flatCost) + perItemCost * quantity).toFixed(2);
-
-            return {
-                id: 'q_cost',
-                text: `Under their plan, ${name} pays a flat cost of $${flatCost} per month and $${perItemCost} per ${item.split(' ')[0]}. They want to keep the bill at $${totalCost} per month. How many ${item} can they use?`,
-                fields: [{ id: 'q_cost_ans', label: `Number of ${item}` }],
-                answers: [quantity.toString()]
-            };
-        }
+        // --- DOM Elements ---
+        const startArea = document.getElementById('start-area');
+        const quizArea = document.getElementById('quiz-area');
+        const endArea = document.getElementById('end-area');
         
-        // --- CORE QUIZ LOGIC ---
-        function generateAndRenderQuiz() {
-            currentQuestions = [
-                generateFractionProblem(),
-                generateConsecutiveIntProblem(),
-                generatePerimeterProblem(),
-                generateSimpleSystemProblem(),
-                generateLinearCostProblem()
-            ];
-            renderQuizForm(currentQuestions);
-            quizContainer.classList.remove('hidden');
-            resultsSection.classList.add('hidden');
-            window.scrollTo(0, 0);
-        }
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const checkBtn = document.getElementById('check-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        const progressText = document.getElementById('progress');
+        const questionText = document.getElementById('question');
+        const solutionContainer = document.getElementById('solution-container');
+        const feedbackContainer = document.getElementById('feedback-container');
 
-        function renderQuizForm(questions) {
-            const prefixes = ['a.', 'b.', 'c.', 'd.', 'e.'];
-            const questionsHTML = questions.map((q, i) => `
-                <div class="flex flex-col md:flex-row md:items-start gap-4">
-                    <div class="md:w-2/3 text-gray-700">
-                        <p><span class="question-prefix mr-2">${prefixes[i]}</span>${q.text}</p>
-                    </div>
-                    <div class="w-full md:w-1/3 space-y-3">
-                        ${q.fields.map(field => `
-                            <div class="answer-field">
-                                <label for="${field.id}" class="text-sm font-medium text-gray-600">${field.label}:</label>
-                                <input type="text" id="${field.id}" name="${field.id}" class="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('<hr class="my-6">');
+        const solveInputContainer = document.getElementById('solve-input-container');
+        const typeInputContainer = document.getElementById('type-input-container');
+        const answerInput = document.getElementById('answer-input');
+        const typeBtns = document.querySelectorAll('.type-btn');
 
-            quizContainer.innerHTML = `
-                <form id="quizForm">
-                    <div class="space-y-6">${questionsHTML}</div>
-                    <div class="mt-10 text-center">
-                        <button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-transform transform hover:scale-105">
-                            Grade My Quiz
-                        </button>
-                    </div>
-                </form>
-            `;
+        // --- State ---
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let selectedTypeAnswer = '';
+
+        // --- Helper Functions ---
+        const randint = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+        // --- Question Generation (unchanged) ---
+        function generateSolveQuestions() {
+            const generated = [];
+            let solution;
+
+            // Type 1: twoStep (e.g., 38 = -5x - 12)
+            solution = randint(-10, 10) || 1;
+            const a1 = randint(2, 9), b1 = randint(-15, 15);
+            const lhs1 = a1 * solution + b1;
+            generated.push({
+                type: 'solve',
+                question: `${lhs1} = ${a1}x ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)}`,
+                answer: `x = ${solution}`,
+                steps: [
+                    `Start with the equation: <strong>${lhs1} = ${a1}x ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)}</strong>`,
+                    `To isolate the x term, ${b1 >= 0 ? 'subtract' : 'add'} ${Math.abs(b1)} from both sides.`,
+                    `<em>${lhs1} ${b1 >= 0 ? '-' : '+'} ${Math.abs(b1)} = ${a1}x</em>  &nbsp;➡️&nbsp; <strong>${lhs1 - b1} = ${a1}x</strong>`,
+                    `Divide both sides by ${a1} to solve for x.`,
+                    `<em>x = ${lhs1-b1} / ${a1}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
+                ]
+            });
             
-            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
-        }
-
-        function gradeQuiz(event) {
-            event.preventDefault();
-            let score = 0;
-            let resultsHTML = '';
+            // Type 2: distributive (e.g., 3(4k + 4) = 60)
+            solution = randint(-5, 5) || 1;
+            const a2 = randint(2, 5), b2 = randint(2, 5), c2 = randint(-5, 5);
+            const rhs2 = a2 * (b2 * solution + c2);
+            generated.push({
+                type: 'solve',
+                question: `${a2}(${b2}k + ${c2}) = ${rhs2}`,
+                answer: `k = ${solution}`,
+                steps: [
+                    `Start with the equation: <strong>${a2}(${b2}k + ${c2}) = ${rhs2}</strong>`,
+                    `Distribute the ${a2} to both terms inside the parentheses.`,
+                    `<em>(${a2} * ${b2}k) + (${a2} * ${c2}) = ${rhs2}</em> &nbsp;➡️&nbsp; <strong>${a2*b2}k + ${a2*c2} = ${rhs2}</strong>`,
+                    `Now it's a two-step equation. ${a2*c2 > 0 ? 'Subtract' : 'Add'} ${Math.abs(a2*c2)} from both sides.`,
+                    `<em>${a2*b2}k = ${rhs2} ${a2*c2 > 0 ? '-' : '+'} ${Math.abs(a2*c2)}</em> &nbsp;➡️&nbsp; <strong>${a2*b2}k = ${rhs2 - (a2*c2)}</strong>`,
+                    `Divide both sides by ${a2*b2}.`,
+                    `<em>k = ${rhs2 - (a2*c2)} / ${a2*b2}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">k = ${solution}</strong>`
+                ]
+            });
             
-            currentQuestions.forEach(q => {
-                const userAnswers = q.fields.map(field => document.getElementById(field.id).value.trim());
-                
-                // For multi-answer questions, sort to ignore order.
-                const sortedUserAnswers = [...userAnswers].sort();
-                const sortedCorrectAnswers = [...q.answers].sort();
-                
-                const isCorrect = JSON.stringify(sortedUserAnswers) === JSON.stringify(sortedCorrectAnswers);
-
-                if (isCorrect) score++;
-
-                resultsHTML += `
-                    <div class="result-item border-l-4 p-4 rounded-md ${isCorrect ? 'correct' : 'incorrect'}">
-                        <div class="font-semibold text-gray-800">${q.text}</div>
-                        <p class="mt-2 text-sm">Your answer(s): <span class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">${userAnswers.join(', ') || '<i>No answer</i>'}</span></p>
-                        ${!isCorrect ? `<p class="mt-1 text-sm">Correct answer(s): <span class="font-medium text-green-700">${q.answers.join(', ')}</span></p>` : ''}
-                    </div>
-                `;
+            // Type 3: simpleFraction (e.g., (1/3)(6x - 9) = 5)
+            solution = randint(-8, 8) || 1;
+            const den3 = randint(2, 5);
+            const coeff3 = den3 * randint(1, 3);
+            const const3 = den3 * randint(-5, 5);
+            const rhs3 = (coeff3 * solution + const3) / den3;
+             generated.push({
+                type: 'solve',
+                question: `<span class="latex"><sup>1</sup>&frasl;<sub>${den3}</sub></span>(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}`,
+                answer: `x = ${solution}`,
+                steps: [
+                    `Start with the equation: <strong><span class="latex"><sup>1</sup>&frasl;<sub>${den3}</sub></span>(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}</strong>`,
+                    `To clear the fraction, multiply both sides by the denominator, ${den3}.`,
+                    `<em>${den3} * <span class="latex"><sup>1</sup>&frasl;<sub>${den3}</sub></span>(...) = ${rhs3} * ${den3}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)} = ${rhs3 * den3}</strong>`,
+                    `Now, ${const3 >= 0 ? 'subtract' : 'add'} ${Math.abs(const3)} from both sides.`,
+                    `<em>${coeff3}x = ${rhs3*den3} ${const3 >= 0 ? '-' : '+'} ${Math.abs(const3)}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x = ${(rhs3*den3) - const3}</strong>`,
+                    `Divide both sides by ${coeff3}.`,
+                    `<em>x = ${(rhs3*den3) - const3} / ${coeff3}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
+                ]
             });
 
-            const totalQuestions = currentQuestions.length;
-            const percentage = Math.round((score / totalQuestions) * 100);
-            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
-
-            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${totalQuestions} (${percentage}%)</span>`;
-            detailedResultsElement.innerHTML = resultsHTML;
-
-            quizContainer.classList.add('hidden');
-            resultsSection.classList.remove('hidden');
-            window.scrollTo(0, 0);
+            return generated;
         }
 
-        // --- EVENT LISTENERS ---
-        retakeQuizBtn.addEventListener('click', () => {
-            renderQuizForm(currentQuestions);
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-        });
+        function generateTypeQuestions() {
+            const generated = [];
+            let a, b, c, lhsSimple, rhsSimple;
 
-        generateNewBtn.addEventListener('click', generateAndRenderQuiz);
-        document.addEventListener('DOMContentLoaded', generateAndRenderQuiz);
+            // Type 1: One solution
+            a = randint(4, 9); b = randint(1, 10);
+            c = randint(2, a - 1); // Ensure x-coeffs are different
+            lhsSimple = `${a}x + ${b}`;
+            rhsSimple = `${c}x + ${randint(-10, 10)}`;
+            generated.push({
+                type: 'type',
+                question: `2x + ${b-5} + ${a-2}x + 5 = ${c}x + ${randint(-10, 10)}`,
+                answer: `One solution`,
+                steps: [
+                    `Original equation: <strong>2x + ${b-5} + ${a-2}x + 5 = ${c}x + ${randint(-10, 10)}</strong>`,
+                    `Combine like terms on the left side: <em>(2x + ${a-2}x) + (${b-5} + 5)</em> &nbsp;➡️&nbsp; <strong>${lhsSimple}</strong>`,
+                    `The simplified equation is: <strong>${lhsSimple} = ${rhsSimple}</strong>`,
+                    `Because the coefficients of x (${a} and ${c}) are different, there will be exactly <strong class="text-green-600">one solution</strong>.`
+                ]
+            });
+            
+            // Type 2: No solution
+            a = randint(4, 9); b = randint(1, 10); c = b + randint(1, 5); // Ensure constants are different
+            lhsSimple = `${a}x + ${b}`;
+            rhsSimple = `${a}x + ${c}`;
+            generated.push({
+                type: 'type',
+                question: `${a}x + ${b} = ${a-2}x + ${c+5} + 2x - 5`,
+                answer: `No solution`,
+                steps: [
+                    `Original equation: <strong>${a}x + ${b} = ${a-2}x + ${c+5} + 2x - 5</strong>`,
+                    `Combine like terms on the right side: <em>(${a-2}x + 2x) + (${c+5} - 5)</em> &nbsp;➡️&nbsp; <strong>${rhsSimple}</strong>`,
+                    `The simplified equation is: <strong>${lhsSimple} = ${rhsSimple}</strong>`,
+                    `The coefficients of x are the same (${a}), but the constants (${b} and ${c}) are different.`,
+                    `If we subtract ${a}x from both sides, we get ${b} = ${c}, which is false. Therefore, there is <strong class="text-green-600">no solution</strong>.`
+                ]
+            });
+            
+            // Type 3: Infinite solutions
+            a = randint(4, 9); b = randint(1, 10);
+            lhsSimple = `${a}x + ${b}`;
+            rhsSimple = `${a}x + ${b}`;
+            generated.push({
+                type: 'type',
+                question: `${a}x - 5 + ${b+5} = 2(${a/2}x) + ${b}`,
+                answer: `Infinitely many solutions`,
+                steps: [
+                    `Original equation: <strong>${a}x - 5 + ${b+5} = 2(${a/2}x) + ${b}</strong>`,
+                    `Combine like terms on the left side: <em>${a}x + (-5 + ${b+5})</em> &nbsp;➡️&nbsp; <strong>${lhsSimple}</strong>`,
+                    `Simplify the right side: <em>2 * ${a/2}x + ${b}</em> &nbsp;➡️&nbsp; <strong>${rhsSimple}</strong>`,
+                    `The simplified equation is: <strong>${lhsSimple} = ${rhsSimple}</strong>`,
+                    `Because both sides are identical, this equation is true for any value of x. Therefore, there are <strong class="text-green-600">infinitely many solutions</strong>.`
+                ]
+            });
+
+            return generated;
+        }
+        
+        // --- Quiz Logic ---
+        function startQuiz() {
+            const solveQs = generateSolveQuestions();
+            const typeQs = generateTypeQuestions();
+            const allQs = [...solveQs, ...solveQs, ...typeQs];
+            questions = shuffle(allQs).slice(0, 9);
+            currentQuestionIndex = 0;
+            
+            startArea.classList.add('hidden');
+            endArea.classList.add('hidden');
+            quizArea.classList.remove('hidden');
+
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            solutionContainer.innerHTML = '';
+            feedbackContainer.innerHTML = '';
+            answerInput.value = '';
+            selectedTypeAnswer = '';
+
+            const q = questions[currentQuestionIndex];
+            progressText.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+            questionText.innerHTML = q.question;
+            
+            if(q.type === 'solve') {
+                solveInputContainer.classList.remove('hidden');
+                typeInputContainer.classList.add('hidden');
+                answerInput.disabled = false;
+            } else { // type
+                solveInputContainer.classList.add('hidden');
+                typeInputContainer.classList.remove('hidden');
+                typeBtns.forEach(btn => {
+                    btn.classList.remove('selected');
+                    btn.disabled = false;
+                });
+            }
+
+            checkBtn.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+        }
+
+        function checkAnswer() {
+            const q = questions[currentQuestionIndex];
+            let userAnswer;
+            let isCorrect = false;
+
+            if (q.type === 'solve') {
+                userAnswer = answerInput.value.trim();
+                const correctAnswer = q.answer.split('=')[1].trim();
+                if (userAnswer === correctAnswer) {
+                    isCorrect = true;
+                }
+            } else { // type
+                userAnswer = selectedTypeAnswer;
+                if(userAnswer === q.answer) {
+                    isCorrect = true;
+                }
+            }
+
+            if(isCorrect) {
+                feedbackContainer.textContent = 'Correct! 🎉';
+                feedbackContainer.className = 'mb-4 h-6 text-center font-semibold text-green-600';
+            } else {
+                feedbackContainer.textContent = 'Not quite. Here is the solution:';
+                feedbackContainer.className = 'mb-4 h-6 text-center font-semibold text-red-600';
+            }
+
+            // Lock inputs
+            answerInput.disabled = true;
+            typeBtns.forEach(btn => btn.disabled = true);
+            
+            showSolution();
+        }
+
+        function showSolution() {
+            const q = questions[currentQuestionIndex];
+            let delay = 0;
+            solutionContainer.innerHTML = q.steps.map(step => {
+                delay += 200; // Stagger animation
+                return `<p class="p-3 bg-gray-100 rounded-md solution-step" style="animation-delay: ${delay}ms">${step}</p>`;
+            }).join('');
+
+            checkBtn.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+            if (currentQuestionIndex === questions.length - 1) {
+                nextBtn.textContent = '🏁 Finish Quiz';
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                nextBtn.textContent = '➡️ Next Question';
+                displayQuestion();
+            } else {
+                showEndScreen();
+            }
+        }
+
+        function showEndScreen() {
+            quizArea.classList.add('hidden');
+            endArea.classList.remove('hidden');
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', startQuiz);
+        restartBtn.addEventListener('click', startQuiz);
+        checkBtn.addEventListener('click', checkAnswer);
+        nextBtn.addEventListener('click', nextQuestion);
+
+        typeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if(btn.disabled) return;
+                typeBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                selectedTypeAnswer = btn.dataset.answer;
+            });
+        });
     </script>
 </body>
 </html>

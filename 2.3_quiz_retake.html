@@ -39,16 +39,8 @@
         .latex {
             font-family: "Times New Roman", Times, serif;
             display: inline-block;
-            text-align: center;
             vertical-align: middle;
-        }
-        .latex sup, .latex sub {
-            font-size: 0.8em;
-            line-height: 1;
-            display: block;
-        }
-        .latex sub {
-            border-top: 1px solid currentColor;
+            font-size: 1.1em;
         }
         #quiz-area.hidden, #start-area.hidden, #end-area.hidden {
             display: none;
@@ -84,7 +76,7 @@
                 <div id="answer-area" class="mb-4">
                     <div id="solve-input-container">
                         <label for="answer-input" class="block text-sm font-medium text-gray-700 mb-1">Enter your answer:</label>
-                        <input type="text" id="answer-input" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="e.g., 5 or -10">
+                        <input type="text" id="answer-input" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="e.g., 5 or -10 or 3/4">
                     </div>
                     <div id="mcq-input-container" class="hidden">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Select the correct equation:</label>
@@ -175,20 +167,21 @@
             if (d === 1) return `${n}${term}`;
             if (n === 0) return `0`;
             const sign = n < 0 ? '-' : '';
-            return `${sign}<span class="latex"><sup>${Math.abs(n)}</sup><sub>${d}</sub></span>${term}`;
+            return `${sign}(${Math.abs(n)}/${d})${term}`;
         };
+
         const formatSignedFrac = (n, d, term = '') => {
             if (n === 0) return '';
             const sign = n > 0 ? '+' : '-';
             if (d === 1) return ` ${sign} ${Math.abs(n)}${term}`;
-            return ` ${sign} <span class="latex"><sup>${Math.abs(n)}</sup><sub>${d}</sub></span>${term}`;
+            return ` ${sign} (${Math.abs(n)}/${d})${term}`;
         };
 
 
         // --- Question Generation ---
         function generateSolveQuestions() {
             const generated = [];
-            let solution;
+            let solution, solutionNum, solutionDen;
 
             // Type 1: twoStep (e.g., 38 = -5x - 12)
             solution = randint(-10, 10) || 1;
@@ -231,12 +224,12 @@
             const rhs3 = (coeff3 * solution + const3) / den3;
              generated.push({
                 type: 'solve',
-                question: `<span class="latex"><sup>1</sup><sub>${den3}</sub></span>(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}`,
+                question: `${formatFrac(1, den3)}(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}`,
                 answer: `${solution}`,
                 steps: [
-                    `Start with the equation: <strong><span class="latex"><sup>1</sup><sub>${den3}</sub></span>(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}</strong>`,
+                    `Start with the equation: <strong>${formatFrac(1, den3)}(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}</strong>`,
                     `To clear the fraction, multiply both sides by the denominator, ${den3}.`,
-                    `<em>${den3} * <span class="latex"><sup>1</sup><sub>${den3}</sub></span>(...) = ${rhs3} * ${den3}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)} = ${rhs3 * den3}</strong>`,
+                    `<em>${den3} * ${formatFrac(1, den3)}(...) = ${rhs3} * ${den3}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)} = ${rhs3 * den3}</strong>`,
                     `Now, ${const3 >= 0 ? 'subtract' : 'add'} ${Math.abs(const3)} from both sides.`,
                     `<em>${coeff3}x = ${rhs3*den3} ${const3 >= 0 ? '-' : '+'} ${Math.abs(const3)}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x = ${(rhs3*den3) - const3}</strong>`,
                     `Divide both sides by ${coeff3}.`,
@@ -245,33 +238,41 @@
             });
 
             // Type 4: Equation with multiple fractions
-            solution = randint(-5, 5) || 1;
+            solutionNum = randint(-9, 9) || 1;
+            solutionDen = randint(2, 5);
+            const simplifiedSol = simplifyFraction(solutionNum, solutionDen);
+            solutionNum = simplifiedSol.num;
+            solutionDen = simplifiedSol.den;
+
             const A4 = randint(2, 9);
+            const M4 = lcm(A4, solutionDen);
+            const C4 = (A4 * solutionNum) / solutionDen;
             const B4 = randint(-10, 10) || 1;
-            const C4 = A4 * solution + B4;
-            const M4 = [6, 8, 10, 12][randint(0, 3)];
-            const fracA = simplifyFraction(A4, M4);
-            const fracB = simplifyFraction(B4, M4);
-            const fracC = simplifyFraction(C4, M4);
-            const commonDen = lcm3(fracA.den, fracB.den, fracC.den);
-            let questionStr4 = `${formatFrac(fracA.num, fracA.den, 'x')}${formatSignedFrac(fracB.num, fracB.den)} = ${formatFrac(fracC.num, fracC.den)}`;
+           
+            const lhsB = simplifyFraction(B4, M4);
+            const rhsC = simplifyFraction(C4-B4, M4);
+            const lhsA = simplifyFraction(A4,M4);
+            
+            const commonDen = lcm3(lhsA.den, lhsB.den, rhsC.den);
+            
+            let questionStr4 = `${formatFrac(lhsA.num, lhsA.den, 'x')}${formatSignedFrac(lhsB.num, lhsB.den)} = ${formatFrac(rhsC.num, rhsC.den)}`;
 
             generated.push({
                 type: 'solve',
                 question: questionStr4,
-                answer: `${solution}`,
+                answer: `${solutionNum}/${solutionDen}`,
                 steps: [
                     `Start with the equation: <strong>${questionStr4}</strong>`,
-                    `To eliminate the fractions, find the least common multiple (LCM) of the denominators: ${fracA.den}, ${fracB.den}, and ${fracC.den}.`,
+                    `To eliminate the fractions, find the least common multiple (LCM) of the denominators: ${lhsA.den}, ${lhsB.den}, and ${rhsC.den}.`,
                     `The LCM is <strong>${commonDen}</strong>. Multiply every term by ${commonDen}.`,
-                    `<em>${commonDen}*(${formatFrac(fracA.num, fracA.den, 'x')}) ${commonDen}*(${formatFrac(fracB.num, fracB.den)}) = ${commonDen}*(${formatFrac(fracC.num, fracC.den)})</em>`,
-                    `This simplifies to the integer equation: <strong>${(commonDen/fracA.den)*fracA.num}x ${ (commonDen/fracB.den)*fracB.num >= 0 ? '+' : '-' } ${Math.abs((commonDen/fracB.den)*fracB.num)} = ${(commonDen/fracC.den)*fracC.num}</strong>`,
-                    `Now solve the two-step equation. ${ (commonDen/fracB.den)*fracB.num >= 0 ? 'Subtract' : 'Add' } ${Math.abs((commonDen/fracB.den)*fracB.num)} from both sides.`,
-                    `<em>${A4}x = ${(commonDen/fracC.den)*fracC.num} ${ (commonDen/fracB.den)*fracB.num >= 0 ? '-' : '+' } ${Math.abs((commonDen/fracB.den)*fracB.num)}</em> &nbsp;➡️&nbsp; <strong>${A4}x = ${C4 - B4}</strong>`,
+                    `This simplifies to the integer equation: <strong>${(commonDen/lhsA.den)*lhsA.num}x ${ (commonDen/lhsB.den)*lhsB.num >= 0 ? '+' : '-' } ${Math.abs((commonDen/lhsB.den)*lhsB.num)} = ${(commonDen/rhsC.den)*rhsC.num}</strong>`,
+                    `Now solve the two-step equation.`,
+                    `<strong>${A4}x = ${C4 - B4}</strong>`,
                     `Finally, divide by ${A4}.`,
-                    `<em>x = ${C4-B4} / ${A4}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
+                    `<em>x = ${C4-B4} / ${A4}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solutionNum}/${solutionDen}</strong>`
                 ]
             });
+
 
             return generated;
         }
@@ -418,8 +419,18 @@
             if (q.type === 'solve') {
                 userAnswer = answerInput.value.trim();
                 const correctAnswer = q.answer;
+                // Allow for both decimal and fraction answers if applicable
                 if (userAnswer === correctAnswer) {
                     isCorrect = true;
+                } else {
+                    try {
+                       const [num, den] = correctAnswer.split('/').map(Number);
+                       if (den && Math.abs(eval(userAnswer) - (num/den)) < 0.001) {
+                           isCorrect = true;
+                       }
+                    } catch (e) {
+                        // User input was not a valid number or expression
+                    }
                 }
             } else { // solutionSet
                 userAnswer = selectedMCQAnswer;
@@ -439,9 +450,6 @@
             answerInput.disabled = true;
             mcqBtns.forEach(btn => {
                 btn.disabled = true;
-                if(parseInt(btn.dataset.index) === q.answer) {
-                   // Optionally highlight correct answer if wrong
-                }
             });
             
             showSolution();

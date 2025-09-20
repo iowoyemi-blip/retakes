@@ -38,6 +38,17 @@
         }
         .latex {
             font-family: "Times New Roman", Times, serif;
+            display: inline-block;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .latex sup, .latex sub {
+            font-size: 0.8em;
+            line-height: 1;
+            display: block;
+        }
+        .latex sub {
+            border-top: 1px solid currentColor;
         }
         #quiz-area.hidden, #start-area.hidden, #end-area.hidden {
             display: none;
@@ -140,11 +151,40 @@
         let currentQuestionIndex = 0;
         let selectedTypeAnswer = '';
 
-        // --- Helper Functions ---
+        // --- Math & Formatting Helper Functions ---
         const randint = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+        const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+        const lcm = (a, b) => (a * b) / gcd(a, b);
+        const lcm3 = (a, b, c) => lcm(lcm(a, b), c);
+        
+        function simplifyFraction(numerator, denominator) {
+            if (denominator === 0) return { num: numerator, den: 1 };
+            const commonDivisor = gcd(Math.abs(numerator), Math.abs(denominator));
+            let num = numerator / commonDivisor;
+            let den = denominator / commonDivisor;
+            if (den < 0) {
+                num = -num;
+                den = -den;
+            }
+            return { num, den };
+        }
+        
+        const formatFrac = (n, d, term = '') => {
+            if (d === 1) return `${n}${term}`;
+            if (n === 0) return `0`;
+            const sign = n < 0 ? '-' : '';
+            return `${sign}<span class="latex"><sup>${Math.abs(n)}</sup><sub>${d}</sub></span>${term}`;
+        };
+        const formatSignedFrac = (n, d, term = '') => {
+            if (n === 0) return '';
+            const sign = n > 0 ? '+' : '-';
+            if (d === 1) return ` ${sign} ${Math.abs(n)}${term}`;
+            return ` ${sign} <span class="latex"><sup>${Math.abs(n)}</sup><sub>${d}</sub></span>${term}`;
+        };
 
-        // --- Question Generation (unchanged) ---
+
+        // --- Question Generation ---
         function generateSolveQuestions() {
             const generated = [];
             let solution;
@@ -156,7 +196,7 @@
             generated.push({
                 type: 'solve',
                 question: `${lhs1} = ${a1}x ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)}`,
-                answer: `x = ${solution}`,
+                answer: `${solution}`,
                 steps: [
                     `Start with the equation: <strong>${lhs1} = ${a1}x ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)}</strong>`,
                     `To isolate the x term, ${b1 >= 0 ? 'subtract' : 'add'} ${Math.abs(b1)} from both sides.`,
@@ -173,7 +213,7 @@
             generated.push({
                 type: 'solve',
                 question: `${a2}(${b2}k + ${c2}) = ${rhs2}`,
-                answer: `k = ${solution}`,
+                answer: `${solution}`,
                 steps: [
                     `Start with the equation: <strong>${a2}(${b2}k + ${c2}) = ${rhs2}</strong>`,
                     `Distribute the ${a2} to both terms inside the parentheses.`,
@@ -193,16 +233,92 @@
             const rhs3 = (coeff3 * solution + const3) / den3;
              generated.push({
                 type: 'solve',
-                question: `<span class="latex"><sup>1</sup>&frasl;<sub>${den3}</sub></span>(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}`,
-                answer: `x = ${solution}`,
+                question: `<span class="latex"><sup>1</sup><sub>${den3}</sub></span>(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}`,
+                answer: `${solution}`,
                 steps: [
-                    `Start with the equation: <strong><span class="latex"><sup>1</sup>&frasl;<sub>${den3}</sub></span>(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}</strong>`,
+                    `Start with the equation: <strong><span class="latex"><sup>1</sup><sub>${den3}</sub></span>(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}</strong>`,
                     `To clear the fraction, multiply both sides by the denominator, ${den3}.`,
-                    `<em>${den3} * <span class="latex"><sup>1</sup>&frasl;<sub>${den3}</sub></span>(...) = ${rhs3} * ${den3}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)} = ${rhs3 * den3}</strong>`,
+                    `<em>${den3} * <span class="latex"><sup>1</sup><sub>${den3}</sub></span>(...) = ${rhs3} * ${den3}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)} = ${rhs3 * den3}</strong>`,
                     `Now, ${const3 >= 0 ? 'subtract' : 'add'} ${Math.abs(const3)} from both sides.`,
                     `<em>${coeff3}x = ${rhs3*den3} ${const3 >= 0 ? '-' : '+'} ${Math.abs(const3)}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x = ${(rhs3*den3) - const3}</strong>`,
                     `Divide both sides by ${coeff3}.`,
                     `<em>x = ${(rhs3*den3) - const3} / ${coeff3}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
+                ]
+            });
+
+            // --- NEW QUESTION TYPES ---
+
+            // Type 4: Distributive property on both sides
+            solution = randint(-5, 5) || 1;
+            let a4, b4, d4, e4;
+            do {
+                a4 = randint(2, 5); b4 = randint(2, 5);
+                d4 = randint(2, 5); e4 = randint(2, 5);
+            } while (a4 * b4 === d4 * e4); // Ensure x-coefficients won't cancel to zero
+
+            const lhsCoeff4 = a4 * b4, rhsCoeff4 = d4 * e4;
+            const finalCoeff4 = lhsCoeff4 - rhsCoeff4;
+            
+            let c4, f4, target; // FIX: Declare target here
+            let counter4 = 0;
+            do {
+                c4 = randint(-5, 5);
+                target = finalCoeff4 * solution + (a4 * c4); // FIX: Assign to target
+                counter4++; if(counter4 > 20) {c4 = d4; } // Failsafe
+            } while (target % d4 !== 0);
+            f4 = target / d4;
+
+            const lhsStr4 = `${a4}(${b4}x ${c4 >= 0 ? '+' : '-'} ${Math.abs(c4)})`;
+            const rhsStr4 = `${d4}(${e4}x ${f4 >= 0 ? '+' : '-'} ${Math.abs(f4)})`;
+
+            generated.push({
+                type: 'solve',
+                question: `${lhsStr4} = ${rhsStr4}`,
+                answer: `${solution}`,
+                steps: [
+                    `Start with the equation: <strong>${lhsStr4} = ${rhsStr4}</strong>`,
+                    `First, distribute on both sides of the equation.`,
+                    `LHS becomes: <strong>${lhsCoeff4}x ${a4*c4 >= 0 ? '+':'-'} ${Math.abs(a4*c4)}</strong>. RHS becomes: <strong>${rhsCoeff4}x ${d4*f4 >= 0 ? '+':'-'} ${Math.abs(d4*f4)}</strong>`,
+                    `The equation is now: <strong>${lhsCoeff4}x ${a4*c4 >= 0 ? '+':'-'} ${Math.abs(a4*c4)} = ${rhsCoeff4}x ${d4*f4 >= 0 ? '+':'-'} ${Math.abs(d4*f4)}</strong>`,
+                    `Get all variable terms on one side. Subtract ${rhsCoeff4}x from both sides.`,
+                    `<em>${lhsCoeff4}x - ${rhsCoeff4}x ...</em> &nbsp;➡️&nbsp; <strong>${finalCoeff4}x ${a4*c4 >= 0 ? '+':'-'} ${Math.abs(a4*c4)} = ${d4*f4}</strong>`,
+                    `Next, move constants to the other side. ${a4*c4 >= 0 ? 'Subtract' : 'Add'} ${Math.abs(a4*c4)}.`,
+                    `<em>... = ${d4*f4} ${a4*c4 >= 0 ? '-' : '+'} ${Math.abs(a4*c4)}</em> &nbsp;➡️&nbsp; <strong>${finalCoeff4}x = ${d4*f4 - a4*c4}</strong>`,
+                    `Finally, divide by the coefficient of x, which is ${finalCoeff4}.`,
+                    `<em>x = ${d4*f4 - a4*c4} / ${finalCoeff4}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
+                ]
+            });
+            
+            // Type 5: Equation with multiple fractions
+            solution = randint(-5, 5) || 1;
+            const A5 = randint(2, 9);
+            const B5 = randint(-10, 10) || 1;
+            const C5 = A5 * solution + B5;
+
+            const M5 = [6, 8, 10, 12][randint(0, 3)]; // Multiplier to create fractions
+
+            const fracA = simplifyFraction(A5, M5);
+            const fracB = simplifyFraction(B5, M5);
+            const fracC = simplifyFraction(C5, M5);
+
+            const commonDen = lcm3(fracA.den, fracB.den, fracC.den);
+
+            let questionStr5 = `${formatFrac(fracA.num, fracA.den, 'x')}${formatSignedFrac(fracB.num, fracB.den)} = ${formatFrac(fracC.num, fracC.den)}`;
+
+            generated.push({
+                type: 'solve',
+                question: questionStr5,
+                answer: `${solution}`,
+                steps: [
+                    `Start with the equation: <strong>${questionStr5}</strong>`,
+                    `To eliminate the fractions, find the least common multiple (LCM) of the denominators: ${fracA.den}, ${fracB.den}, and ${fracC.den}.`,
+                    `The LCM is <strong>${commonDen}</strong>. Multiply every term by ${commonDen}.`,
+                    `<em>${commonDen}*(${formatFrac(fracA.num, fracA.den, 'x')}) ${commonDen}*(${formatFrac(fracB.num, fracB.den)}) = ${commonDen}*(${formatFrac(fracC.num, fracC.den)})</em>`,
+                    `This simplifies to the integer equation: <strong>${(commonDen/fracA.den)*fracA.num}x ${ (commonDen/fracB.den)*fracB.num >= 0 ? '+' : '-' } ${Math.abs((commonDen/fracB.den)*fracB.num)} = ${(commonDen/fracC.den)*fracC.num}</strong>`,
+                    `Now solve the two-step equation. ${ (commonDen/fracB.den)*fracB.num >= 0 ? 'Subtract' : 'Add' } ${Math.abs((commonDen/fracB.den)*fracB.num)} from both sides.`,
+                    `<em>${A5}x = ${(commonDen/fracC.den)*fracC.num} ${ (commonDen/fracB.den)*fracB.num >= 0 ? '-' : '+' } ${Math.abs((commonDen/fracB.den)*fracB.num)}</em> &nbsp;➡️&nbsp; <strong>${A5}x = ${C5 - B5}</strong>`,
+                    `Finally, divide by ${A5}.`,
+                    `<em>x = ${C5-B5} / ${A5}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
                 ]
             });
 
@@ -211,20 +327,20 @@
 
         function generateTypeQuestions() {
             const generated = [];
-            let a, b, c, lhsSimple, rhsSimple;
+            let a, b, c, d, lhsSimple, rhsSimple;
 
             // Type 1: One solution
             a = randint(4, 9); b = randint(1, 10);
-            c = randint(2, a - 1); // Ensure x-coeffs are different
+            c = randint(2, a - 1); d = randint(-10, 10);
             lhsSimple = `${a}x + ${b}`;
-            rhsSimple = `${c}x + ${randint(-10, 10)}`;
+            rhsSimple = `${c}x + ${d}`;
             generated.push({
                 type: 'type',
-                question: `2x + ${b-5} + ${a-2}x + 5 = ${c}x + ${randint(-10, 10)}`,
+                question: `${a-2}x + ${b-5} + 2x + 5 = ${c}x + ${d}`,
                 answer: `One solution`,
                 steps: [
-                    `Original equation: <strong>2x + ${b-5} + ${a-2}x + 5 = ${c}x + ${randint(-10, 10)}</strong>`,
-                    `Combine like terms on the left side: <em>(2x + ${a-2}x) + (${b-5} + 5)</em> &nbsp;➡️&nbsp; <strong>${lhsSimple}</strong>`,
+                    `Original equation: <strong>${a-2}x + ${b-5} + 2x + 5 = ${c}x + ${d}</strong>`,
+                    `Combine like terms on the left side: <em>(${a-2}x + 2x) + (${b-5} + 5)</em> &nbsp;➡️&nbsp; <strong>${lhsSimple}</strong>`,
                     `The simplified equation is: <strong>${lhsSimple} = ${rhsSimple}</strong>`,
                     `Because the coefficients of x (${a} and ${c}) are different, there will be exactly <strong class="text-green-600">one solution</strong>.`
                 ]
@@ -296,6 +412,7 @@
                 solveInputContainer.classList.remove('hidden');
                 typeInputContainer.classList.add('hidden');
                 answerInput.disabled = false;
+                answerInput.focus();
             } else { // type
                 solveInputContainer.classList.add('hidden');
                 typeInputContainer.classList.remove('hidden');
@@ -316,7 +433,7 @@
 
             if (q.type === 'solve') {
                 userAnswer = answerInput.value.trim();
-                const correctAnswer = q.answer.split('=')[1].trim();
+                const correctAnswer = q.answer;
                 if (userAnswer === correctAnswer) {
                     isCorrect = true;
                 }
@@ -352,6 +469,7 @@
 
             checkBtn.classList.add('hidden');
             nextBtn.classList.remove('hidden');
+            nextBtn.focus();
             if (currentQuestionIndex === questions.length - 1) {
                 nextBtn.textContent = '🏁 Finish Quiz';
             }
@@ -377,6 +495,12 @@
         restartBtn.addEventListener('click', startQuiz);
         checkBtn.addEventListener('click', checkAnswer);
         nextBtn.addEventListener('click', nextQuestion);
+        
+        answerInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkBtn.click();
+            }
+        });
 
         typeBtns.forEach(btn => {
             btn.addEventListener('click', () => {

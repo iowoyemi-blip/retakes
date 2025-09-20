@@ -36,20 +36,20 @@
     <h2 id="quiz-title" style="font-size:16px;margin-top:0;display:none">Algebra 1 — 2.3 Quiz</h2>
     <fieldset>
       <legend><strong>1. Solve each equation:</strong></legend>
-      <label for="q1a"><span class="qnum">1a.</span> 3(4k + 4) = 36 + 2(2k + 4)
+      <label for="q1a"><span class="qnum">1a.</span> <span id="q1a-text">3(4k + 4) = 36 + 2(2k + 4)</span>
         <input id="q1a" type="text" name="q1a" aria-describedby="q1a-desc" aria-label="solution for equation 1a" />
         <div id="q1a-desc" style="display:none">Enter numeric answer, decimals or fractions like 3/4</div>
       </label>
 
-      <label for="q1b"><span class="qnum">1b.</span> (1/6)(10x + 6) = 2
+      <label for="q1b"><span class="qnum">1b.</span> <span id="q1b-text">(1/6)(10x + 6) = 2</span>
         <input id="q1b" type="text" name="q1b" aria-label="solution for equation 1b" class="small" />
       </label>
 
-      <label for="q1c"><span class="qnum">1c.</span> 38 = -5x - 12
+      <label for="q1c"><span class="qnum">1c.</span> <span id="q1c-text">38 = -5x - 12</span>
         <input id="q1c" type="text" name="q1c" aria-label="solution for equation 1c" class="small" />
       </label>
 
-      <label for="q1d"><span class="qnum">1d.</span> (2/3)x - 1/3 = 1/2
+      <label for="q1d"><span class="qnum">1d.</span> <span id="q1d-text">(2/3)x - 1/3 = 1/2</span>
         <input id="q1d" type="text" name="q1d" aria-label="solution for equation 1d" class="small" />
       </label>
     </fieldset>
@@ -58,30 +58,31 @@
       <legend><strong>2. State whether each equation has one solution, no solution, or infinitely many solutions.</strong></legend>
   <div class="explain">Enter: <em>one</em>, <em>none</em>, or <em>infinitely many</em>. (You can type "one", "none", or "infinitely many".)</div>
 
-      <label for="q2a"><span class="qnum">2a.</span> 2 - 7x + 4 + 5x = -2(x + 3) + 12
+      <label for="q2a"><span class="qnum">2a.</span> <span id="q2a-text">2 - 7x + 4 + 5x = -2(x + 3) + 12</span>
         <input id="q2a" type="text" name="q2a" aria-label="classification for equation 2a" />
       </label>
 
-      <label for="q2b"><span class="qnum">2b.</span> 7(x - 2) - 6x = 6x + 5 - 5(x + 3)
+      <label for="q2b"><span class="qnum">2b.</span> <span id="q2b-text">7(x - 2) - 6x = 6x + 5 - 5(x + 3)</span>
         <input id="q2b" type="text" name="q2b" aria-label="classification for equation 2b" />
       </label>
 
-      <label for="q2c"><span class="qnum">2c.</span> 4(x + 2) - 4(3x + 2) = 2x + 4x
+      <label for="q2c"><span class="qnum">2c.</span> <span id="q2c-text">4(x + 2) - 4(3x + 2) = 2x + 4x</span>
         <input id="q2c" type="text" name="q2c" aria-label="classification for equation 2c" />
       </label>
 
-      <label for="q2d"><span class="qnum">2d.</span> -4(x + 6) + 8 = 3(5 - x) - x + 2
+      <label for="q2d"><span class="qnum">2d.</span> <span id="q2d-text">-4(x + 6) + 8 = 3(5 - x) - x + 2</span>
         <input id="q2d" type="text" name="q2d" aria-label="classification for equation 2d" />
       </label>
 
-      <label for="q2e"><span class="qnum">2e.</span> 5(x + 1) - x = 6x - 2(x - 3) - 1
+      <label for="q2e"><span class="qnum">2e.</span> <span id="q2e-text">5(x + 1) - x = 6x - 2(x - 3) - 1</span>
         <input id="q2e" type="text" name="q2e" aria-label="classification for equation 2e" />
       </label>
     </fieldset>
 
     <div class="actions">
-      <button type="button" id="check">Check Answers</button>
-      <button type="button" id="reset" style="background:#777;margin-left:8px">Clear</button>
+  <button type="button" id="check">Check Answers</button>
+  <button type="button" id="reset" style="background:#777;margin-left:8px">Clear</button>
+  <button type="button" id="regen" style="background:#28a745;margin-left:8px">Generate New Quiz</button>
     </div>
 
     <div id="output" aria-live="polite"></div>
@@ -113,18 +114,108 @@
       return s;
     }
 
-    // Correct answers (numeric values or classification)
-    const answers = {
-      q1a: 4,
-      q1b: 0.6, // (1/6)(10x+6)=2 -> 10x+6=12 -> 10x=6 -> x=0.6
-      q1c: -10,
-      q1d: 5/4,
-      q2a: 'one',
-      q2b: 'one',
-      q2c: 'none',
-      q2d: 'one',
-      q2e: 'infinitely many'
-    };
+    // Correct answers (will be set by generateQuiz)
+    const answers = {};
+
+    // Utility random helpers
+    function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+    function pick(arr){ return arr[randInt(0,arr.length-1)]; }
+
+    // Generate similar structured equations and compute answers
+    function generateQuiz(){
+      // Q1a: form A(Bk + C) = D + E(Fk + G)
+      // We'll pick integers and build a solvable linear equation in k
+      const a = randInt(2,5);
+      const B = randInt(3,6);
+      const C = randInt(1,6);
+      const D = randInt(10,50);
+      const E = randInt(1,4);
+      const F = randInt(1,4);
+      const G = randInt(1,6);
+      // left: a*(B*k + C) => a*B*k + a*C
+      // right: D + E*(F*k + G) => E*F*k + D + E*G
+      const coefL = a*B, constL = a*C;
+      const coefR = E*F, constR = D + E*G;
+      const k = (constR - constL) / (coefL - coefR);
+      document.getElementById('q1a-text').textContent = `${a}(${B}k + ${C}) = ${D} + ${E}(${F}k + ${G})`;
+      answers.q1a = k;
+
+      // Q1b: (p/q)(rx + s) = t -> solve for x
+      const p = randInt(1,5);
+      const q = pick([2,3,4,6]);
+      const r = randInt(2,6);
+      const s = randInt(0,6);
+      const t = randInt(1,8);
+      // (p/q)*(r*x + s) = t -> r*x + s = t*(q/p) -> x = (t*(q/p) - s)/r
+      const x1 = (t*(q/p) - s)/r;
+      document.getElementById('q1b-text').textContent = `(${p}/${q})(${r}x + ${s}) = ${t}`;
+      answers.q1b = x1;
+
+      // Q1c: A = Bx + C -> x = (A - C)/B
+      const A = randInt(10,80);
+      const Bc = pick([ -6, -5, -4, -3, 3,4,5]);
+      const Cc = randInt(-6,6);
+      const x2 = (A - Cc)/Bc;
+      document.getElementById('q1c-text').textContent = `${A} = ${Bc}x ${Cc>=0?'+ '+Cc: '- '+Math.abs(Cc)}`;
+      answers.q1c = x2;
+
+      // Q1d: a/b x + c/d = e/f  (we'll follow original style (2/3)x -1/3 = 1/2 )
+      const a1 = pick([1,2,3,4]);
+      const b1 = pick([2,3,4]);
+      const c1 = pick([-3,-2,-1,0,1,2]);
+      const d1 = pick([2,3,4]);
+      const e1 = pick([1,2,3]);
+      const f1 = pick([2,3,4]);
+      // equation: (a1/b1)x + (c1/d1) = (e1/f1)
+      const x3 = (e1/f1 - c1/d1) / (a1/b1);
+      document.getElementById('q1d-text').textContent = `(${a1}/${b1})x ${c1<0?'- '+Math.abs(c1)+'/'+d1 : '+ '+(c1+'/'+d1)} = ${e1}/${f1}`;
+      answers.q1d = x3;
+
+      // Classification questions: create linear equations with known relations
+      // We'll reuse patterns to produce one/none/infinitely many
+      // 2a pattern: identical both sides -> infinitely many
+      const A1 = randInt(1,6), B1 = randInt(1,6), C2 = randInt(0,6);
+      // make left: L = p x + q ; right: same p x + q
+      const pL = randInt(-6,6) || 2; const qL = randInt(-10,10);
+      document.getElementById('q2a-text').textContent = `${pL}x ${qL>=0?'+ '+qL: '- '+Math.abs(qL)} = ${pL}x ${qL>=0?'+ '+qL: '- '+Math.abs(qL)}`;
+      answers.q2a = 'infinitely many';
+
+      // 2b pattern: contradiction -> none
+      const p2 = randInt(1,5); const q2 = randInt(-10,-1); const r2 = p2; const s2 = q2 + randInt(1,6);
+      document.getElementById('q2b-text').textContent = `${p2}x ${q2>=0?'+ '+q2: '- '+Math.abs(q2)} = ${r2}x ${s2>=0?'+ '+s2: '- '+Math.abs(s2)}`;
+      answers.q2b = 'none';
+
+      // 2c pattern: unique solution
+      // make left coef != right coef
+      const Lc = randInt(1,6), Ll = randInt(-6,6), Rc = randInt(1,6), Rl = randInt(-6,6);
+      // ensure not identical and not contradictory
+      if(Lc===Rc && Ll===Rl){ Rc++; }
+      document.getElementById('q2c-text').textContent = `${Lc}x ${Ll>=0?'+ '+Ll: '- '+Math.abs(Ll)} = ${Rc}x ${Rl>=0?'+ '+Rl: '- '+Math.abs(Rl)}`;
+      answers.q2c = 'one';
+
+      // 2d pattern: contradiction (no solution)
+      const a2 = randInt(1,6); const b2 = randInt(1,6); const c2 = randInt(1,6);
+      // craft a contradiction
+      const left2 = `${-a2}x ${-b2>=0?'+ '+(-b2): '- '+Math.abs(-b2)} ${c2?'+ '+c2:''}`;
+      const right2 = `${-a2}x ${-b2+ randInt(1,10)>=0?'+ '+(-b2+ randInt(1,10)): '- '+Math.abs(-b2+ randInt(1,10))}`;
+      document.getElementById('q2d-text').textContent = `${-a2}x ${-b2} = ${-a2}x ${-b2 + 17}`;
+      answers.q2d = 'none';
+
+      // 2e pattern: identical -> infinitely many
+      const m = randInt(1,6); const n = randInt(-5,5);
+      document.getElementById('q2e-text').textContent = `${m}x ${n>=0?'+ '+n: '- '+Math.abs(n)} = ${m}x ${n>=0?'+ '+n: '- '+Math.abs(n)}`;
+      answers.q2e = 'infinitely many';
+
+      // Clear previous inputs/results
+      document.getElementById('quiz').reset();
+      document.getElementById('output').innerHTML = '';
+    }
+
+    // wire regen button
+    document.getElementById('regen').addEventListener('click', generateQuiz);
+
+    // initialize on load
+    window.addEventListener('load', generateQuiz);
 
     // Event handlers
     document.getElementById('check').addEventListener('click', function(){

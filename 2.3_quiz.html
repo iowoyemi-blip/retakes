@@ -38,19 +38,27 @@
       <legend><strong>1. Solve each equation:</strong></legend>
       <label for="q1a"><span class="qnum">1a.</span> <span id="q1a-text">3(4k + 4) = 36 + 2(2k + 4)</span>
         <input id="q1a" type="text" name="q1a" aria-describedby="q1a-desc" aria-label="solution for equation 1a" />
+        <button type="button" class="check-single" data-q="q1a" style="margin-left:8px">Check</button>
         <div id="q1a-desc" style="display:none">Enter numeric answer, decimals or fractions like 3/4</div>
+        <div id="sol-q1a" class="explain" aria-live="polite"></div>
       </label>
 
       <label for="q1b"><span class="qnum">1b.</span> <span id="q1b-text">(1/6)(10x + 6) = 2</span>
         <input id="q1b" type="text" name="q1b" aria-label="solution for equation 1b" class="small" />
+        <button type="button" class="check-single" data-q="q1b" style="margin-left:8px">Check</button>
+        <div id="sol-q1b" class="explain" aria-live="polite"></div>
       </label>
 
       <label for="q1c"><span class="qnum">1c.</span> <span id="q1c-text">38 = -5x - 12</span>
         <input id="q1c" type="text" name="q1c" aria-label="solution for equation 1c" class="small" />
+        <button type="button" class="check-single" data-q="q1c" style="margin-left:8px">Check</button>
+        <div id="sol-q1c" class="explain" aria-live="polite"></div>
       </label>
 
       <label for="q1d"><span class="qnum">1d.</span> <span id="q1d-text">(2/3)x - 1/3 = 1/2</span>
         <input id="q1d" type="text" name="q1d" aria-label="solution for equation 1d" class="small" />
+        <button type="button" class="check-single" data-q="q1d" style="margin-left:8px">Check</button>
+        <div id="sol-q1d" class="explain" aria-live="polite"></div>
       </label>
     </fieldset>
 
@@ -152,8 +160,9 @@
       const coefL = a*B, constL = a*C;
       const coefR = E*F, constR = D + E*G;
       const k = (constR - constL) / (coefL - coefR);
-      document.getElementById('q1a-text').textContent = `${a}(${B}k + ${C}) = ${D} + ${E}(${F}k + ${G})`;
-      answers.q1a = k;
+  document.getElementById('q1a-text').textContent = `${a}(${B}k + ${C}) = ${D} + ${E}(${F}k + ${G})`;
+  answers.q1a = k;
+  answersMeta.q1a = {a,B,C,D,E,F,G, coefL, constL, coefR, constR, k};
 
       // Q1b: (p/q)(rx + s) = t -> solve for x
       const p = randInt(1,5);
@@ -163,16 +172,18 @@
       const t = randInt(1,8);
       // (p/q)*(r*x + s) = t -> r*x + s = t*(q/p) -> x = (t*(q/p) - s)/r
       const x1 = (t*(q/p) - s)/r;
-      document.getElementById('q1b-text').textContent = `(${p}/${q})(${r}x + ${s}) = ${t}`;
-      answers.q1b = x1;
+  document.getElementById('q1b-text').textContent = `(${p}/${q})(${r}x + ${s}) = ${t}`;
+  answers.q1b = x1;
+  answersMeta.q1b = {p,q,r,s,t,x1};
 
       // Q1c: A = Bx + C -> x = (A - C)/B
       const A = randInt(10,80);
       const Bc = pick([ -6, -5, -4, -3, 3,4,5]);
       const Cc = randInt(-6,6);
       const x2 = (A - Cc)/Bc;
-      document.getElementById('q1c-text').textContent = `${A} = ${Bc}x ${Cc>=0?'+ '+Cc: '- '+Math.abs(Cc)}`;
-      answers.q1c = x2;
+  document.getElementById('q1c-text').textContent = `${A} = ${Bc}x ${Cc>=0?'+ '+Cc: '- '+Math.abs(Cc)}`;
+  answers.q1c = x2;
+  answersMeta.q1c = {A,Bc,Cc,x2};
 
       // Q1d: a/b x + c/d = e/f  (we'll follow original style (2/3)x -1/3 = 1/2 )
       const a1 = pick([1,2,3,4]);
@@ -183,8 +194,9 @@
       const f1 = pick([2,3,4]);
       // equation: (a1/b1)x + (c1/d1) = (e1/f1)
       const x3 = (e1/f1 - c1/d1) / (a1/b1);
-      document.getElementById('q1d-text').textContent = `(${a1}/${b1})x ${c1<0?'- '+Math.abs(c1)+'/'+d1 : '+ '+(c1+'/'+d1)} = ${e1}/${f1}`;
-      answers.q1d = x3;
+  document.getElementById('q1d-text').textContent = `(${a1}/${b1})x ${c1<0?'- '+Math.abs(c1)+'/'+d1 : '+ '+(c1+'/'+d1)} = ${e1}/${f1}`;
+  answers.q1d = x3;
+  answersMeta.q1d = {a1,b1,c1,d1,e1,f1,x3};
 
       // Classification questions: create linear equations with known relations
       // We'll reuse patterns to produce one/none/infinitely many
@@ -192,39 +204,113 @@
       const A1 = randInt(1,6), B1 = randInt(1,6), C2 = randInt(0,6);
       // make left: L = p x + q ; right: same p x + q
       const pL = randInt(-6,6) || 2; const qL = randInt(-10,10);
-      document.getElementById('q2a-text').textContent = `${pL}x ${qL>=0?'+ '+qL: '- '+Math.abs(qL)} = ${pL}x ${qL>=0?'+ '+qL: '- '+Math.abs(qL)}`;
-      answers.q2a = 'infinitely many';
+  document.getElementById('q2a-text').textContent = `${pL}x ${qL>=0?'+ '+qL: '- '+Math.abs(qL)} = ${pL}x ${qL>=0?'+ '+qL: '- '+Math.abs(qL)}`;
+  answers.q2a = 'infinitely many';
+  answersMeta.q2a = {pL,qL};
 
       // 2b pattern: contradiction -> none
       const p2 = randInt(1,5); const q2 = randInt(-10,-1); const r2 = p2; const s2 = q2 + randInt(1,6);
-      document.getElementById('q2b-text').textContent = `${p2}x ${q2>=0?'+ '+q2: '- '+Math.abs(q2)} = ${r2}x ${s2>=0?'+ '+s2: '- '+Math.abs(s2)}`;
-      answers.q2b = 'none';
+  document.getElementById('q2b-text').textContent = `${p2}x ${q2>=0?'+ '+q2: '- '+Math.abs(q2)} = ${r2}x ${s2>=0?'+ '+s2: '- '+Math.abs(s2)}`;
+  answers.q2b = 'none';
+  answersMeta.q2b = {p2,q2,r2,s2};
 
       // 2c pattern: unique solution
       // make left coef != right coef
       const Lc = randInt(1,6), Ll = randInt(-6,6), Rc = randInt(1,6), Rl = randInt(-6,6);
       // ensure not identical and not contradictory
       if(Lc===Rc && Ll===Rl){ Rc++; }
-      document.getElementById('q2c-text').textContent = `${Lc}x ${Ll>=0?'+ '+Ll: '- '+Math.abs(Ll)} = ${Rc}x ${Rl>=0?'+ '+Rl: '- '+Math.abs(Rl)}`;
-      answers.q2c = 'one';
+  document.getElementById('q2c-text').textContent = `${Lc}x ${Ll>=0?'+ '+Ll: '- '+Math.abs(Ll)} = ${Rc}x ${Rl>=0?'+ '+Rl: '- '+Math.abs(Rl)}`;
+  answers.q2c = 'one';
+  answersMeta.q2c = {Lc,Ll,Rc,Rl};
 
       // 2d pattern: contradiction (no solution)
       const a2 = randInt(1,6); const b2 = randInt(1,6); const c2 = randInt(1,6);
       // craft a contradiction
       const left2 = `${-a2}x ${-b2>=0?'+ '+(-b2): '- '+Math.abs(-b2)} ${c2?'+ '+c2:''}`;
       const right2 = `${-a2}x ${-b2+ randInt(1,10)>=0?'+ '+(-b2+ randInt(1,10)): '- '+Math.abs(-b2+ randInt(1,10))}`;
-      document.getElementById('q2d-text').textContent = `${-a2}x ${-b2} = ${-a2}x ${-b2 + 17}`;
-      answers.q2d = 'none';
+  document.getElementById('q2d-text').textContent = `${-a2}x ${-b2} = ${-a2}x ${-b2 + 17}`;
+  answers.q2d = 'none';
+  answersMeta.q2d = {a2,b2};
 
       // 2e pattern: identical -> infinitely many
       const m = randInt(1,6); const n = randInt(-5,5);
-      document.getElementById('q2e-text').textContent = `${m}x ${n>=0?'+ '+n: '- '+Math.abs(n)} = ${m}x ${n>=0?'+ '+n: '- '+Math.abs(n)}`;
-      answers.q2e = 'infinitely many';
+  document.getElementById('q2e-text').textContent = `${m}x ${n>=0?'+ '+n: '- '+Math.abs(n)} = ${m}x ${n>=0?'+ '+n: '- '+Math.abs(n)}`;
+  answers.q2e = 'infinitely many';
+  answersMeta.q2e = {m,n};
 
       // Clear previous inputs/results
       document.getElementById('quiz').reset();
       document.getElementById('output').innerHTML = '';
     }
+
+    // store metadata for step-by-step solutions
+    const answersMeta = {};
+
+    function frac(n){
+      // pretty format small rational if possible
+      if(Number.isInteger(n)) return String(n);
+      return Number(Math.round(n * 1000000)/1000000).toString();
+    }
+
+    function checkSingle(qid){
+      const solDiv = document.getElementById('sol-'+qid);
+      solDiv.innerHTML = '';
+      if(qid==='q1a'){
+        const m = answersMeta.q1a;
+        if(!m) return;
+        // steps for solving: a(Bk+C)=D+E(Fk+G)
+        const steps = [];
+        steps.push(`Expand both sides: left ${m.a}*${m.B}k + ${m.a* m.C} = ${m.coefL}k + ${m.constL}`);
+        steps.push(`Right side expanded: ${m.E}*${m.F}k + ${m.constR} = ${m.coefR}k + ${m.constR}`);
+        steps.push(`Collect k terms: ${m.coefL}k - ${m.coefR}k = ${m.constR} - ${m.constL}`);
+        steps.push(`Combine: ${m.coefL - m.coefR}k = ${m.constR - m.constL}`);
+        steps.push(`Solve for k: k = (${m.constR - m.constL}) / (${m.coefL - m.coefR}) = ${frac(m.k)}`);
+        solDiv.innerHTML = steps.map(s=>`<div>${s}</div>`).join('');
+      } else if(qid==='q1b'){
+        const m = answersMeta.q1b; if(!m) return;
+        const steps = [];
+        steps.push(`Start: (${m.p}/${m.q})(${m.r}x + ${m.s}) = ${m.t}`);
+        steps.push(`Multiply both sides by ${m.q}/${m.p}: ${m.r}x + ${m.s} = ${m.t} * (${m.q}/${m.p}) = ${frac(m.t*(m.q/m.p))}`);
+        steps.push(`Subtract ${m.s}: ${m.r}x = ${frac(m.t*(m.q/m.p) - m.s)}`);
+        steps.push(`Divide by ${m.r}: x = ${frac((m.t*(m.q/m.p) - m.s)/m.r)}`);
+        solDiv.innerHTML = steps.map(s=>`<div>${s}</div>`).join('');
+      } else if(qid==='q1c'){
+        const m = answersMeta.q1c; if(!m) return;
+        const steps = [];
+        steps.push(`Start: ${m.A} = ${m.Bc}x ${m.Cc>=0?'+ '+m.Cc: '- '+Math.abs(m.Cc)}`);
+        steps.push(`Subtract ${m.Cc}: ${m.A - m.Cc} = ${m.Bc}x`);
+        steps.push(`Divide by ${m.Bc}: x = ${frac(m.x2)}`);
+        solDiv.innerHTML = steps.map(s=>`<div>${s}</div>`).join('');
+      } else if(qid==='q1d'){
+        const m = answersMeta.q1d; if(!m) return;
+        const steps = [];
+        steps.push(`Start: (${m.a1}/${m.b1})x ${m.c1<0?'- '+Math.abs(m.c1)+'/'+m.d1 : '+ '+(m.c1+'/'+m.d1)} = ${m.e1}/${m.f1}`);
+        steps.push(`Move constant term: (${m.a1}/${m.b1})x = ${frac(m.e1/m.f1 - m.c1/m.d1)}`);
+        steps.push(`Divide: x = (${frac(m.e1/m.f1 - m.c1/m.d1)}) / (${m.a1}/${m.b1}) = ${frac(m.x3)}`);
+        solDiv.innerHTML = steps.map(s=>`<div>${s}</div>`).join('');
+      }
+      // for classification q2*, provide a short explanation
+      else if(qid.startsWith('q2')){
+        const meta = answersMeta[qid];
+        const expected = answers[qid];
+        let text = '';
+        if(qid==='q2a') text = `Both sides are the same expression (${meta.pL}x ${meta.qL>=0?'+ '+meta.qL: '- '+Math.abs(meta.qL)}) so there are infinitely many solutions.`;
+        else if(qid==='q2b') text = `Left simplifies to ${meta.p2}x ${meta.q2>=0?'+ '+meta.q2: '- '+Math.abs(meta.q2)} and right to ${meta.r2}x ${meta.s2>=0?'+ '+meta.s2: '- '+Math.abs(meta.s2)}; coefficients match but constants differ so no solution.`;
+        else if(qid==='q2c') text = `Coefficients of x differ (left ${meta.Lc}, right ${meta.Rc}) so one unique solution exists.`;
+        else if(qid==='q2d') text = `Both sides have same x term but different constants leading to a contradiction -> no solution.`;
+        else if(qid==='q2e') text = `Both sides are identical (${meta.m}x ${meta.n>=0?'+ '+meta.n: '- '+Math.abs(meta.n)}) so infinitely many solutions.`;
+        solDiv.innerHTML = `<div>${text}</div><div>Answer: ${expected}</div>`;
+      }
+    }
+
+    // attach delegated listeners for per-question check buttons
+    document.addEventListener('click', function(e){
+      if(e.target && e.target.classList && e.target.classList.contains('check-single')){
+        const q = e.target.getAttribute('data-q');
+        // run checkSingle and also mark correctness briefly
+        checkSingle(q);
+      }
+    });
 
     // wire regen button
     document.getElementById('regen').addEventListener('click', generateQuiz);

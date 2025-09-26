@@ -3,510 +3,407 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Algebra I: Equation Quiz</title>
+    <title>Algebra 1 - Practice Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-        .solution-step {
-            opacity: 0;
-            transform: translateY(10px);
-            animation: fadeIn 0.5s ease forwards;
-        }
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .equation-text {
+            font-size: 1.5rem; /* Larger font for equations */
+            font-weight: 500;
+            color: #1F2937; /* A dark gray for good contrast */
         }
         .btn {
-            transition: all 0.2s ease;
+            transition: all 0.2s ease-in-out;
         }
-        .btn:hover:not(:disabled) {
+        .btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .btn:disabled {
-            cursor: not-allowed;
-            opacity: 0.7;
+        .feedback-correct {
+            color: #059669;
+            background-color: #D1FAE5;
+            border-left: 4px solid #059669;
         }
-        .mcq-btn.selected {
-            background-color: #2563eb; /* blue-600 */
+        .feedback-incorrect {
+            color: #DC2626;
+            background-color: #FEE2E2;
+            border-left: 4px solid #DC2626;
+        }
+        .option-btn.selected {
+            background-color: #3B82F6;
             color: white;
-            border-color: #2563eb;
+            border-color: #2563EB;
         }
-        .latex {
-            font-family: "Times New Roman", Times, serif;
-            display: inline-block;
-            vertical-align: middle;
-            font-size: 1.1em;
-        }
-        #quiz-area.hidden, #start-area.hidden, #end-area.hidden {
-            display: none;
+        .solution-steps {
+            text-align: left;
+            padding: 1rem;
+            margin-top: 1rem;
+            background-color: #f3f4f6;
+            border-radius: 0.5rem;
+            white-space: pre-wrap; /* Allows line breaks */
+            font-family: monospace;
+            font-size: 0.9rem;
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 antialiased flex items-center justify-center min-h-screen">
-    <div class="container mx-auto p-4 md:p-8 max-w-2xl">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-900">Algebra I Quiz</h1>
-            <p class="text-lg text-gray-600 mt-2">One Question at a Time</p>
-        </header>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div id="quiz-container" class="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+        <div id="quiz-header">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center">Algebra 1 Practice Quiz</h1>
+            <p class="text-gray-500 text-center mt-2">Solving Linear Equations</p>
+            <div class="bg-gray-200 h-1 rounded-full mt-6">
+                <div id="progress-bar" class="bg-blue-500 h-1 rounded-full" style="width: 0%;"></div>
+            </div>
+            <p id="progress-text" class="text-sm text-gray-500 text-right mt-1">Question 0 / 10</p>
+        </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <div id="question-area" class="mt-8">
+            <p id="question-instruction" class="text-lg font-semibold text-gray-700"></p>
+            <div id="question-text" class="equation-text my-4 text-center bg-gray-50 p-6 rounded-lg"></div>
             
-            <!-- Start Screen -->
-            <div id="start-area" class="text-center">
-                <h2 class="text-2xl font-bold mb-4">Ready to practice solving equations?</h2>
-                <p class="text-gray-600 mb-6">You'll get 11 questions covering different equation types. Work them out, check your answer, then review the step-by-step solution.</p>
-                <button id="start-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn">
-                    🚀 Start Quiz
-                </button>
+            <div id="solve-input-area" class="hidden">
+                <label for="answer-input" class="block text-sm font-medium text-gray-700 mb-1">Enter your answer (as a fraction like -2/3 if needed):</label>
+                <input type="text" id="answer-input" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="e.g., 4 or -2/3">
             </div>
 
-            <!-- Quiz Screen -->
-            <div id="quiz-area" class="hidden">
-                <p id="progress" class="text-right text-gray-500 font-semibold mb-4"></p>
-                <div id="question" class="bg-gray-50 rounded-lg p-6 mb-4 min-h-[80px] flex flex-col items-center justify-center text-xl font-medium text-center">
-                    <!-- Question content injected here -->
-                </div>
-                
-                <!-- Answer Input Area -->
-                <div id="answer-area" class="mb-4">
-                    <div id="solve-input-container">
-                        <label for="answer-input" class="block text-sm font-medium text-gray-700 mb-1">Enter your answer:</label>
-                        <input type="text" id="answer-input" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="e.g., 5 or -10 or 3/4">
-                    </div>
-                    <div id="mcq-input-container" class="hidden">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Select the correct equation:</label>
-                        <div class="grid grid-cols-1 gap-3">
-                             <button class="mcq-btn border border-gray-300 p-3 rounded-md hover:bg-gray-100 btn text-left text-lg" data-index="0"></button>
-                             <button class="mcq-btn border border-gray-300 p-3 rounded-md hover:bg-gray-100 btn text-left text-lg" data-index="1"></button>
-                             <button class="mcq-btn border border-gray-300 p-3 rounded-md hover:bg-gray-100 btn text-left text-lg" data-index="2"></button>
-                             <button class="mcq-btn border border-gray-300 p-3 rounded-md hover:bg-gray-100 btn text-left text-lg" data-index="3"></button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="feedback-container" class="mb-4 h-6 text-center font-semibold"></div>
-
-                <div id="solution-container" class="space-y-3 mb-6"></div>
-
-                <div class="flex flex-col sm:flex-row gap-4">
-                    <button id="check-btn" class="w-full sm:w-auto flex-1 bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 btn">
-                        ✅ Check Answer
-                    </button>
-                    <button id="next-btn" class="w-full sm:w-auto flex-1 bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 btn hidden">
-                        ➡️ Next Question
-                    </button>
-                </div>
+            <div id="classify-options-area" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                 <button data-value="one" class="option-btn btn w-full text-center py-3 px-4 bg-white border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50">One Solution</button>
+                 <button data-value="no" class="option-btn btn w-full text-center py-3 px-4 bg-white border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50">No Solution</button>
+                 <button data-value="infinite" class="option-btn btn w-full text-center py-3 px-4 bg-white border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50">Infinitely Many Solutions</button>
             </div>
 
-            <!-- End Screen -->
-            <div id="end-area" class="hidden text-center">
-                 <h2 class="text-2xl font-bold mb-4">🎉 Quiz Complete! 🎉</h2>
-                <p class="text-gray-600 mb-6">Great job working through those problems. Practice is key to mastering algebra!</p>
-                <button id="restart-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 btn">
-                    🔄 Practice Again
-                </button>
+            <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                 <button id="check-btn" class="btn w-full sm:w-1/2 bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600">Check Answer</button>
+                 <button id="next-btn" class="btn w-full sm:w-1/2 bg-gray-700 text-white font-bold py-3 px-4 rounded-lg hover:bg-gray-800 hidden">Next Question</button>
             </div>
         </div>
 
-        <footer class="text-center mt-8 text-gray-500">
-            <p>A collaborative creation to help students master algebra.</p>
-        </footer>
+        <div id="feedback-area" class="mt-4 p-4 rounded-md text-center hidden"></div>
+
+        <div id="results-area" class="hidden text-center mt-8">
+            <h2 class="text-2xl font-bold text-gray-800">Quiz Complete!</h2>
+            <p class="text-gray-600 mt-2">You've finished the practice quiz.</p>
+            <p id="score-text" class="text-4xl font-bold mt-4"></p>
+            <p id="final-message" class="text-lg text-gray-500 mt-2"></p>
+            <button id="restart-btn" class="btn mt-8 bg-blue-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-600">Practice Again</button>
+        </div>
     </div>
 
     <script>
-        // --- DOM Elements ---
-        const startArea = document.getElementById('start-area');
-        const quizArea = document.getElementById('quiz-area');
-        const endArea = document.getElementById('end-area');
-        
-        const startBtn = document.getElementById('start-btn');
-        const restartBtn = document.getElementById('restart-btn');
+        // --- UTILITY FUNCTIONS ---
+        const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const gcd = (a, b) => {
+            a = Math.abs(a);
+            b = Math.abs(b);
+            return b === 0 ? a : gcd(b, a % b);
+        };
+        const simplifyFraction = (n, d) => {
+            if (d === 0) return [n, d]; // Avoid division by zero
+            const common = gcd(n, d);
+            let newN = n / common;
+            let newD = d / common;
+            if (newD < 0) { // Keep denominator positive
+                newN *= -1;
+                newD *= -1;
+            }
+            return [newN, newD];
+        }
+        const shuffle = (array) => {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        };
+
+        // --- QUESTION GENERATORS ---
+        const questionGenerators = {
+            solveDistributive: () => {
+                const a = randInt(2, 5), b = randInt(2, 4), x = randInt(-5, 5), c = randInt(1, 5);
+                const e = randInt(2, 4);
+                let f = randInt(2, 4);
+                while (a*b === e*f) f = randInt(2,4);
+                const g = randInt(1, 5), d = a * (b * x + c) - e * (f * x + g);
+                const question = `${a}(${b}x + ${c}) = ${d} + ${e}(${f}x + ${g})`;
+                const answer = x.toString();
+                const steps = `Step 1: Distribute on both sides.\n  ${a*b}x + ${a*c} = ${d} + ${e*f}x + ${e*g}\n` +
+                              `Step 2: Combine like terms.\n  ${a*b}x + ${a*c} = ${e*f}x + ${d+e*g}\n` +
+                              `Step 3: Move variable terms to one side.\n  ${a*b - e*f}x + ${a*c} = ${d+e*g}\n` +
+                              `Step 4: Isolate the variable term.\n  ${a*b - e*f}x = ${d+e*g - a*c}\n` +
+                              `Step 5: Solve for x.\n  x = ${answer}`;
+                return { instruction: "Solve the equation:", question, type: 'solve', answer, steps };
+            },
+            solveFractions: () => {
+                let ansN, ansD, coeffN, coeffD, const1N, const1D, const2N, const2D, step1_resN, step1_resD;
+
+                // Loop until all generated fractions in the question are proper (denominator > 1, numerator != denominator)
+                do {
+                    [ansN, ansD] = simplifyFraction(randInt(1, 5) * (randInt(0, 1) ? 1 : -1), randInt(2, 7));
+                    if (ansD === 1) continue; // Ensure the answer itself is a fraction
+
+                    [coeffN, coeffD] = simplifyFraction(randInt(1, 7), randInt(2, 8));
+                    [step1_resN, step1_resD] = simplifyFraction(coeffN * ansN, coeffD * ansD);
+                    
+                    do {
+                        [const1N, const1D] = simplifyFraction(randInt(1, 7), randInt(2, 8));
+                    } while (const1D === step1_resD); // Ensure denominators differ for addition practice
+
+                    [const2N, const2D] = simplifyFraction(step1_resN * const1D + const1N * step1_resD, step1_resD * const1D);
+                } while (
+                    coeffD === 1 || Math.abs(coeffN) === coeffD ||
+                    const1D === 1 || Math.abs(const1N) === const1D ||
+                    const2D === 1 || Math.abs(const2N) === const2D
+                );
+
+                const answer = `${ansN}/${ansD}`;
+                // Recalculate the intermediate step for the solution text with the final numbers
+                [step1_resN, step1_resD] = simplifyFraction(coeffN * ansN, coeffD * ansD);
+
+                const question = `(${coeffN}/${coeffD})x + ${const1N}/${const1D} = ${const2N}/${const2D}`;
+                const steps = `Step 1: Subtract ${const1N}/${const1D} from both sides.\n` +
+                              `  (${coeffN}/${coeffD})x = (${const2N}/${const2D}) - (${const1N}/${const1D})\n` +
+                              `  (${coeffN}/${coeffD})x = ${step1_resN}/${step1_resD}\n\n` +
+                              `Step 2: Multiply both sides by the reciprocal of (${coeffN}/${coeffD}), which is (${coeffD}/${coeffN}).\n` +
+                              `  x = (${step1_resN}/${step1_resD}) * (${coeffD}/${coeffN})\n\n` +
+                              `Step 3: Multiply the fractions and simplify.\n` +
+                              `  x = ${step1_resN * coeffD}/${step1_resD * coeffN}\n` +
+                              `  x = ${answer}`;
+                return { instruction: "Solve the equation:", question, type: 'solve', answer, steps };
+            },
+            solveFractionDistributive: () => {
+                let distN, distD, const1N, const1D, const2N, const2D;
+                let c, d; // parts inside parenthesis
+
+                // Loop until all generated fractions in the question are proper
+                do {
+                    [distN, distD] = simplifyFraction(randInt(1,5), randInt(2,6));
+                    c = randInt(2,9); // coefficient of x
+                    d = randInt(1,9); // constant in parenthesis
+                    [const1N, const1D] = simplifyFraction(randInt(1,5), randInt(2,6));
+                    [const2N, const2D] = simplifyFraction(randInt(1,5), randInt(2,6));
+                } while (
+                    distD === 1 || Math.abs(distN) === distD ||
+                    const1D === 1 || Math.abs(const1N) === const1D ||
+                    const2D === 1 || Math.abs(const2N) === const2D
+                );
+
+                // Recalculate steps with the validated numbers
+                // Step 1: Distribute
+                const [distTermX_N, distTermX_D] = simplifyFraction(distN * c, distD);
+                const [distTermC_N, distTermC_D] = simplifyFraction(distN * d, distD);
+                
+                // Step 2: Combine like terms
+                let [combinedConstN, combinedConstD] = simplifyFraction(distTermC_N * const1D + const1N * distTermC_D, distTermC_D * const1D);
+                
+                // Step 3: Move constant
+                let [rhsN, rhsD] = simplifyFraction(const2N * combinedConstD - combinedConstN * const2D, const2D * combinedConstD);
+
+                // Step 4: Multiply by reciprocal
+                let [ansN, ansD] = simplifyFraction(rhsN * distTermX_D, rhsD * distTermX_N);
+
+                const question = `(${distN}/${distD})(${c}x + ${d}) + ${const1N}/${const1D} = ${const2N}/${const2D}`;
+                const answer = ansD === 1 ? `${ansN}` : `${ansN}/${ansD}`;
+                
+                const steps = `Step 1: Distribute (${distN}/${distD}).\n` +
+                              `  (${distTermX_N}/${distTermX_D})x + ${distTermC_N}/${distTermC_D} + ${const1N}/${const1D} = ${const2N}/${const2D}\n\n` +
+                              `Step 2: Combine constant terms on the left.\n`+
+                              `  (${distTermX_N}/${distTermX_D})x + ${combinedConstN}/${combinedConstD} = ${const2N}/${const2D}\n\n`+
+                              `Step 3: Subtract ${combinedConstN}/${combinedConstD} from both sides.\n`+
+                              `  (${distTermX_N}/${distTermX_D})x = ${rhsN}/${rhsD}\n\n`+
+                              `Step 4: Multiply by the reciprocal of (${distTermX_N}/${distTermX_D}).\n`+
+                              `  x = (${rhsN}/${rhsD}) * (${distTermX_D}/${distTermX_N})\n` +
+                              `  x = ${answer}`;
+
+                return { instruction: "Solve the equation:", question, type: 'solve', answer, steps };
+            },
+            solveBasic: () => {
+                const a = randInt(2, 8); let c = randInt(-8, -2);
+                while (a === c) c = randInt(-8,-2);
+                const x = randInt(-5, 5); const b = randInt(1, 10);
+                const d = a*x + b - c*x;
+                const question = `${a}x + ${b} = ${c}x + ${d}`;
+                const answer = x.toString();
+                const steps = `Step 1: Move variable terms to one side.\n  ${a-c}x + ${b} = ${d}\n`+
+                              `Step 2: Isolate the variable term.\n  ${a-c}x = ${d-b}\n`+
+                              `Step 3: Solve for x.\n  x = ${answer}`;
+                return { instruction: "Solve the equation:", question, type: 'solve', answer, steps };
+            },
+            classify: (type) => {
+                const a = randInt(2, 5), b = randInt(2, 5), c = randInt(2, 5), d = randInt(2, 5);
+                let question, answer, explanation;
+                if (type === 'infinite') {
+                    question = `${a}(${b}x + ${c}) = ${a*b}x + ${a*c}`;
+                    answer = 'infinite'; explanation = `Simplifies to ${a*b}x + ${a*c} = ${a*b}x + ${a*c}, which is always true.`;
+                } else if (type === 'no') {
+                    const e = a * c + randInt(1,5);
+                    question = `${a}(${b}x + ${c}) = ${a*b}x + ${e}`;
+                    answer = 'no'; explanation = `Simplifies to ${a*b}x + ${a*c} = ${a*b}x + ${e}, which is never true.`;
+                } else {
+                    const e = a * b + randInt(1,5);
+                    question = `${a}(${b}x + ${c}) = ${e}x + ${d}`;
+                    answer = 'one'; explanation = `The coefficients of x (${a*b} and ${e}) are different, so there is one solution.`;
+                }
+                 const steps = `Step 1: Distribute on the left side.\n  ${question}\nStep 2: Simplify.\n  ${explanation}`;
+                return { instruction: "State whether the equation has one solution, no solution, or infinitely many solutions.", question, type: 'classify', answer, steps };
+            }
+        };
+
+        let quizData = [];
+
+        function generateNewQuiz() {
+            let newQuestions = [];
+            newQuestions.push(questionGenerators.solveDistributive());
+            newQuestions.push(questionGenerators.solveFractions());
+            newQuestions.push(questionGenerators.solveBasic());
+            newQuestions.push(questionGenerators.solveFractionDistributive()); // New challenging question
+            newQuestions.push(questionGenerators.classify('infinite'));
+            newQuestions.push(questionGenerators.classify('no'));
+            newQuestions.push(questionGenerators.classify('one'));
+            newQuestions.push(questionGenerators.solveDistributive());
+            newQuestions.push(questionGenerators.classify('infinite'));
+            newQuestions.push(questionGenerators.solveFractions());
+
+            quizData = shuffle(newQuestions);
+        }
+
+        // --- DOM ELEMENTS AND EVENT LISTENERS (No changes below this line) ---
+        const questionArea = document.getElementById('question-area');
+        const resultsArea = document.getElementById('results-area');
+        const instructionEl = document.getElementById('question-instruction');
+        const questionEl = document.getElementById('question-text');
+        const solveArea = document.getElementById('solve-input-area');
+        const answerInput = document.getElementById('answer-input');
+        const classifyArea = document.getElementById('classify-options-area');
+        const optionButtons = classifyArea.querySelectorAll('.option-btn');
         const checkBtn = document.getElementById('check-btn');
         const nextBtn = document.getElementById('next-btn');
-        
-        const progressText = document.getElementById('progress');
-        const questionText = document.getElementById('question');
-        const solutionContainer = document.getElementById('solution-container');
-        const feedbackContainer = document.getElementById('feedback-container');
+        const restartBtn = document.getElementById('restart-btn');
+        const feedbackEl = document.getElementById('feedback-area');
+        const scoreEl = document.getElementById('score-text');
+        const finalMessageEl = document.getElementById('final-message');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
 
-        const solveInputContainer = document.getElementById('solve-input-container');
-        const answerInput = document.getElementById('answer-input');
-        const mcqInputContainer = document.getElementById('mcq-input-container');
-        const mcqBtns = document.querySelectorAll('.mcq-btn');
-
-        // --- State ---
-        let questions = [];
         let currentQuestionIndex = 0;
-        let selectedMCQAnswer = -1;
+        let score = 0;
+        let selectedOption = null;
 
-        // --- Math & Formatting Helper Functions ---
-        const randint = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
-        const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
-        const lcm = (a, b) => (a * b) / gcd(a, b);
-        const lcm3 = (a, b, c) => lcm(lcm(a, b), c);
-        
-        function simplifyFraction(numerator, denominator) {
-            if (denominator === 0) return { num: numerator, den: 1 };
-            const commonDivisor = gcd(Math.abs(numerator), Math.abs(denominator));
-            let num = numerator / commonDivisor;
-            let den = denominator / commonDivisor;
-            if (den < 0) {
-                num = -num;
-                den = -den;
-            }
-            return { num, den };
-        }
-        
-        const formatFrac = (n, d, term = '') => {
-            if (d === 1) return `${n}${term}`;
-            if (n === 0) return `0`;
-            const sign = n < 0 ? '-' : '';
-            return `${sign}(${Math.abs(n)}/${d})${term}`;
-        };
-
-        const formatSignedFrac = (n, d, term = '') => {
-            if (n === 0) return '';
-            const sign = n > 0 ? '+' : '-';
-            if (d === 1) return ` ${sign} ${Math.abs(n)}${term}`;
-            return ` ${sign} (${Math.abs(n)}/${d})${term}`;
-        };
-
-
-        // --- Question Generation ---
-        function generateSolveQuestions() {
-            const generated = [];
-            let solution, solutionNum, solutionDen;
-
-            // Type 1: twoStep (e.g., 38 = -5x - 12)
-            solution = randint(-10, 10) || 1;
-            const a1 = randint(2, 9), b1 = randint(-15, 15);
-            const lhs1 = a1 * solution + b1;
-            generated.push({
-                type: 'solve',
-                question: `${lhs1} = ${a1}x ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)}`,
-                answer: `${solution}`,
-                steps: [
-                    `Start with the equation: <strong>${lhs1} = ${a1}x ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)}</strong>`,
-                    `To isolate the x term, ${b1 >= 0 ? 'subtract' : 'add'} ${Math.abs(b1)} from both sides.`,
-                    `<em>${lhs1} ${b1 >= 0 ? '-' : '+'} ${Math.abs(b1)} = ${a1}x</em>  &nbsp;➡️&nbsp; <strong>${lhs1 - b1} = ${a1}x</strong>`,
-                    `Divide both sides by ${a1} to solve for x.`,
-                    `<em>x = ${lhs1-b1} / ${a1}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
-                ]
-            });
-            
-            // Type 2: distributive (e.g., 3(4k + 4) = 60)
-            solution = randint(-5, 5) || 1;
-            const a2 = randint(2, 5), b2 = randint(2, 5), c2 = randint(-5, 5);
-            const rhs2 = a2 * (b2 * solution + c2);
-            generated.push({
-                type: 'solve',
-                question: `${a2}(${b2}k + ${c2}) = ${rhs2}`,
-                answer: `${solution}`,
-                steps: [
-                    `Start with the equation: <strong>${a2}(${b2}k + ${c2}) = ${rhs2}</strong>`,
-                    `Distribute the ${a2}.`, `<strong>${a2*b2}k + ${a2*c2} = ${rhs2}</strong>`,
-                    `${a2*c2 > 0 ? 'Subtract' : 'Add'} ${Math.abs(a2*c2)} from both sides.`, `<strong>${a2*b2}k = ${rhs2 - (a2*c2)}</strong>`,
-                    `Divide both sides by ${a2*b2}.`, `<strong class="text-green-600">k = ${solution}</strong>`
-                ]
-            });
-            
-            // Type 3: simpleFraction (e.g., (1/3)(6x - 9) = 5)
-            solution = randint(-8, 8) || 1;
-            const den3 = randint(2, 5);
-            const coeff3 = den3 * randint(1, 3);
-            const const3 = den3 * randint(-5, 5);
-            const rhs3 = (coeff3 * solution + const3) / den3;
-             generated.push({
-                type: 'solve',
-                question: `${formatFrac(1, den3)}(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}`,
-                answer: `${solution}`,
-                steps: [
-                    `Start with the equation: <strong>${formatFrac(1, den3)}(${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)}) = ${rhs3}</strong>`,
-                    `To clear the fraction, multiply both sides by the denominator, ${den3}.`,
-                    `<em>${den3} * ${formatFrac(1, den3)}(...) = ${rhs3} * ${den3}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x ${const3 >= 0 ? '+':'-'} ${Math.abs(const3)} = ${rhs3 * den3}</strong>`,
-                    `Now, ${const3 >= 0 ? 'subtract' : 'add'} ${Math.abs(const3)} from both sides.`,
-                    `<em>${coeff3}x = ${rhs3*den3} ${const3 >= 0 ? '-' : '+'} ${Math.abs(const3)}</em> &nbsp;➡️&nbsp; <strong>${coeff3}x = ${(rhs3*den3) - const3}</strong>`,
-                    `Divide both sides by ${coeff3}.`,
-                    `<em>x = ${(rhs3*den3) - const3} / ${coeff3}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solution}</strong>`
-                ]
-            });
-
-            // Type 4: Equation with multiple fractions
-            solutionNum = randint(-9, 9) || 1;
-            solutionDen = randint(2, 5);
-            const simplifiedSol = simplifyFraction(solutionNum, solutionDen);
-            solutionNum = simplifiedSol.num;
-            solutionDen = simplifiedSol.den;
-
-            const A4 = randint(2, 9);
-            const M4 = lcm(A4, solutionDen);
-            const C4 = (A4 * solutionNum) / solutionDen;
-            const B4 = randint(-10, 10) || 1;
-           
-            const lhsB = simplifyFraction(B4, M4);
-            const rhsC = simplifyFraction(C4-B4, M4);
-            const lhsA = simplifyFraction(A4,M4);
-            
-            const commonDen = lcm3(lhsA.den, lhsB.den, rhsC.den);
-            
-            let questionStr4 = `${formatFrac(lhsA.num, lhsA.den, 'x')}${formatSignedFrac(lhsB.num, lhsB.den)} = ${formatFrac(rhsC.num, rhsC.den)}`;
-
-            generated.push({
-                type: 'solve',
-                question: questionStr4,
-                answer: `${solutionNum}/${solutionDen}`,
-                steps: [
-                    `Start with the equation: <strong>${questionStr4}</strong>`,
-                    `To eliminate the fractions, find the least common multiple (LCM) of the denominators: ${lhsA.den}, ${lhsB.den}, and ${rhsC.den}.`,
-                    `The LCM is <strong>${commonDen}</strong>. Multiply every term by ${commonDen}.`,
-                    `This simplifies to the integer equation: <strong>${(commonDen/lhsA.den)*lhsA.num}x ${ (commonDen/lhsB.den)*lhsB.num >= 0 ? '+' : '-' } ${Math.abs((commonDen/lhsB.den)*lhsB.num)} = ${(commonDen/rhsC.den)*rhsC.num}</strong>`,
-                    `Now solve the two-step equation.`,
-                    `<strong>${A4}x = ${C4 - B4}</strong>`,
-                    `Finally, divide by ${A4}.`,
-                    `<em>x = ${C4-B4} / ${A4}</em> &nbsp;➡️&nbsp; <strong class="text-green-600">x = ${solutionNum}/${solutionDen}</strong>`
-                ]
-            });
-
-
-            return generated;
-        }
-        
-        // --- MULTIPLE CHOICE QUESTION GENERATOR ---
-
-        function generateDistributiveEq(solutionType) {
-            let a, b, c, d, e, f;
-            
-            a = randint(2, 5); b = randint(2, 5); c = randint(-6, 6) || 1;
-            d = randint(2, 5); e = randint(2, 5); f = randint(-6, 6) || 1;
-
-            if (solutionType === 'one') {
-                while (a * b === d * e) { e = randint(2, 5); }
-            } else { // 'none' or 'infinite'
-                if (a * b !== d * e) {
-                   const factors = [2,3,4,5,6,8,9,10,12,15,16,20,24,25].filter(n => n > a*b);
-                   const product = factors[randint(0, factors.length - 1)] || 20;
-                   d = [2,3,4,5].find(div => product % div === 0) || 2;
-                   e = product / d;
-                   a = [2,3,4,5].find(div => product % div === 0 && div !== d) || 4;
-                   b = product/a;
-                }
-                
-                if (solutionType === 'none') {
-                    while (a * c === d * f) { f = randint(-6, 6) || -1; }
-                } else { // infinite
-                     if (a*c !== d*f) {
-                        const constProd = (a*c) * randint(2,3);
-                        f = [2,3,4,5].find(div => constProd % div === 0 && (constProd/div) !== (a*c)) || 2;
-                        d = constProd / f;
-                        // re-calculate x coeff to match new d
-                        const xProd = (a*b);
-                        e = xProd / d;
-                        if (e !== Math.floor(e)) { // failsafe for integer coefficients
-                           return generateDistributiveEq('infinite');
-                        }
-                     }
-                }
-            }
-    
-            const formatSide = (c1, v, c2) => `${c1}(${v}x ${c2 >= 0 ? '+' : '-'} ${Math.abs(c2)})`;
-            const formatSimplified = (coeff, cons) => `${coeff}x ${cons >= 0 ? '+' : '-'} ${Math.abs(cons)}`;
-
-            return {
-                equation: `${formatSide(a, b, c)} = ${formatSide(d, e, f)}`,
-                lhs_simplified: formatSimplified(a * b, a * c),
-                rhs_simplified: formatSimplified(d * e, d * f),
-                solutionType: solutionType === 'one' ? 'one solution' : (solutionType === 'none' ? 'no solution' : 'infinitely many solutions')
-            };
-        }
-
-        function generateSolutionSetQuestion() {
-            const types = ['one solution', 'no solution', 'infinitely many solutions'];
-            const targetType = types[randint(0, 2)];
-            const otherTypes = types.filter(t => t !== targetType);
-
-            let options = [];
-            // Generate the correct answer
-            options.push(generateDistributiveEq(targetType.split(' ')[0]));
-            // Generate three distractors
-            options.push(generateDistributiveEq(otherTypes[0].split(' ')[0]));
-            options.push(generateDistributiveEq(otherTypes[1].split(' ')[0]));
-            // Make last distractor random from the other types
-            options.push(generateDistributiveEq(otherTypes[randint(0,1)].split(' ')[0]));
-
-            shuffle(options);
-            const answerIndex = options.findIndex(opt => opt.solutionType === targetType);
-            
-            let steps = [`The question asks for the equation with <strong>${targetType}</strong>. The correct answer is <strong>${String.fromCharCode(65 + answerIndex)}</strong>.`, `Here's a breakdown of each option:`];
-            options.forEach((option, index) => {
-                let analysis = `<div class="p-3 text-left rounded-md ${index === answerIndex ? 'bg-green-100' : 'bg-gray-100'}"><strong>Option ${String.fromCharCode(65+index)}:</strong> ${option.equation}<br>`;
-                analysis += `After distributing, we get: <em>${option.lhs_simplified} = ${option.rhs_simplified}</em>.<br>`;
-                if (option.solutionType === 'one solution') {
-                    analysis += `The x-coefficients are different, so there is <strong>one solution</strong>.</div>`;
-                } else if (option.solutionType === 'no solution') {
-                    analysis += `The x-coefficients are the same, but the constants are different. This means there is <strong>no solution</strong>.</div>`;
-                } else {
-                    analysis += `Both sides simplify to the exact same expression, meaning there are <strong>infinitely many solutions</strong>.</div>`;
-                }
-                steps.push(analysis);
-            });
-
-            return {
-                type: 'solutionSet',
-                prompt: `Which of the following equations has <strong>${targetType}</strong>?`,
-                options: options,
-                answer: answerIndex,
-                steps: steps
-            };
-        }
-        
-        // --- Quiz Logic ---
-        function startQuiz() {
-            const solveQs = generateSolveQuestions();
-            const solutionSetQs = [generateSolutionSetQuestion(), generateSolutionSetQuestion(), generateSolutionSetQuestion()];
-            const allQs = [...solveQs, ...solveQs, ...solutionSetQs]; // Now 4 solve types, so 4+4+3 = 11
-            questions = shuffle(allQs).slice(0, 11);
-            currentQuestionIndex = 0;
-            
-            startArea.classList.add('hidden');
-            endArea.classList.add('hidden');
-            quizArea.classList.remove('hidden');
-
-            displayQuestion();
-        }
-
-        function displayQuestion() {
-            solutionContainer.innerHTML = '';
-            feedbackContainer.innerHTML = '';
-            answerInput.value = '';
-            selectedMCQAnswer = -1;
-
-            const q = questions[currentQuestionIndex];
-            progressText.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
-            
-            if(q.type === 'solve') {
-                questionText.innerHTML = q.question;
-                solveInputContainer.classList.remove('hidden');
-                mcqInputContainer.classList.add('hidden');
-                answerInput.disabled = false;
-                answerInput.focus();
-            } else { // solutionSet
-                questionText.innerHTML = `<p class="mb-4">${q.prompt}</p>`;
-                solveInputContainer.classList.add('hidden');
-                mcqInputContainer.classList.remove('hidden');
-                mcqBtns.forEach((btn, index) => {
-                    const option = q.options[index];
-                    btn.innerHTML = `<span class="font-bold mr-3">${String.fromCharCode(65 + index)}.</span> ${option.equation}`;
-                    btn.classList.remove('selected');
-                    btn.disabled = false;
-                });
-            }
-
+        function loadQuestion() {
+            feedbackEl.classList.add('hidden');
             checkBtn.classList.remove('hidden');
             nextBtn.classList.add('hidden');
+            answerInput.value = '';
+            answerInput.disabled = false;
+            selectedOption = null;
+            optionButtons.forEach(btn => {
+                btn.classList.remove('selected');
+                btn.disabled = false;
+            });
+            
+            if (currentQuestionIndex >= quizData.length) {
+                showResults();
+                return;
+            }
+
+            const progressPercentage = ((currentQuestionIndex) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+            progressText.textContent = `Question ${currentQuestionIndex + 1} / ${quizData.length}`;
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            instructionEl.textContent = currentQuestion.instruction;
+            questionEl.textContent = currentQuestion.question;
+
+            if (currentQuestion.type === 'solve') {
+                solveArea.classList.remove('hidden');
+                classifyArea.classList.add('hidden');
+                answerInput.focus();
+            } else {
+                solveArea.classList.add('hidden');
+                classifyArea.classList.remove('hidden');
+            }
+        }
+        
+        function handleOptionClick(e) {
+            selectedOption = e.target.dataset.value;
+            optionButtons.forEach(btn => btn.classList.remove('selected'));
+            e.target.classList.add('selected');
         }
 
         function checkAnswer() {
-            const q = questions[currentQuestionIndex];
-            let userAnswer;
-            let isCorrect = false;
-
-            if (q.type === 'solve') {
-                userAnswer = answerInput.value.trim();
-                const correctAnswer = q.answer;
-                // Allow for both decimal and fraction answers if applicable
-                if (userAnswer === correctAnswer) {
-                    isCorrect = true;
-                } else {
-                    try {
-                       const [num, den] = correctAnswer.split('/').map(Number);
-                       if (den && Math.abs(eval(userAnswer) - (num/den)) < 0.001) {
-                           isCorrect = true;
-                       }
-                    } catch (e) {
-                        // User input was not a valid number or expression
-                    }
-                }
-            } else { // solutionSet
-                userAnswer = selectedMCQAnswer;
-                if(userAnswer === q.answer) {
-                    isCorrect = true;
-                }
+            const currentQuestion = quizData[currentQuestionIndex];
+            let userAnswer = (currentQuestion.type === 'solve') ? answerInput.value.trim() : selectedOption;
+            
+            if (!userAnswer) {
+                feedbackEl.innerHTML = 'Please provide an answer.';
+                feedbackEl.className = 'mt-4 p-4 rounded-md text-center feedback-incorrect';
+                return;
             }
 
-            if(isCorrect) {
-                feedbackContainer.textContent = 'Correct! 🎉';
-                feedbackContainer.className = 'mb-4 h-6 text-center font-semibold text-green-600';
+            const isCorrect = userAnswer === currentQuestion.answer;
+
+            feedbackEl.classList.remove('hidden');
+            if (isCorrect) {
+                score++;
+                feedbackEl.innerHTML = "Correct!";
+                feedbackEl.className = 'mt-4 p-4 rounded-md text-center feedback-correct';
             } else {
-                feedbackContainer.textContent = 'Not quite. Here is the solution:';
-                feedbackContainer.className = 'mb-4 h-6 text-center font-semibold text-red-600';
+                let feedbackHTML = `Incorrect. The correct answer is <strong>${currentQuestion.answer}</strong>.` +
+                                   `<div class="solution-steps"><strong>Solution:</strong>\n${currentQuestion.steps}</div>`;
+                feedbackEl.innerHTML = feedbackHTML;
+                feedbackEl.className = 'mt-4 p-4 rounded-md text-center feedback-incorrect';
             }
 
             answerInput.disabled = true;
-            mcqBtns.forEach(btn => {
-                btn.disabled = true;
-            });
-            
-            showSolution();
-        }
-
-        function showSolution() {
-            const q = questions[currentQuestionIndex];
-            let delay = 0;
-            solutionContainer.innerHTML = q.steps.map(step => {
-                delay += 200; // Stagger animation
-                return `<div class="solution-step" style="animation-delay: ${delay}ms">${step}</div>`;
-            }).join('');
-
+            optionButtons.forEach(btn => btn.disabled = true);
             checkBtn.classList.add('hidden');
             nextBtn.classList.remove('hidden');
-            nextBtn.focus();
-            if (currentQuestionIndex === questions.length - 1) {
-                nextBtn.textContent = '🏁 Finish Quiz';
-            }
         }
 
-        function nextQuestion() {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
-                nextBtn.textContent = '➡️ Next Question';
-                displayQuestion();
+        function showResults() {
+            questionArea.classList.add('hidden');
+            resultsArea.classList.remove('hidden');
+            document.getElementById('quiz-header').classList.add('hidden');
+            
+            scoreEl.textContent = `${score} / ${quizData.length}`;
+            const percentage = Math.round((score / quizData.length) * 100);
+
+            if (percentage >= 80) {
+                finalMessageEl.textContent = "Excellent work! You've got a great grasp of these concepts.";
+                scoreEl.classList.add('text-green-600');
+            } else if (percentage >= 60) {
+                finalMessageEl.textContent = "Good job! A little more practice will make perfect.";
+                scoreEl.classList.add('text-yellow-500');
             } else {
-                showEndScreen();
+                finalMessageEl.textContent = "Keep practicing! Reviewing the concepts will help a lot.";
+                scoreEl.classList.add('text-red-600');
             }
         }
-
-        function showEndScreen() {
-            quizArea.classList.add('hidden');
-            endArea.classList.remove('hidden');
-        }
-
-        // --- Event Listeners ---
-        startBtn.addEventListener('click', startQuiz);
-        restartBtn.addEventListener('click', startQuiz);
-        checkBtn.addEventListener('click', checkAnswer);
-        nextBtn.addEventListener('click', nextQuestion);
         
-        answerInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                checkBtn.click();
-            }
-        });
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultsArea.classList.add('hidden');
+            questionArea.classList.remove('hidden');
+            document.getElementById('quiz-header').classList.remove('hidden');
+            scoreEl.className = 'text-4xl font-bold mt-4'; 
+            generateNewQuiz();
+            loadQuestion();
+        }
 
-        mcqBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                if(btn.disabled) return;
-                mcqBtns.forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                selectedMCQAnswer = parseInt(btn.dataset.index);
-            });
-        });
+        checkBtn.addEventListener('click', checkAnswer);
+        nextBtn.addEventListener('click', () => { currentQuestionIndex++; loadQuestion(); });
+        restartBtn.addEventListener('click', restartQuiz);
+        optionButtons.forEach(button => button.addEventListener('click', handleOptionClick));
+        answerInput.addEventListener('keyup', (event) => { if (event.key === 'Enter') checkAnswer(); });
+
+        generateNewQuiz();
+        loadQuestion();
     </script>
 </body>
 </html>
+
+
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solving Equations - Practice Quiz</title>
+    <title>Algebra 1 - Practice Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -52,7 +52,7 @@
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
     <div id="quiz-container" class="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-xl shadow-lg">
         <div id="quiz-header">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center">Solving Equations Practice Quiz</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 text-center">Algebra 1 Practice Quiz</h1>
             <p class="text-gray-500 text-center mt-2">Solving Linear Equations</p>
             <div class="bg-gray-200 h-1 rounded-full mt-6">
                 <div id="progress-bar" class="bg-blue-500 h-1 rounded-full" style="width: 0%;"></div>
@@ -138,24 +138,27 @@
             },
             solveFractions: () => {
                 let ansN, ansD, coeffN, coeffD, const1N, const1D, const2N, const2D, step1_resN, step1_resD;
+                const maxVal = 10; // Max value for numerators/denominators
 
-                // Loop until all generated fractions in the question are proper (denominator > 1, numerator != denominator)
+                // Loop until all generated fractions in the question are proper and within the desired range
                 do {
-                    [ansN, ansD] = simplifyFraction(randInt(1, 5) * (randInt(0, 1) ? 1 : -1), randInt(2, 7));
-                    if (ansD === 1) continue; // Ensure the answer itself is a fraction
+                    // Generate a simple fractional answer (ensures the problem is solvable with fractions)
+                    [ansN, ansD] = simplifyFraction(randInt(1, 9) * (randInt(0, 1) ? 1 : -1), randInt(2, 10));
+                    if (ansD === 1) continue; // The answer must be a fraction
 
-                    [coeffN, coeffD] = simplifyFraction(randInt(1, 7), randInt(2, 8));
-                    [step1_resN, step1_resD] = simplifyFraction(coeffN * ansN, coeffD * ansD);
+                    // Generate the coefficient and constant fractions that the student will see
+                    [coeffN, coeffD] = simplifyFraction(randInt(1, 9), randInt(2, 10));
+                    [const1N, const1D] = simplifyFraction(randInt(1, 9), randInt(2, 10));
                     
-                    do {
-                        [const1N, const1D] = simplifyFraction(randInt(1, 7), randInt(2, 8));
-                    } while (const1D === step1_resD); // Ensure denominators differ for addition practice
-
+                    // Work backwards to calculate the third fraction based on the others
+                    [step1_resN, step1_resD] = simplifyFraction(coeffN * ansN, coeffD * ansD);
                     [const2N, const2D] = simplifyFraction(step1_resN * const1D + const1N * step1_resD, step1_resD * const1D);
+
                 } while (
-                    coeffD === 1 || Math.abs(coeffN) === coeffD ||
-                    const1D === 1 || Math.abs(const1N) === const1D ||
-                    const2D === 1 || Math.abs(const2N) === const2D
+                    // This is the crucial check: ensure all fractions in the *question* are within bounds
+                    coeffD > maxVal || Math.abs(coeffN) > maxVal || Math.abs(coeffN) === coeffD ||
+                    const1D > maxVal || Math.abs(const1N) > maxVal || Math.abs(const1N) === const1D ||
+                    const2D > maxVal || Math.abs(const2N) > maxVal || Math.abs(const2N) === const2D
                 );
 
                 const answer = `${ansN}/${ansD}`;
@@ -176,14 +179,15 @@
             solveFractionDistributive: () => {
                 let distN, distD, const1N, const1D, const2N, const2D;
                 let c, d; // parts inside parenthesis
+                const maxVal = 10;
 
-                // Loop until all generated fractions in the question are proper
+                // Loop until all generated fractions in the question are proper and within range
                 do {
-                    [distN, distD] = simplifyFraction(randInt(1,5), randInt(2,6));
-                    c = randInt(2,9); // coefficient of x
-                    d = randInt(1,9); // constant in parenthesis
-                    [const1N, const1D] = simplifyFraction(randInt(1,5), randInt(2,6));
-                    [const2N, const2D] = simplifyFraction(randInt(1,5), randInt(2,6));
+                    [distN, distD] = simplifyFraction(randInt(1, maxVal - 1), randInt(2, maxVal));
+                    c = randInt(2, 9); // coefficient of x
+                    d = randInt(1, 9); // constant in parenthesis
+                    [const1N, const1D] = simplifyFraction(randInt(1, maxVal - 1), randInt(2, maxVal));
+                    [const2N, const2D] = simplifyFraction(randInt(1, maxVal - 1), randInt(2, maxVal));
                 } while (
                     distD === 1 || Math.abs(distN) === distD ||
                     const1D === 1 || Math.abs(const1N) === const1D ||
@@ -469,6 +473,7 @@
     </script>
 </body>
 </html>
+
 
 
 

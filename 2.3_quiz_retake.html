@@ -232,21 +232,86 @@
                 return { instruction: "Solve the equation:", question, type: 'solve', answer, steps };
             },
             classify: (type) => {
-                const a = randInt(2, 5), b = randInt(2, 5), c = randInt(2, 5), d = randInt(2, 5);
-                let question, answer, explanation;
-                if (type === 'infinite') {
-                    question = `${a}(${b}x + ${c}) = ${a*b}x + ${a*c}`;
-                    answer = 'infinite'; explanation = `Simplifies to ${a*b}x + ${a*c} = ${a*b}x + ${a*c}, which is always true.`;
-                } else if (type === 'no') {
-                    const e = a * c + randInt(1,5);
-                    question = `${a}(${b}x + ${c}) = ${a*b}x + ${e}`;
-                    answer = 'no'; explanation = `Simplifies to ${a*b}x + ${a*c} = ${a*b}x + ${e}, which is never true.`;
-                } else {
-                    const e = a * b + randInt(1,5);
-                    question = `${a}(${b}x + ${c}) = ${e}x + ${d}`;
-                    answer = 'one'; explanation = `The coefficients of x (${a*b} and ${e}) are different, so there is one solution.`;
+                // For "one solution", keep it simple as it's a different skill check
+                if (type === 'one') {
+                    const a = randInt(2, 5), b = randInt(2, 5), c = randInt(2, 5), d = randInt(2, 5);
+                    const e = a * b + randInt(1, 5);
+                    const question = `${a}(${b}x + ${c}) = ${e}x + ${d}`;
+                    const answer = 'one';
+                    const explanation = `The coefficients of x (${a*b} and ${e}) are different, so there is one solution.`;
+                    const steps = `Step 1: Distribute on the left side.\n  ${a*b}x + ${a*c} = ${e}x + ${d}\nStep 2: Simplify.\n  ${explanation}`;
+                    return { instruction: "State whether the equation has one solution, no solution, or infinitely many solutions.", question, type: 'classify', answer, steps };
                 }
-                 const steps = `Step 1: Distribute on the left side.\n  ${question}\nStep 2: Simplify.\n  ${explanation}`;
+
+                // --- Generate complex no/infinite solutions ---
+                // LHS structure: a(bx+c) + dx
+                const a = randInt(2, 5);
+                const b = randInt(2, 5);
+                const c = randInt(1, 5);
+                const d = randInt(-4, 4); 
+                const finalXCoeff = a * b + d; // Final x-coefficient for both sides
+                const finalConstLHS = a * c;     // Final constant on LHS
+
+                // RHS structure: e(fx+g) + hx + k
+                const e = randInt(2, 5);
+                const f = randInt(2, 5);
+                const g = randInt(1, 5);
+
+                let question, answer, explanation, steps;
+
+                // Helper to format terms with signs for building the equation string
+                const formatTerm = (val, isX) => {
+                    if (val === 0) return '';
+                    const sign = val > 0 ? ' + ' : ' - ';
+                    const num = Math.abs(val);
+                    const x = isX ? 'x' : '';
+                    if (num === 1 && isX) return `${sign}${x}`;
+                    return `${sign}${num}${x}`;
+                };
+                
+                // Build the left side of the equation
+                let lhs = `${a}(${b}x + ${c})${formatTerm(d, true)}`;
+                const lhsSimplified = `${finalXCoeff}x${formatTerm(finalConstLHS, false)}`;
+
+                if (type === 'infinite') {
+                    // Make RHS simplify to the same expression as LHS
+                    const h = finalXCoeff - (e * f);
+                    const k = finalConstLHS - (e * g);
+                    
+                    let rhs = `${e}(${f}x + ${g})${formatTerm(h, true)}${formatTerm(k, false)}`;
+                    const rhsSimplified = `${finalXCoeff}x${formatTerm(finalConstLHS, false)}`;
+
+                    question = `${lhs} = ${rhs}`;
+                    answer = 'infinite';
+                    explanation = `Both sides simplify to ${lhsSimplified.replace(' + -', ' - ')}, which is always true.`;
+                    steps = `Left Side:\n  ${lhs}\n  => ${a*b}x + ${a*c}${formatTerm(d, true)}\n  => ${lhsSimplified.replace(' + -', ' - ')}\n\n` +
+                            `Right Side:\n  ${rhs}\n  => ${e*f}x + ${e*g}${formatTerm(h, true)}${formatTerm(k, false)}\n  => ${rhsSimplified.replace(' + -', ' - ')}\n\n` +
+                            `Result:\n  The simplified equation is a true statement, so there are infinitely many solutions.`;
+
+                } else { // type === 'no'
+                    let finalConstRHS;
+                    do {
+                       finalConstRHS = finalConstLHS + randInt(1, 5) * (randInt(0, 1) ? 1 : -1);
+                    } while (finalConstRHS === finalConstLHS); // Ensure constants are different
+
+                    const h = finalXCoeff - (e * f);
+                    const k = finalConstRHS - (e * g);
+
+                    let rhs = `${e}(${f}x + ${g})${formatTerm(h, true)}${formatTerm(k, false)}`;
+                    const rhsSimplified = `${finalXCoeff}x${formatTerm(finalConstRHS, false)}`;
+
+                    question = `${lhs} = ${rhs}`;
+                    answer = 'no';
+                    explanation = `The equation simplifies to ${lhsSimplified.replace(' + -', ' - ')} = ${rhsSimplified.replace(' + -', ' - ')}, which is never true.`;
+                    steps = `Left Side:\n  ${lhs}\n  => ${a*b}x + ${a*c}${formatTerm(d, true)}\n  => ${lhsSimplified.replace(' + -', ' - ')}\n\n` +
+                            `Right Side:\n  ${rhs}\n  => ${e*f}x + ${e*g}${formatTerm(h, true)}${formatTerm(k, false)}\n  => ${rhsSimplified.replace(' + -', ' - ')}\n\n` +
+                            `Result:\n  The simplified equation is a false statement, so there is no solution.`;
+                }
+
+                // Clean up leading ' + ' signs and double spaces from generated strings
+                question = question.replace('=  +', '= ').replace('=  -', '= -');
+                if (question.startsWith(' + ')) question = question.substring(3);
+                
                 return { instruction: "State whether the equation has one solution, no solution, or infinitely many solutions.", question, type: 'classify', answer, steps };
             }
         };
@@ -404,6 +469,7 @@
     </script>
 </body>
 </html>
+
 
 
 

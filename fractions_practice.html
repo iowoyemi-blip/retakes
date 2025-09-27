@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fraction Perseverance Practice</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --success: #059669;
+      --error: #dc2626;
+      --border: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #4338ca, #2563eb);
+      color: white;
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      letter-spacing: 0.02em;
+    }
+
+    header p {
+      margin: 0.75rem auto 0;
+      max-width: 600px;
+      font-size: 1.05rem;
+    }
+
+    main {
+      max-width: 720px;
+      margin: 2.5rem auto 4rem;
+      padding: 0 1rem 4rem;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.1);
+      padding: clamp(1.75rem, 4vw, 2.4rem);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .progress {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .progress span {
+      font-size: 0.95rem;
+    }
+
+    .prompt {
+      margin: 1.5rem 0 1.9rem;
+      padding: 1rem 1.25rem;
+      background: var(--accent-light);
+      border-left: 4px solid var(--accent);
+      border-radius: 12px;
+      font-size: clamp(1.1rem, 2.8vw, 1.35rem);
+      line-height: 1.6;
+      font-weight: 600;
+      color: #1d4ed8;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      font-size: 1.05rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin: 1.5rem 0 0;
+    }
+
+    button {
+      padding: 0.85rem 1.4rem;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+    }
+
+    button.secondary {
+      background: var(--accent-light);
+      color: #1d4ed8;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      box-shadow: none;
+      transform: none !important;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
+    }
+
+    .feedback {
+      margin-top: 1.4rem;
+      padding: 1.05rem 1.2rem;
+      border-radius: 14px;
+      font-weight: 600;
+    }
+
+    .feedback.correct {
+      background: rgba(5, 150, 105, 0.12);
+      color: var(--success);
+      border: 1px solid rgba(5, 150, 105, 0.35);
+    }
+
+    .feedback.incorrect {
+      background: rgba(220, 38, 38, 0.12);
+      color: var(--error);
+      border: 1px solid rgba(220, 38, 38, 0.35);
+    }
+
+    .solution {
+      margin-top: 1.75rem;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 1.4rem 1.6rem;
+      line-height: 1.7;
+    }
+
+    .solution h3 {
+      margin: 0 0 0.85rem;
+      font-size: 1.1rem;
+    }
+
+    .solution ol {
+      margin: 0;
+      padding-left: 1.1rem;
+    }
+
+    .solution li + li {
+      margin-top: 0.6rem;
+    }
+
+    .summary {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .summary h2 {
+      margin-bottom: 0.6rem;
+      font-size: 1.55rem;
+    }
+
+    .summary p {
+      color: var(--muted);
+      margin-bottom: 1.8rem;
+    }
+
+    @media (max-width: 500px) {
+      header {
+        padding: 2rem 1rem;
+      }
+
+      .card {
+        padding: 1.5rem;
+      }
+
+      .prompt {
+        font-size: 1.08rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Persevere with Fractions!</h1>
+    <p>Every step grows your confidence—keep going and you will conquer fraction equations.</p>
+  </header>
+
+  <main>
+    <div class="card" id="app">
+      <div class="progress" id="progress" aria-live="polite"></div>
+      <div class="prompt" id="prompt"></div>
+
+      <div id="response-area">
+        <label for="answer">Your answer for <em>x</em> (use integers or fractions like 3/4):</label>
+        <input type="text" id="answer" autocomplete="off" />
+        <div class="actions">
+          <button class="primary" id="submit-btn">Submit answer</button>
+          <button class="secondary" id="next-btn" disabled>Next problem</button>
+        </div>
+      </div>
+
+      <div id="feedback"></div>
+      <div id="solution"></div>
+    </div>
+
+    <div class="summary" id="summary" hidden>
+      <h2>Quiz complete!</h2>
+      <p id="score"></p>
+      <button class="primary" id="regen-btn">Regenerate a New Quiz Practice</button>
+    </div>
+  </main>
+
+  <script>
+    const gcd = (a, b) => {
+      let x = Math.abs(a);
+      let y = Math.abs(b);
+      while (y) {
+        const t = y;
+        y = x % y;
+        x = t;
+      }
+      return x || 1;
+    };
+
+    function makeFraction(num, den = 1) {
+      if (den === 0) throw new Error("Denominator cannot be zero");
+      if (!Number.isInteger(num) || !Number.isInteger(den)) {
+        throw new Error("Fraction parameters must be integers");
+      }
+      let n = num;
+      let d = den;
+      if (d < 0) {
+        n = -n;
+        d = -d;
+      }
+      const divisor = gcd(n, d);
+      return { num: n / divisor, den: d / divisor };
+    }
+
+    const add = (a, b) => makeFraction(a.num * b.den + b.num * a.den, a.den * b.den);
+    const sub = (a, b) => makeFraction(a.num * b.den - b.num * a.den, a.den * b.den);
+    const mul = (a, b) => makeFraction(a.num * b.num, a.den * b.den);
+    const div = (a, b) => makeFraction(a.num * b.den, a.den * b.num);
+    const neg = (f) => makeFraction(-f.num, f.den);
+    const toIntFraction = (n) => makeFraction(n, 1);
+
+    const fractionToString = (f) => (f.den === 1 ? `${f.num}` : `${f.num}/${f.den}`);
+    const formatMultiplier = (f) => (f.den === 1 ? `${f.num}` : `(${fractionToString(f)})`);
+
+    const randInt = (min = 1, max = 10) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    function decimalToFraction(str) {
+      if (!str.includes('.')) {
+        return makeFraction(parseInt(str, 10), 1);
+      }
+      const negative = str.trim().startsWith('-');
+      const sanitized = str.trim().replace('+', '').replace('-', '');
+      const [whole, fracPart] = sanitized.split('.');
+      const denominator = Math.pow(10, fracPart.length);
+      const numerator = parseInt((whole || '0') + fracPart, 10);
+      return makeFraction(negative ? -numerator : numerator, denominator);
+    }
+
+    function parseInput(value) {
+      const raw = value.trim();
+      if (!raw) return null;
+      if (/^[+-]?\d+$/.test(raw)) {
+        return toIntFraction(parseInt(raw, 10));
+      }
+      if (/^[+-]?\d+\/[+-]?\d+$/.test(raw)) {
+        const [n, d] = raw.split('/').map(Number);
+        if (d === 0) return null;
+        return makeFraction(n, d);
+      }
+      if (/^[+-]?\d*\.\d+$/.test(raw)) {
+        return decimalToFraction(raw);
+      }
+      return null;
+    }
+
+    const isEqual = (a, b) => a.num * b.den === b.num * a.den;
+
+    const problemTemplates = [
+      function problemA() {
+        const coef = makeFraction(randInt(), randInt());
+        const subtractor = randInt();
+        const rhsInt = randInt();
+        const coefText = fractionToString(coef);
+        const prompt = `Problem A — Solve ${formatMultiplier(coef)}x - ${subtractor} = ${rhsInt}`;
+        const rhsAfterAdd = add(toIntFraction(rhsInt), toIntFraction(subtractor));
+        const reciprocal = makeFraction(coef.den, coef.num);
+        const answer = mul(rhsAfterAdd, reciprocal);
+        const steps = [
+          `Add ${subtractor} to both sides to move the constant: (${coefText})x = ${rhsInt} + ${subtractor} = ${fractionToString(rhsAfterAdd)}.`,
+          `Multiply both sides by the reciprocal of ${coefText}, which is ${fractionToString(reciprocal)}: x = ${fractionToString(rhsAfterAdd)} × ${fractionToString(reciprocal)} = ${fractionToString(answer)}.`,
+          `Therefore, x = ${fractionToString(answer)}.`,
+        ];
+        return { label: 'A', prompt, answer, steps };
+      },
+      function problemB() {
+        const coef = makeFraction(randInt(), randInt());
+        const subtractor = makeFraction(randInt(), randInt());
+        const rhs = makeFraction(randInt(), randInt());
+        const coefText = fractionToString(coef);
+        const subText = fractionToString(subtractor);
+        const rhsText = fractionToString(rhs);
+        const rhsAfterAdd = add(rhs, subtractor);
+        const reciprocal = makeFraction(coef.den, coef.num);
+        const answer = mul(rhsAfterAdd, reciprocal);
+        const steps = [
+          `Add ${subText} to both sides: (${coefText})x = ${rhsText} + ${subText} = ${fractionToString(rhsAfterAdd)}.`,
+          `Multiply by the reciprocal ${fractionToString(reciprocal)}: x = ${fractionToString(rhsAfterAdd)} × ${fractionToString(reciprocal)} = ${fractionToString(answer)}.`,
+          `So x = ${fractionToString(answer)}.`,
+        ];
+        const prompt = `Problem B — Solve ${formatMultiplier(coef)}x - ${subText} = ${rhsText}`;
+        return { label: 'B', prompt, answer, steps };
+      },
+      function problemC() {
+        const coef = makeFraction(randInt(), randInt());
+        const subtractor = makeFraction(randInt(), randInt());
+        const rhs = makeFraction(randInt(), randInt());
+        const coefText = fractionToString(coef);
+        const subText = fractionToString(subtractor);
+        const rhsText = fractionToString(rhs);
+        const rhsAfterAdd = add(rhs, subtractor);
+        const reciprocal = makeFraction(coef.den, coef.num);
+        const answer = mul(rhsAfterAdd, reciprocal);
+        const steps = [
+          `Add ${subText} to both sides: (${coefText})x = ${rhsText} + ${subText} = ${fractionToString(rhsAfterAdd)}.`,
+          `Multiply by the reciprocal ${fractionToString(reciprocal)}: x = ${fractionToString(rhsAfterAdd)} × ${fractionToString(reciprocal)} = ${fractionToString(answer)}.`,
+          `So x = ${fractionToString(answer)}.`,
+        ];
+        const prompt = `Problem C — Solve ${formatMultiplier(coef)}x - ${subText} = ${rhsText}`;
+        return { label: 'C', prompt, answer, steps };
+      },
+      function problemD() {
+        const coef = makeFraction(randInt(), randInt());
+        const addend = makeFraction(randInt(), randInt());
+        const rhs = makeFraction(randInt(), randInt());
+        const coefText = fractionToString(coef);
+        const addText = fractionToString(addend);
+        const rhsText = fractionToString(rhs);
+        const rhsAfterSubtract = sub(neg(rhs), addend);
+        const reciprocal = makeFraction(coef.den, coef.num);
+        const afterReciprocal = mul(rhsAfterSubtract, reciprocal);
+        const answer = afterReciprocal;
+        const steps = [
+          `Subtract ${addText} from both sides: (${coefText})x = -${rhsText} - ${addText} = ${fractionToString(rhsAfterSubtract)}.`,
+          `Multiply by the reciprocal ${fractionToString(reciprocal)}: x = ${fractionToString(rhsAfterSubtract)} × ${fractionToString(reciprocal)} = ${fractionToString(answer)}.`,
+          `Therefore, x = ${fractionToString(answer)}.`,
+        ];
+        const prompt = `Problem D — Solve ${formatMultiplier(coef)}x + ${addText} = -${rhsText}`;
+        return { label: 'D', prompt, answer, steps };
+      },
+      function problemE() {
+        const outer = makeFraction(randInt(), randInt());
+        const innerCoef = randInt();
+        const innerConstant = randInt();
+        const rhs = makeFraction(-randInt(), 1);
+        const outerText = fractionToString(outer);
+        const rhsText = fractionToString(rhs);
+        const outerReciprocal = makeFraction(outer.den, outer.num);
+        const afterReciprocal = mul(rhs, outerReciprocal);
+        const afterAdd = add(afterReciprocal, toIntFraction(innerConstant));
+        const answer = div(afterAdd, toIntFraction(innerCoef));
+        const steps = [
+          `Multiply both sides by the reciprocal of ${outerText}, ${fractionToString(outerReciprocal)}: ${innerCoef}x - ${innerConstant} = ${rhsText} × ${fractionToString(outerReciprocal)} = ${fractionToString(afterReciprocal)}.`,
+          `Add ${innerConstant} to both sides: ${innerCoef}x = ${fractionToString(afterReciprocal)} + ${innerConstant} = ${fractionToString(afterAdd)}.`,
+          `Divide both sides by ${innerCoef}: x = ${fractionToString(afterAdd)} ÷ ${innerCoef} = ${fractionToString(answer)}.`,
+        ];
+        const prompt = `Problem E — Solve ${formatMultiplier(outer)}(${innerCoef}x - ${innerConstant}) = ${rhsText}`;
+        return { label: 'E', prompt, answer, steps };
+      },
+      function problemF() {
+        const outer = makeFraction(randInt(), randInt());
+        const shift = randInt();
+        const extra = makeFraction(randInt(), randInt());
+        const rhs = makeFraction(randInt(), randInt());
+        const outerText = fractionToString(outer);
+        const extraText = fractionToString(extra);
+        const rhsText = fractionToString(rhs);
+        const outerReciprocal = makeFraction(outer.den, outer.num);
+        const afterSubtract = sub(neg(rhs), extra);
+        const afterMultiply = mul(afterSubtract, outerReciprocal);
+        const answer = add(afterMultiply, toIntFraction(shift));
+        const steps = [
+          `Subtract ${extraText} from both sides: (${outerText})(x - ${shift}) = -${rhsText} - ${extraText} = ${fractionToString(afterSubtract)}.`,
+          `Multiply by the reciprocal ${fractionToString(outerReciprocal)}: x - ${shift} = ${fractionToString(afterSubtract)} × ${fractionToString(outerReciprocal)} = ${fractionToString(afterMultiply)}.`,
+          `Add ${shift} to both sides: x = ${fractionToString(afterMultiply)} + ${shift} = ${fractionToString(answer)}.`,
+        ];
+        const prompt = `Problem F — Solve ${formatMultiplier(outer)}(x - ${shift}) + ${extraText} = -${rhsText}`;
+        return { label: 'F', prompt, answer, steps };
+      },
+    ];
+
+    function generateProblemSet() {
+      return problemTemplates.map((template) => {
+        const base = template();
+        return {
+          ...base,
+          userAnswer: null,
+          isCorrect: null,
+        };
+      });
+    }
+
+    const promptEl = document.getElementById('prompt');
+    const progressEl = document.getElementById('progress');
+    const answerInput = document.getElementById('answer');
+    const submitBtn = document.getElementById('submit-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const feedbackEl = document.getElementById('feedback');
+    const solutionEl = document.getElementById('solution');
+    const summaryEl = document.getElementById('summary');
+    const scoreEl = document.getElementById('score');
+    const regenBtn = document.getElementById('regen-btn');
+
+    let problems = [];
+    let currentIndex = 0;
+
+    function updateProgress() {
+      const correct = problems.filter((p) => p.isCorrect).length;
+      progressEl.textContent = `Question ${currentIndex + 1} of ${problems.length} · Correct so far: ${correct}`;
+      progressEl.setAttribute('aria-label', `Question ${currentIndex + 1} of ${problems.length}. ${correct} correct so far.`);
+    }
+
+    function resetFeedback() {
+      feedbackEl.innerHTML = '';
+      feedbackEl.className = '';
+      solutionEl.innerHTML = '';
+    }
+
+    function renderProblem() {
+      summaryEl.hidden = true;
+      const problem = problems[currentIndex];
+      promptEl.textContent = problem.prompt;
+      updateProgress();
+      answerInput.value = '';
+      answerInput.disabled = false;
+      submitBtn.disabled = false;
+      nextBtn.disabled = true;
+      resetFeedback();
+      answerInput.focus();
+    }
+
+    function showSolution(problem, userFraction) {
+      const correctText = fractionToString(problem.answer);
+      const userText = userFraction ? fractionToString(userFraction) : '';
+      const feedbackMsg = problem.isCorrect
+        ? `Great job! You found x = ${correctText}.`
+        : `Keep practicing! The correct value is x = ${correctText}${userFraction ? ` (you entered ${userText})` : ''}.`;
+      feedbackEl.className = `feedback ${problem.isCorrect ? 'correct' : 'incorrect'}`;
+      feedbackEl.textContent = feedbackMsg;
+
+      const listItems = problem.steps.map((step) => `<li>${step}</li>`).join('');
+      solutionEl.innerHTML = `<div class="solution"><h3>Step-by-step solution</h3><ol>${listItems}</ol></div>`;
+    }
+
+    function handleSubmit() {
+      const problem = problems[currentIndex];
+      const parsed = parseInput(answerInput.value);
+      if (!parsed) {
+        feedbackEl.className = 'feedback incorrect';
+        feedbackEl.textContent = 'Please enter a valid integer, fraction (like 5/6), or decimal.';
+        solutionEl.innerHTML = '';
+        return;
+      }
+      problem.userAnswer = parsed;
+      problem.isCorrect = isEqual(parsed, problem.answer);
+      showSolution(problem, parsed);
+      submitBtn.disabled = true;
+      answerInput.disabled = true;
+      nextBtn.disabled = false;
+    }
+
+    function handleNext() {
+      if (currentIndex < problems.length - 1) {
+        currentIndex += 1;
+        renderProblem();
+      } else {
+        showSummary();
+      }
+    }
+
+    function showSummary() {
+      const correct = problems.filter((p) => p.isCorrect).length;
+      scoreEl.textContent = `You answered ${correct} out of ${problems.length} correctly. Regenerate for a fresh set and keep pushing forward!`;
+      summaryEl.hidden = false;
+      promptEl.textContent = 'Nice perseverance—quiz finished!';
+      feedbackEl.className = '';
+      feedbackEl.textContent = '';
+      solutionEl.innerHTML = '';
+      answerInput.disabled = true;
+      submitBtn.disabled = true;
+      nextBtn.disabled = true;
+    }
+
+    function startNewQuiz() {
+      problems = generateProblemSet();
+      currentIndex = 0;
+      renderProblem();
+    }
+
+    submitBtn.addEventListener('click', handleSubmit);
+    nextBtn.addEventListener('click', handleNext);
+    regenBtn.addEventListener('click', () => {
+      summaryEl.hidden = true;
+      startNewQuiz();
+    });
+    answerInput.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Enter' && !submitBtn.disabled) {
+        evt.preventDefault();
+        handleSubmit();
+      }
+    });
+
+    startNewQuiz();
+  </script>
+</body>
+</html>

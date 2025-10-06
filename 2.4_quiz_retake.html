@@ -152,12 +152,70 @@
                 };
             };
 
+            // NEW: Generator for verbal fraction problems
+            const wordedFractionProblem = () => {
+                const problemSet = [
+                    { d1: 6, d2: 3, d3: 2, s: 1 }, // 1/6x + 1/3 = 1/2 -> x=1
+                    { d1: 8, d2: 4, d3: 2, s: 2 }, // 1/8x + 1/4 = 1/2 -> x=2
+                    { d1: 10, d2: 5, d3: 2, s: 3 }, // 1/10x + 1/5 = 1/2 -> x=3
+                    { d1: 12, d2: 4, d3: 3, s: 1 }  // 1/12x + 1/4 = 1/3 -> x=1
+                ];
+                const { d1, d2, d3, s } = problemSet[getRandomInt(0, problemSet.length - 1)];
+                const fractionWords = {2: 'one half', 3: 'one third', 4: 'one fourth', 5: 'one fifth', 6: 'one sixth', 8: 'one eighth', 10: 'one tenth', 12: 'one twelfth'};
+                const text = `${fractionWords[d1].charAt(0).toUpperCase() + fractionWords[d1].slice(1)} of a number increased by ${fractionWords[d2]} equals ${fractionWords[d3]}. Find the number.`;
+
+                return {
+                    text: text,
+                    fields: [{ id: 'ans', label: 'The number is' }],
+                    answers: [s.toString()],
+                    solutionSteps: [
+                        `<strong>Step 1: Translate the sentence into an equation.</strong> Let 'n' be the number.`,
+                        `<code>(1/${d1})n + (1/${d2}) = (1/${d3})</code>`,
+                        `<strong>Step 2: Isolate the variable term.</strong> Subtract <code>1/${d2}</code> from both sides.`,
+                        `<code>(1/${d1})n = (1/${d3}) - (1/${d2})</code>`,
+                        `To subtract the fractions, find a common denominator: <code>(1/${d1})n = (${d2}/${d2*d3}) - (${d3}/${d2*d3})</code> => <code>(1/${d1})n = (${d2-d3}/${d2*d3})</code>`,
+                        `<strong>Step 3: Solve for n.</strong> Multiply both sides by <code>${d1}</code>.`,
+                        `<code>n = ${d1} * (${d2-d3}/${d2*d3})</code> => <code>n = ${s}</code>`
+                    ]
+                };
+            };
+
+            // NEW: Generator for variables on both sides problem
+            const variableOnBothSidesProblem = () => {
+                const solution = getRandomInt(5, 15);
+                const multiplier = getRandomInt(2, 4);
+                const multiplierWords = ["", "one", "twice", "three times", "four times"];
+                const constant2 = getRandomInt(1, 10);
+                const constant1 = (multiplier - 1) * solution - constant2;
+                
+                const text = `A number plus ${constant1} equals ${multiplierWords[multiplier]} the number minus ${constant2}. Find the number.`;
+
+                return {
+                    text: text,
+                    fields: [{ id: 'ans', label: 'The number is' }],
+                    answers: [solution.toString()],
+                    solutionSteps: [
+                        `<strong>Step 1: Translate the sentence into an equation.</strong> Let 'n' be the number.`,
+                        `<code>n + ${constant1} = ${multiplier}n - ${constant2}</code>`,
+                        `<strong>Step 2: Move variables to one side.</strong> Subtract 'n' from both sides.`,
+                        `<code>${constant1} = ${multiplier-1}n - ${constant2}</code>`,
+                        `<strong>Step 3: Move constants to the other side.</strong> Add <code>${constant2}</code> to both sides.`,
+                        `<code>${constant1 + constant2} = ${multiplier-1}n</code>`,
+                        `<strong>Step 4: Solve for n.</strong> Divide by <code>${multiplier-1}</code>.`,
+                        `<code>n = ${solution}</code>`
+                    ]
+                };
+            };
+
+
             allQuestions = shuffle([
                 fractionProblem(),
                 consecutiveIntProblem(),
                 perimeterProblem(),
                 simpleSystemProblem(),
-                linearCostProblem()
+                linearCostProblem(),
+                wordedFractionProblem(),
+                variableOnBothSidesProblem()
             ]);
         }
 

@@ -31,8 +31,7 @@
         </div>
 
         <div id="quizContainer" class="p-8">
-            <!-- The quiz question will be dynamically generated and inserted here -->
-        </div>
+            </div>
 
     </main>
 
@@ -40,198 +39,72 @@
         const quizContainer = document.getElementById('quizContainer');
         let allQuestions = [];
         let currentQuestionIndex = 0;
+        let score = 0; // NEW: Variable to track the score
 
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const toWords = (num) => ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][num] || num.toString();
         const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
 
         function generateQuestions() {
+            // This function is unchanged and generates 7 unique problems.
+            //<editor-fold desc="Full Question Generation Logic">
             const fractionProblem = () => {
-                const den = getRandomInt(3, 8);
-                const num = getRandomInt(2, den - 1);
-                const solution = den * getRandomInt(5, 20);
-                const result = (num * solution) / den;
-                const denWords = ["", "", "halves", "thirds", "fourths", "fifths", "sixths", "sevenths", "eighths"];
-                return {
-                    text: `${toWords(num).charAt(0).toUpperCase() + toWords(num).slice(1)} ${denWords[den]} of a number is ${result}. What is the number?`,
-                    fields: [{ id: 'ans', label: 'The number is' }],
-                    answers: [solution.toString()],
-                    solutionSteps: [
-                        `<strong>Step 1: Set up the equation.</strong> Let 'n' be the number. "${toWords(num)} ${denWords[den]}" translates to <code>(${num}/${den})</code>.`,
-                        `Equation: <code>(${num}/${den})n = ${result}</code>`,
-                        `<strong>Step 2: Solve for n.</strong> Multiply both sides by the reciprocal of the fraction, which is <code>(${den}/${num})</code>.`,
-                        `<code>n = ${result} * (${den}/${num})</code>`,
-                        `<code>n = ${solution}</code>`
-                    ]
-                };
+                const den = getRandomInt(3, 8); const num = getRandomInt(2, den - 1); const solution = den * getRandomInt(5, 20); const result = (num * solution) / den; const denWords = ["", "", "halves", "thirds", "fourths", "fifths", "sixths", "sevenths", "eighths"];
+                return { text: `${toWords(num).charAt(0).toUpperCase() + toWords(num).slice(1)} ${denWords[den]} of a number is ${result}. What is the number?`, fields: [{ id: 'ans', label: 'The number is' }], answers: [solution.toString()], solutionSteps: [ `<strong>Step 1: Set up the equation.</strong> Let 'n' be the number. "${toWords(num)} ${denWords[den]}" translates to <code>(${num}/${den})</code>.`, `Equation: <code>(${num}/${den})n = ${result}</code>`, `<strong>Step 2: Solve for n.</strong> Multiply both sides by the reciprocal of the fraction, which is <code>(${den}/${num})</code>.`, `<code>n = ${result} * (${den}/${num})</code>`, `<code>n = ${solution}</code>` ] };
             };
-            
             const consecutiveIntProblem = () => {
-                const start = getRandomInt(10, 50);
-                const sum = start + (start + 1);
-                return {
-                    text: `The sum of two consecutive integers is ${sum}. What are the numbers?`,
-                    fields: [{ id: 'ans1', label: 'First number' }, { id: 'ans2', label: 'Second number' }],
-                    answers: [start.toString(), (start + 1).toString()],
-                    solutionSteps: [
-                        `<strong>Step 1: Define variables.</strong> Let the first integer be 'n'. Since they are consecutive, the second integer is 'n + 1'.`,
-                        `<strong>Step 2: Set up the equation.</strong> Their sum is ${sum}.`,
-                        `<code>n + (n + 1) = ${sum}</code>`,
-                        `<strong>Step 3: Solve for n.</strong> Combine like terms: <code>2n + 1 = ${sum}</code>.`,
-                        `Subtract 1 from both sides: <code>2n = ${sum - 1}</code>.`,
-                        `Divide by 2: <code>n = ${start}</code>.`,
-                        `<strong>Step 4: Find the second number.</strong> The second number is n + 1, so <code>${start} + 1 = ${start + 1}</code>.`
-                    ]
-                };
+                const start = getRandomInt(10, 50); const sum = start + (start + 1);
+                return { text: `The sum of two consecutive integers is ${sum}. What are the numbers?`, fields: [{ id: 'ans1', label: 'First number' }, { id: 'ans2', label: 'Second number' }], answers: [start.toString(), (start + 1).toString()], solutionSteps: [ `<strong>Step 1: Define variables.</strong> Let the first integer be 'n'. Since they are consecutive, the second integer is 'n + 1'.`, `<strong>Step 2: Set up the equation.</strong> Their sum is ${sum}.`, `<code>n + (n + 1) = ${sum}</code>`, `<strong>Step 3: Solve for n.</strong> Combine like terms: <code>2n + 1 = ${sum}</code>.`, `Subtract 1 from both sides: <code>2n = ${sum - 1}</code>.`, `Divide by 2: <code>n = ${start}</code>.`, `<strong>Step 4: Find the second number.</strong> The second number is n + 1, so <code>${start} + 1 = ${start + 1}</code>.` ] };
             };
-
             const perimeterProblem = () => {
-                const width = getRandomInt(5, 15);
-                const diff = getRandomInt(2, 10);
-                const length = width + diff;
-                const perimeter = 2 * (length + width);
-                const area = length * width;
-                return {
-                    text: `The length of a rectangle is ${diff} inches longer than the width. The perimeter is ${perimeter} inches. Find the length, width, and area.`,
-                    fields: [{ id: 'ans_w', label: 'Width (in)' }, { id: 'ans_l', label: 'Length (in)' }, { id: 'ans_a', label: 'Area (in²)' }],
-                    answers: [width.toString(), length.toString(), area.toString()],
-                    solutionSteps: [
-                        `<strong>Step 1: Set up equations.</strong> Let W be width and L be length.`,
-                        `<code>L = W + ${diff}</code>`,
-                        `<code>2L + 2W = ${perimeter}</code> (Perimeter formula)`,
-                        `<strong>Step 2: Solve for W using substitution.</strong> Substitute the first equation into the second:`,
-                        `<code>2(W + ${diff}) + 2W = ${perimeter}</code>`,
-                        `<code>2W + ${2*diff} + 2W = ${perimeter}</code> => <code>4W + ${2*diff} = ${perimeter}</code>`,
-                        `<code>4W = ${perimeter - 2*diff}</code> => <code>W = ${width}</code>`,
-                        `<strong>Step 3: Solve for L.</strong> <code>L = ${width} + ${diff} = ${length}</code>.`,
-                        `<strong>Step 4: Calculate Area.</strong> Area = L * W => <code>${length} * ${width} = ${area}</code>.`
-                    ]
-                };
+                const width = getRandomInt(5, 15); const diff = getRandomInt(2, 10); const length = width + diff; const perimeter = 2 * (length + width); const area = length * width;
+                return { text: `The length of a rectangle is ${diff} inches longer than the width. The perimeter is ${perimeter} inches. Find the length, width, and area.`, fields: [{ id: 'ans_w', label: 'Width (in)' }, { id: 'ans_l', label: 'Length (in)' }, { id: 'ans_a', label: 'Area (in²)' }], answers: [width.toString(), length.toString(), area.toString()], solutionSteps: [ `<strong>Step 1: Set up equations.</strong> Let W be width and L be length.`, `<code>L = W + ${diff}</code>`, `<code>2L + 2W = ${perimeter}</code> (Perimeter formula)`, `<strong>Step 2: Solve for W using substitution.</strong> Substitute the first equation into the second:`, `<code>2(W + ${diff}) + 2W = ${perimeter}</code>`, `<code>2W + ${2*diff} + 2W = ${perimeter}</code> => <code>4W + ${2*diff} = ${perimeter}</code>`, `<code>4W = ${perimeter - 2*diff}</code> => <code>W = ${width}</code>`, `<strong>Step 3: Solve for L.</strong> <code>L = ${width} + ${diff} = ${length}</code>.`, `<strong>Step 4: Calculate Area.</strong> Area = L * W => <code>${length} * ${width} = ${area}</code>.` ] };
             };
-            
             const simpleSystemProblem = () => {
-                const item2Count = getRandomInt(5, 15);
-                const diff = getRandomInt(2, 5);
-                const item1Count = item2Count + diff;
-                const total = item1Count + item2Count;
-                 return {
-                    text: `Jen bought ${diff} more apples than oranges. She bought ${total} items in total. How many oranges did Jen buy?`,
-                    fields: [{ id: 'ans_o', label: `Number of oranges` }],
-                    answers: [item2Count.toString()],
-                    solutionSteps: [
-                         `<strong>Step 1: Define variables.</strong> Let 'a' be apples and 'o' be oranges.`,
-                         `<strong>Step 2: Set up the system.</strong>`,
-                         `<code>a = o + ${diff}</code> (more apples than oranges)`,
-                         `<code>a + o = ${total}</code> (total items)`,
-                         `<strong>Step 3: Solve using substitution.</strong>`,
-                         `<code>(o + ${diff}) + o = ${total}</code>`,
-                         `<code>2o + ${diff} = ${total}</code> => <code>2o = ${total - diff}</code>`,
-                         `<code>o = ${item2Count}</code>`
-                    ]
-                };
+                const item2Count = getRandomInt(5, 15); const diff = getRandomInt(2, 5); const item1Count = item2Count + diff; const total = item1Count + item2Count;
+                 return { text: `Jen bought ${diff} more apples than oranges. She bought ${total} items in total. How many oranges did Jen buy?`, fields: [{ id: 'ans_o', label: `Number of oranges` }], answers: [item2Count.toString()], solutionSteps: [ `<strong>Step 1: Define variables.</strong> Let 'a' be apples and 'o' be oranges.`, `<strong>Step 2: Set up the system.</strong>`, `<code>a = o + ${diff}</code> (more apples than oranges)`, `<code>a + o = ${total}</code> (total items)`, `<strong>Step 3: Solve using substitution.</strong>`, `<code>(o + ${diff}) + o = ${total}</code>`, `<code>2o + ${diff} = ${total}</code> => <code>2o = ${total - diff}</code>`, `<code>o = ${item2Count}</code>` ] };
             };
-
             const linearCostProblem = () => {
-                const flatCost = (getRandomInt(20, 50) + 0.5).toFixed(2);
-                const perItemCost = getRandomInt(3, 10);
-                const quantity = getRandomInt(5, 15);
-                const totalCost = (parseFloat(flatCost) + perItemCost * quantity).toFixed(2);
-                return {
-                    text: `Under his cell phone plan, Gavin pays a flat cost of $${flatCost} per month and $${perItemCost} per gigabyte. He wants to keep his bill at $${totalCost} per month. How many gigabytes of data can he use?`,
-                    fields: [{ id: 'ans_gb', label: `Gigabytes of data` }],
-                    answers: [quantity.toString()],
-                     solutionSteps: [
-                         `<strong>Step 1: Set up the equation.</strong> Let 'g' be the number of gigabytes.`,
-                         `The total cost is the flat cost plus the per-gigabyte cost.`,
-                         `<code>${flatCost} + ${perItemCost}g = ${totalCost}</code>`,
-                         `<strong>Step 2: Solve for g.</strong>`,
-                         `Subtract the flat cost: <code>${perItemCost}g = ${totalCost} - ${flatCost}</code> => <code>${perItemCost}g = ${(totalCost - flatCost).toFixed(2)}</code>`,
-                         `Divide by the per-item cost: <code>g = ${(totalCost - flatCost).toFixed(2)} / ${perItemCost}</code>`,
-                         `<code>g = ${quantity}</code>`
-                    ]
-                };
+                const flatCost = (getRandomInt(20, 50) + 0.5).toFixed(2); const perItemCost = getRandomInt(3, 10); const quantity = getRandomInt(5, 15); const totalCost = (parseFloat(flatCost) + perItemCost * quantity).toFixed(2);
+                return { text: `Under his cell phone plan, Gavin pays a flat cost of $${flatCost} per month and $${perItemCost} per gigabyte. He wants to keep his bill at $${totalCost} per month. How many gigabytes of data can he use?`, fields: [{ id: 'ans_gb', label: `Gigabytes of data` }], answers: [quantity.toString()], solutionSteps: [ `<strong>Step 1: Set up the equation.</strong> Let 'g' be the number of gigabytes.`, `The total cost is the flat cost plus the per-gigabyte cost.`, `<code>${flatCost} + ${perItemCost}g = ${totalCost}</code>`, `<strong>Step 2: Solve for g.</strong>`, `Subtract the flat cost: <code>${perItemCost}g = ${totalCost} - ${flatCost}</code> => <code>${perItemCost}g = ${(totalCost - flatCost).toFixed(2)}</code>`, `Divide by the per-item cost: <code>g = ${(totalCost - flatCost).toFixed(2)} / ${perItemCost}</code>`, `<code>g = ${quantity}</code>` ] };
             };
-
-            // NEW: Generator for verbal fraction problems
             const wordedFractionProblem = () => {
-                const problemSet = [
-                    { d1: 6, d2: 3, d3: 2, s: 1 }, // 1/6x + 1/3 = 1/2 -> x=1
-                    { d1: 8, d2: 4, d3: 2, s: 2 }, // 1/8x + 1/4 = 1/2 -> x=2
-                    { d1: 10, d2: 5, d3: 2, s: 3 }, // 1/10x + 1/5 = 1/2 -> x=3
-                    { d1: 12, d2: 4, d3: 3, s: 1 }  // 1/12x + 1/4 = 1/3 -> x=1
-                ];
-                const { d1, d2, d3, s } = problemSet[getRandomInt(0, problemSet.length - 1)];
-                const fractionWords = {2: 'one half', 3: 'one third', 4: 'one fourth', 5: 'one fifth', 6: 'one sixth', 8: 'one eighth', 10: 'one tenth', 12: 'one twelfth'};
-                const text = `${fractionWords[d1].charAt(0).toUpperCase() + fractionWords[d1].slice(1)} of a number increased by ${fractionWords[d2]} equals ${fractionWords[d3]}. Find the number.`;
-
-                return {
-                    text: text,
-                    fields: [{ id: 'ans', label: 'The number is' }],
-                    answers: [s.toString()],
-                    solutionSteps: [
-                        `<strong>Step 1: Translate the sentence into an equation.</strong> Let 'n' be the number.`,
-                        `<code>(1/${d1})n + (1/${d2}) = (1/${d3})</code>`,
-                        `<strong>Step 2: Isolate the variable term.</strong> Subtract <code>1/${d2}</code> from both sides.`,
-                        `<code>(1/${d1})n = (1/${d3}) - (1/${d2})</code>`,
-                        `To subtract the fractions, find a common denominator: <code>(1/${d1})n = (${d2}/${d2*d3}) - (${d3}/${d2*d3})</code> => <code>(1/${d1})n = (${d2-d3}/${d2*d3})</code>`,
-                        `<strong>Step 3: Solve for n.</strong> Multiply both sides by <code>${d1}</code>.`,
-                        `<code>n = ${d1} * (${d2-d3}/${d2*d3})</code> => <code>n = ${s}</code>`
-                    ]
-                };
+                const problemSet = [ { d1: 6, d2: 3, d3: 2, s: 1 }, { d1: 8, d2: 4, d3: 2, s: 2 }, { d1: 10, d2: 5, d3: 2, s: 3 }, { d1: 12, d2: 4, d3: 3, s: 1 } ]; const { d1, d2, d3, s } = problemSet[getRandomInt(0, problemSet.length - 1)]; const fractionWords = {2: 'one half', 3: 'one third', 4: 'one fourth', 5: 'one fifth', 6: 'one sixth', 8: 'one eighth', 10: 'one tenth', 12: 'one twelfth'}; const text = `${fractionWords[d1].charAt(0).toUpperCase() + fractionWords[d1].slice(1)} of a number increased by ${fractionWords[d2]} equals ${fractionWords[d3]}. Find the number.`;
+                return { text: text, fields: [{ id: 'ans', label: 'The number is' }], answers: [s.toString()], solutionSteps: [ `<strong>Step 1: Translate the sentence into an equation.</strong> Let 'n' be the number.`, `<code>(1/${d1})n + (1/${d2}) = (1/${d3})</code>`, `<strong>Step 2: Isolate the variable term.</strong> Subtract <code>1/${d2}</code> from both sides.`, `<code>(1/${d1})n = (1/${d3}) - (1/${d2})</code>`, `To subtract the fractions, find a common denominator: <code>(1/${d1})n = (${d2}/${d2*d3}) - (${d3}/${d2*d3})</code> => <code>(1/${d1})n = (${d2-d3}/${d2*d3})</code>`, `<strong>Step 3: Solve for n.</strong> Multiply both sides by <code>${d1}</code>.`, `<code>n = ${d1} * (${d2-d3}/${d2*d3})</code> => <code>n = ${s}</code>` ] };
             };
-
-            // NEW: Generator for variables on both sides problem
             const variableOnBothSidesProblem = () => {
-                const solution = getRandomInt(5, 15);
-                const multiplier = getRandomInt(2, 4);
-                const multiplierWords = ["", "one", "twice", "three times", "four times"];
-                const constant2 = getRandomInt(1, 10);
-                const constant1 = (multiplier - 1) * solution - constant2;
-                
-                const text = `A number plus ${constant1} equals ${multiplierWords[multiplier]} the number minus ${constant2}. Find the number.`;
-
-                return {
-                    text: text,
-                    fields: [{ id: 'ans', label: 'The number is' }],
-                    answers: [solution.toString()],
-                    solutionSteps: [
-                        `<strong>Step 1: Translate the sentence into an equation.</strong> Let 'n' be the number.`,
-                        `<code>n + ${constant1} = ${multiplier}n - ${constant2}</code>`,
-                        `<strong>Step 2: Move variables to one side.</strong> Subtract 'n' from both sides.`,
-                        `<code>${constant1} = ${multiplier-1}n - ${constant2}</code>`,
-                        `<strong>Step 3: Move constants to the other side.</strong> Add <code>${constant2}</code> to both sides.`,
-                        `<code>${constant1 + constant2} = ${multiplier-1}n</code>`,
-                        `<strong>Step 4: Solve for n.</strong> Divide by <code>${multiplier-1}</code>.`,
-                        `<code>n = ${solution}</code>`
-                    ]
-                };
+                const solution = getRandomInt(5, 15); const multiplier = getRandomInt(2, 4); const multiplierWords = ["", "one", "twice", "three times", "four times"]; const constant2 = getRandomInt(1, 10); const constant1 = (multiplier - 1) * solution - constant2; const text = `A number plus ${constant1} equals ${multiplierWords[multiplier]} the number minus ${constant2}. Find the number.`;
+                return { text: text, fields: [{ id: 'ans', label: 'The number is' }], answers: [solution.toString()], solutionSteps: [ `<strong>Step 1: Translate the sentence into an equation.</strong> Let 'n' be the number.`, `<code>n + ${constant1} = ${multiplier}n - ${constant2}</code>`, `<strong>Step 2: Move variables to one side.</strong> Subtract 'n' from both sides.`, `<code>${constant1} = ${multiplier-1}n - ${constant2}</code>`, `<strong>Step 3: Move constants to the other side.</strong> Add <code>${constant2}</code> to both sides.`, `<code>${constant1 + constant2} = ${multiplier-1}n</code>`, `<strong>Step 4: Solve for n.</strong> Divide by <code>${multiplier-1}</code>.`, `<code>n = ${solution}</code>` ] };
             };
-
-
+            //</editor-fold>
             allQuestions = shuffle([
-                fractionProblem(),
-                consecutiveIntProblem(),
-                perimeterProblem(),
-                simpleSystemProblem(),
-                linearCostProblem(),
-                wordedFractionProblem(),
-                variableOnBothSidesProblem()
+                fractionProblem(), consecutiveIntProblem(), perimeterProblem(), simpleSystemProblem(),
+                linearCostProblem(), wordedFractionProblem(), variableOnBothSidesProblem()
             ]);
         }
 
         function startQuiz() {
+            score = 0; // MODIFIED: Reset score at the start
             currentQuestionIndex = 0;
             generateQuestions();
             renderCurrentQuestion();
         }
 
         function renderCurrentQuestion() {
+            // MODIFIED: This block now displays the final score at the end of the quiz.
             if (currentQuestionIndex >= allQuestions.length) {
-                quizContainer.innerHTML = `<div class="text-center">
-                    <h2 class="text-2xl font-bold text-gray-800">Practice Complete!</h2>
-                    <p class="mt-2 text-gray-600">You've finished all the questions for this session.</p>
-                    <button id="startOverBtn" class="mt-6 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Start Over with New Questions</button>
-                </div>`;
+                const totalQuestions = allQuestions.length;
+                const percentage = Math.round((score / totalQuestions) * 100);
+                let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-700');
+
+                quizContainer.innerHTML = `
+                    <div class="text-center">
+                        <h2 class="text-2xl font-bold text-gray-800">Practice Complete!</h2>
+                        <p class="text-xl my-4">Your Final Score:</p>
+                        <p class="text-5xl font-bold ${scoreColor}">${score} out of ${totalQuestions}</p>
+                        <p class="text-xl mt-2 font-semibold ${scoreColor}">(${percentage}%)</p>
+                        <button id="startOverBtn" class="mt-8 bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Start Over with New Questions</button>
+                    </div>`;
                 document.getElementById('startOverBtn').addEventListener('click', startQuiz);
                 return;
             }
@@ -267,13 +140,13 @@
             const q = allQuestions[currentQuestionIndex];
             const userAnswers = q.fields.map(f => document.getElementById(f.id).value.trim());
             
-            // For multi-answer questions, sort to ignore order.
             const sortedUser = [...userAnswers].sort();
             const sortedCorrect = [...q.answers].sort();
             const isCorrect = JSON.stringify(sortedUser) === JSON.stringify(sortedCorrect);
 
             let feedbackHTML = `<div class="p-4 rounded-lg solution-box">`;
             if (isCorrect) {
+                score++; // MODIFIED: Increment score if the answer is correct
                 feedbackHTML += `<h3 class="text-lg font-bold text-green-700">Correct!</h3>`;
             } else {
                 const userAnswerDisplay = userAnswers.map(a => a || "empty").join(', ');
@@ -303,4 +176,3 @@
     </script>
 </body>
 </html>
-

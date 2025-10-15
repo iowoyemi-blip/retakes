@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Literal Equations Practice</title>
+    <title>Literal Equations & Slope-Intercept Practice</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -27,13 +28,12 @@
 
     <main class="bg-white rounded-2xl shadow-lg w-full max-w-2xl">
         <div class="p-8 border-b border-gray-200">
-            <h1 class="text-3xl font-bold text-gray-800">Literal Equations Practice</h1>
-            <p class="text-gray-600 mt-2">Check your answer after each problem. Solve for the indicated variable.</p>
+            <h1 class="text-3xl font-bold text-gray-800">Mixed Equations Practice</h1>
+            <p class="text-gray-600 mt-2">Check your answer after each problem. All equivalent answers are accepted.</p>
         </div>
 
         <div id="quizContainer" class="p-8">
-            <!-- The quiz question will be dynamically generated and inserted here -->
-        </div>
+            </div>
 
     </main>
 
@@ -44,7 +44,30 @@
 
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
-        const getUniqueVars = (count) => shuffle(['a','b','c','d','k','m','n','p','q','r','s','t','u','v','w','x','y','z','L','W','P']).slice(0, count);
+        const getUniqueVars = (count) => shuffle(['a','b','c','d','k','m','n','p','q','r','s','t','u','v','w','L','W','P']).slice(0, count);
+
+        function generateStandardToSlopeInterceptQuestion() {
+            let a = getRandomInt(-9, 9);
+            if (a === 0) a = 1; // Ensure x term exists
+            let b = getRandomInt(-9, 9);
+            if (b === 0) b = 2; // Ensure y term exists and avoid division by zero
+            let c = getRandomInt(-20, 20);
+
+            // For cleaner display in the problem text, e.g., "3x - 5y" instead of "3x + -5y"
+            const b_display = b < 0 ? `- ${Math.abs(b)}y` : `+ ${b}y`;
+
+            return {
+                text: `Solve for y: <code>${a}x ${b_display} = ${c}</code>`,
+                displayAnswer: `(${c} - ${a}x)/${b}`,
+                evalVars: ['x'], // The independent variable in the student's answer
+                formula: `(${c} - ${a}*x) / ${b}`,
+                solutionSteps: [
+                    `First, isolate the y-term by subtracting ${a}x from both sides: <code>${b}y = ${c} - ${a}x</code>`,
+                    `Then, divide both sides by ${b} to solve for y: <code>y = (${c} - ${a}x) / ${b}</code>`,
+                    `This can also be written in slope-intercept form as: <code>y = (-${a}/${b})x + (${c}/${b})</code>`
+                ]
+            };
+        }
 
         function generateQuestions() {
             allQuestions = [];
@@ -58,7 +81,9 @@
                     const [solveFor, p1, p2] = v;
                     allQuestions.push({
                         text: `Solve for ${solveFor}: <code>${solveFor} + ${p1} = ${p2}</code>`,
-                        answers: [`${p2}-${p1}`, `${solveFor}=${p2}-${p1}`],
+                        displayAnswer: `${p2}-${p1}`,
+                        evalVars: [p1, p2],
+                        formula: `${p2}-${p1}`,
                         solutionSteps: [`To isolate ${solveFor}, subtract ${p1} from both sides of the equation.`,`<code>${solveFor} = ${p2} - ${p1}</code>`]
                     });
                 } else if (type === 1) { // b/k = r
@@ -66,7 +91,9 @@
                     const [solveFor, p1, p2] = v;
                     allQuestions.push({
                         text: `Solve for ${solveFor}: <code>${solveFor} / ${p1} = ${p2}</code>`,
-                        answers: [`${p2}*${p1}`, `${p1}*${p2}`, `${solveFor}=${p2}*${p1}`],
+                        displayAnswer: `${p2}*${p1}`,
+                        evalVars: [p1, p2],
+                        formula: `${p2}*${p1}`,
                         solutionSteps: [`To isolate ${solveFor}, multiply both sides by ${p1}.`,`<code>${solveFor} = ${p2} * ${p1}</code>`]
                     });
                 } else if (type === 2) { // zt = u
@@ -74,7 +101,9 @@
                     const [solveFor, p1, p2] = v;
                     allQuestions.push({
                         text: `Solve for ${solveFor}: <code>${solveFor}${p1} = ${p2}</code>`,
-                        answers: [`${p2}/${p1}`, `${solveFor}=${p2}/${p1}`],
+                        displayAnswer: `${p2}/${p1}`,
+                        evalVars: [p1, p2],
+                        formula: `${p2}/${p1}`,
                         solutionSteps: [`To isolate ${solveFor}, divide both sides by ${p1}.`,`<code>${solveFor} = ${p2} / ${p1}</code>`]
                     });
                 } else if (type === 3) { // ax + b = c
@@ -82,7 +111,9 @@
                     const [p1, solveFor, p2, p3] = v;
                     allQuestions.push({
                         text: `Solve for ${solveFor}: <code>${p1}${solveFor} + ${p2} = ${p3}</code>`,
-                        answers: [`(${p3}-${p2})/${p1}`, `${solveFor}=(${p3}-${p2})/${p1}`],
+                        displayAnswer: `(${p3}-${p2})/${p1}`,
+                        evalVars: [p1, p2, p3],
+                        formula: `(${p3}-${p2})/${p1}`,
                         solutionSteps: [`First, subtract ${p2} from both sides: <code>${p1}${solveFor} = ${p3} - ${p2}</code>`,`Then, divide both sides by ${p1}: <code>${solveFor} = (${p3} - ${p2}) / ${p1}</code>`]
                     });
                 } else if (type === 4) { // dk - r = s
@@ -90,7 +121,9 @@
                     const [p1, solveFor, p2, p3] = v;
                     allQuestions.push({
                         text: `Solve for ${solveFor}: <code>${p1}${solveFor} - ${p2} = ${p3}</code>`,
-                        answers: [`(${p3}+${p2})/${p1}`, `${solveFor}=(${p3}+${p2})/${p1}`],
+                        displayAnswer: `(${p3}+${p2})/${p1}`,
+                        evalVars: [p1, p2, p3],
+                        formula: `(${p3}+${p2})/${p1}`,
                         solutionSteps: [`First, add ${p2} to both sides: <code>${p1}${solveFor} = ${p3} + ${p2}</code>`,`Then, divide both sides by ${p1}: <code>${solveFor} = (${p3} + ${p2}) / ${p1}</code>`]
                     });
                 } else if (type === 5) { // 2L + 2W = P
@@ -98,29 +131,39 @@
                     const [solveFor, p1, p2] = v;
                     allQuestions.push({
                         text: `Solve for ${solveFor}: <code>2${solveFor} + 2${p1} = ${p2}</code>`,
-                        answers: [`(${p2}-2*${p1})/2`, `${p2}/2-${p1}`, `${solveFor}=(${p2}-2*${p1})/2`, `${solveFor}=${p2}/2-${p1}`],
+                        displayAnswer: `(${p2}-2*${p1})/2`,
+                        evalVars: [p1, p2],
+                        formula: `(${p2}-2*${p1})/2`,
                         solutionSteps: [`Subtract 2${p1} from both sides: <code>2${solveFor} = ${p2} - 2${p1}</code>`,`Divide both sides by 2: <code>${solveFor} = (${p2} - 2${p1}) / 2</code>`,`Which can also be written as: <code>${solveFor} = ${p2}/2 - ${p1}</code>`]
                     });
                 } else if (type === 6) { // Ax - By = C -> solve for y
-                    const n1 = getRandomInt(2,9), n2 = getRandomInt(2,9), n3 = getRandomInt(10,30);
-                    v = getUniqueVars(2);
-                    const [p1, solveFor] = v;
+                    v = getUniqueVars(3);
+                    const [p1, solveFor, p2] = v;
                     allQuestions.push({
-                        text: `Solve for ${solveFor}: <code>${n1}${p1} - ${n2}${solveFor} = ${n3}</code>`,
-                        answers: [`(${n3}-${n1}${p1})/-${n2}`, `(${n1}${p1}-${n3})/${n2}`, `${solveFor}=(${n3}-${n1}${p1})/-${n2}`, `${solveFor}=(${n1}${p1}-${n3})/${n2}`],
-                        solutionSteps: [`Subtract ${n1}${p1} from both sides: <code>-${n2}${solveFor} = ${n3} - ${n1}${p1}</code>`,`Divide both sides by -${n2}: <code>${solveFor} = (${n3} - ${n1}${p1}) / -${n2}</code>`, `This is equivalent to multiplying the numerator by -1 and making the denominator positive: <code>${solveFor} = (${n1}${p1} - ${n3}) / ${n2}</code>`]
+                        text: `Solve for ${solveFor}: <code>${p1} - ${p2}${solveFor} = c</code>`,
+                        displayAnswer: `(${p1}-c)/${p2}`,
+                        evalVars: ['c', p1, p2],
+                        formula: `(${p1}-c)/${p2}`,
+                        solutionSteps: [`Subtract ${p1} from both sides: <code>-${p2}${solveFor} = c - ${p1}</code>`,`Divide both sides by -${p2}: <code>${solveFor} = (c - ${p1}) / -${p2}</code>`, `This is equivalent to: <code>${solveFor} = (${p1} - c) / ${p2}</code>`]
                     });
                 } else { // -Ax + By = C -> solve for x
-                    const n1 = getRandomInt(2,9), n2 = getRandomInt(2,9), n3 = getRandomInt(10,30);
-                    v = getUniqueVars(2);
-                    const [solveFor, p1] = v;
-                    allQuestions.push({
-                        text: `Solve for ${solveFor}: <code>-${n1}${solveFor} + ${n2}${p1} = ${n3}</code>`,
-                        answers: [`(${n3}-${n2}${p1})/-${n1}`, `(${n2}${p1}-${n3})/${n1}`, `${solveFor}=(${n3}-${n2}${p1})/-${n1}`, `${solveFor}=(${n2}${p1}-${n3})/${n1}`],
-                        solutionSteps: [`Subtract ${n2}${p1} from both sides: <code>-${n1}${solveFor} = ${n3} - ${n2}${p1}</code>`,`Divide both sides by -${n1}: <code>${solveFor} = (${n3} - ${n2}${p1}) / -${n1}</code>`, `This is equivalent to: <code>${solveFor} = (${n2}${p1} - ${n3}) / ${n1}</code>`]
+                     v = getUniqueVars(3);
+                    const [solveFor, p1, p2] = v;
+                     allQuestions.push({
+                        text: `Solve for ${solveFor}: <code>-${p1}${solveFor} + ${p2} = c</code>`,
+                        displayAnswer: `(${p2}-c)/${p1}`,
+                        evalVars: ['c', p1, p2],
+                        formula: `(${p2}-c)/${p1}`,
+                        solutionSteps: [`Subtract ${p2} from both sides: <code>-${p1}${solveFor} = c - ${p2}</code>`,`Divide both sides by -${p1}: <code>${solveFor} = (c - ${p2}) / -${p1}</code>`, `This is equivalent to: <code>${solveFor} = (${p2} - c) / ${p1}</code>`]
                     });
                 }
             }
+            
+            // Add the two new standard-to-slope-intercept questions
+            allQuestions.push(generateStandardToSlopeInterceptQuestion());
+            allQuestions.push(generateStandardToSlopeInterceptQuestion());
+
+            // Shuffle all 10 questions together
             allQuestions = shuffle(allQuestions);
         }
 
@@ -158,20 +201,52 @@
             document.getElementById('userAnswer').addEventListener('keypress', e => { if (e.key === 'Enter') checkAnswer(); });
         }
         
-        const normalizeAnswer = str => (str || '').replace(/\s+/g, '').replace(/\*/g, '').toLowerCase();
-        
         function checkAnswer() {
             const userAnswerRaw = document.getElementById('userAnswer').value.trim();
             const feedbackContainer = document.getElementById('feedbackContainer');
             const q = allQuestions[currentQuestionIndex];
-            const isCorrect = q.answers.some(ans => normalizeAnswer(userAnswerRaw) === normalizeAnswer(ans));
+            
+            let isCorrect = false;
+            // Only check if the user entered something
+            if (userAnswerRaw) {
+                try {
+                    // Handle inputs like "c=(q-a)/b" by taking the part after the equals sign
+                    const userFormula = userAnswerRaw.includes('=') ? userAnswerRaw.split('=')[1].trim() : userAnswerRaw;
+                    const userNode = math.parse(userFormula);
+                    const correctNode = math.parse(q.formula);
+                    
+                    let isEquivalent = true;
+                    // Test for equivalence with 5 sets of random numbers
+                    for (let i = 0; i < 5; i++) {
+                        const scope = {};
+                        // Create a scope with random integer values for each variable
+                        q.evalVars.forEach(v => {
+                            scope[v] = getRandomInt(2, 20); // Use non-zero integers to avoid simple cases
+                        });
+
+                        const correctResult = correctNode.evaluate(scope);
+                        const userResult = userNode.evaluate(scope);
+                        
+                        // Compare results with a small tolerance for floating point issues
+                        if (Math.abs(correctResult - userResult) > 1e-9) {
+                            isEquivalent = false;
+                            break;
+                        }
+                    }
+                    isCorrect = isEquivalent;
+                } catch (e) {
+                    // If math.js can't parse the expression, it's incorrect.
+                    console.error("Math parsing error:", e.message);
+                    isCorrect = false;
+                }
+            }
 
             let feedbackHTML = `<div class="p-4 rounded-lg solution-box">`;
             if (isCorrect) {
-                feedbackHTML += `<h3 class="text-lg font-bold text-green-700">Correct!</h3>`;
+                feedbackHTML += `<h3 class="text-lg font-bold text-green-700">Correct! 👍</h3>`;
             } else {
                 feedbackHTML += `<h3 class="text-lg font-bold text-red-700">Not quite.</h3>
-                                 <p class="mt-1">Your answer was <strong>${userAnswerRaw || "empty"}</strong>. The correct answer is <strong>${q.answers[0]}</strong>.</p>`;
+                                 <p class="mt-1">Your answer was <strong>${userAnswerRaw || "empty"}</strong>. A correct answer is <strong>${q.displayAnswer}</strong>.</p>`;
             }
             
             feedbackHTML += `<div class="mt-4"><h4 class="font-semibold">Here's how to solve it:</h4><div class="mt-2 space-y-2 text-sm text-gray-700">${q.solutionSteps.join('<br>')}</div></div>`;
@@ -195,4 +270,3 @@
     </script>
 </body>
 </html>
-

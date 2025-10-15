@@ -3,36 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solving Inequalities Practice</title>
+    <title>Solving Inequalities Practice | Step-by-Step</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .quiz-container {
-            transition: all 0.3s ease-in-out;
-        }
-        .result-item.correct {
-            background-color: #f0fdf4;
-            border-left-color: #22c55e;
-        }
-        .result-item.incorrect {
-            background-color: #fef2f2;
-            border-left-color: #ef4444;
-        }
-        code {
+        body { font-family: 'Inter', sans-serif; }
+        .solution-step {
+            padding: 8px 12px;
+            border-left: 3px solid #60a5fa; /* blue-400 */
+            background-color: #f0f9ff; /* blue-50 */
+            margin-top: 8px;
+            border-radius: 0 4px 4px 0;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 1.1em;
-            background-color: #f3f4f6;
-            padding: 2px 6px;
-            border-radius: 4px;
         }
-        .question-prefix {
-            font-weight: 500;
-            flex-shrink: 0;
-        }
-        .checkbox-label {
+         .checkbox-label {
             display: flex;
             align-items: center;
             cursor: pointer;
@@ -45,265 +30,358 @@
             background-color: #eff6ff;
             border-color: #3b82f6;
         }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <main class="bg-white rounded-2xl shadow-lg w-full max-w-4xl quiz-container">
-        <div class="p-8 border-b border-gray-200">
-            <h1 class="text-3xl font-bold text-gray-800">2.6 Quiz Solving Inequalities Retake</h1>
-            <p class="text-gray-600 mt-2">Generate a new quiz anytime. Four-Function Calculator Allowed.</p>
+    <main id="app" class="bg-white rounded-2xl shadow-lg w-full max-w-3xl transition-all duration-300">
+        <div class="p-6 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">2.6 Quiz: Solving Inequalities</h1>
+            <p class="text-gray-600 mt-2">Answer one question at a time to get immediate feedback.</p>
         </div>
 
-        <div id="quizContainer" class="p-8">
-            <!-- The quiz form will be dynamically generated and inserted here -->
-        </div>
-
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
-            <div id="score" class="text-xl mb-6 font-semibold"></div>
-            <div id="detailedResults" class="space-y-4"></div>
-             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
-                    Try This Quiz Again
-                </button>
-                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
-                    Generate New Quiz
-                </button>
+        <div id="quizView" class="p-6 md:p-8">
+            <div class="mb-6">
+                <div class="flex justify-between mb-1">
+                    <span id="progressText" class="text-base font-medium text-blue-700">Question 1 of 7</span>
+                    <span id="scoreText" class="text-base font-medium text-blue-700">Score: 0/0</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
             </div>
+
+            <div id="questionContainer"></div>
+
+            <div id="feedbackContainer" class="mt-6 hidden"></div>
+            
+            <div id="navigationContainer" class="mt-8 text-center"></div>
+        </div>
+
+        <div id="resultsView" class="p-8 text-center hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Complete!</h2>
+            <div id="finalScore" class="text-2xl mb-2 font-semibold"></div>
+            <p id="finalMessage" class="text-lg text-gray-600 mb-8"></p>
+            <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-transform transform hover:scale-105 w-full sm:w-auto">
+                Generate New Quiz
+            </button>
         </div>
     </main>
 
-    <script>
-        const quizContainer = document.getElementById('quizContainer');
-        const resultsSection = document.getElementById('resultsSection');
-        const scoreElement = document.getElementById('score');
-        const detailedResultsElement = document.getElementById('detailedResults');
-        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM ELEMENTS ---
+        const app = document.getElementById('app');
+        const quizView = document.getElementById('quizView');
+        const resultsView = document.getElementById('resultsView');
+        const questionContainer = document.getElementById('questionContainer');
+        const feedbackContainer = document.getElementById('feedbackContainer');
+        const navigationContainer = document.getElementById('navigationContainer');
+        const progressText = document.getElementById('progressText');
+        const scoreText = document.getElementById('scoreText');
+        const progressBar = document.getElementById('progressBar');
+        const finalScore = document.getElementById('finalScore');
+        const finalMessage = document.getElementById('finalMessage');
         const generateNewBtn = document.getElementById('generateNewBtn');
 
-        let currentQuestions = [];
+        // --- STATE ---
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
 
         // --- UTILITY FUNCTIONS ---
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+        const normalizeAnswer = (str) => str.replace(/\s+/g, '').toLowerCase().replace(/infinity/g, 'inf');
 
-        // --- QUESTION GENERATORS ---
+        // --- QUESTION GENERATION WITH SOLUTIONS ---
         function generateInequalityQuestions() {
-            let questions = [];
+            let qSet = [];
             const variable = shuffle(['x', 'p', 'k', 'm', 'n'])[0];
+            let a, b, c, d, e, f, sol, sol2;
 
-            // 1. Select all that apply (No changes needed here as it's based on the boundary)
+            // 1. Select all that apply
             const coeff1 = getRandomInt(2, 5) * -5;
             const boundary1 = getRandomInt(-5, 5);
             const result1 = coeff1 * boundary1;
             const checkFn1 = val => val > boundary1;
             const options1 = shuffle([
                 boundary1, boundary1 - getRandomInt(1, 5), boundary1 - getRandomInt(6, 10),
-                boundary1 + getRandomInt(1, 5), boundary1 + getRandomInt(6, 100)
-            ]);
-            questions.push({
+                boundary1 + getRandomInt(1, 5), boundary1 + getRandomInt(6, 10)
+            ]).sort((a,b)=>a-b);
+            qSet.push({
                 type: 'checkbox',
-                id: 'q1_select',
                 text: `Select the values of the variable that make the given inequality true. [Select all that apply.]`,
-                inequality: `<code>${coeff1}${variable} < ${result1}</code>`,
+                inequality: `${coeff1}${variable} < ${result1}`,
                 options: options1,
-                answers: options1.filter(checkFn1).map(String).sort()
+                answers: options1.filter(checkFn1).map(String).sort(),
+                solution: [
+                    `First, solve the inequality for ${variable}`,
+                    `Given: ${coeff1}${variable} < ${result1}`,
+                    `Divide both sides by ${coeff1}. **Remember to flip the inequality sign** because we are dividing by a negative number.`,
+                    `(${coeff1}${variable}) / ${coeff1} > ${result1} / ${coeff1}`,
+                    `Solution: ${variable} > ${boundary1}`,
+                    `Now, check which of the given options are greater than ${boundary1}. The correct values are: ${options1.filter(checkFn1).join(', ')}.`
+                ]
             });
-            
-            // 2. Solving questions with guaranteed integer solutions
-            let a, b, c, d, e, f, sol, sol2;
 
-            // a. 2x + 6 > 10
+            // 2a. Two-step
             a = getRandomInt(2, 5); b = getRandomInt(1, 10);
-            sol = getRandomInt(2, 8); // Pre-define integer solution
-            c = a * sol + b; // Calculate the constant to yield the integer solution
-            questions.push({
-                type: 'solve', id: 'q2a', text: `<code>${a}${variable} + ${b} > ${c}</code>`,
-                answers: { inequality: `${variable}>${sol}`, interval: `(${sol},inf)` }
+            sol = getRandomInt(2, 8); c = a * sol + b;
+            qSet.push({
+                type: 'solve', text: `Solve: ${a}${variable} + ${b} > ${c}`,
+                answers: { inequality: `${variable}>${sol}`, interval: `(${sol},inf)` },
+                solution: [
+                    `Given: ${a}${variable} + ${b} > ${c}`,
+                    `Subtract ${b} from both sides: ${a}${variable} > ${c} - ${b}`,
+                    `Simplify: ${a}${variable} > ${c-b}`,
+                    `Divide by ${a}: ${variable} > ${c-b}/${a}`,
+                    `Final Answer: ${variable} > ${sol}`
+                ]
             });
 
-            // b. 4 - x >= 8
-            b = getRandomInt(1, 10);
-            sol = getRandomInt(-10, -2); // Pre-define integer solution
-            c = b + sol; // c - sol = b, so c - x >= b --> -x >= b-c --> x <= c-b = sol
-            questions.push({
-                type: 'solve', id: 'q2b', text: `<code>${c} - ${variable} \u2265 ${b}</code>`,
-                answers: { inequality: `${variable}<=${sol}`, interval: `(-inf,${sol}]` }
+            // 2b. Negative variable
+            b = getRandomInt(1, 10); sol = getRandomInt(-10, -2); c = b + sol;
+            qSet.push({
+                type: 'solve', text: `Solve: ${c} - ${variable} >= ${b}`,
+                answers: { inequality: `${variable}<=${sol}`, interval: `(-inf,${sol}]` },
+                solution: [
+                    `Given: ${c} - ${variable} >= ${b}`,
+                    `Subtract ${c} from both sides: -${variable} >= ${b} - ${c}`,
+                    `Simplify: -${variable} >= ${b-c}`,
+                    `Multiply by -1. **Remember to flip the inequality sign.**`,
+                    `Final Answer: ${variable} <= ${sol}`
+                ]
             });
 
-            // c. 2p - 4 < -16 - 4p
+            // 2c. Variables on both sides
             a = getRandomInt(2, 5); b = getRandomInt(1, 10); c = getRandomInt(2, 5);
-            sol = getRandomInt(-5, -1);
-            d = (a + c) * sol - b; // This will be the constant on the right side. FIX: Was +b.
-            questions.push({
-                type: 'solve', id: 'q2c', text: `<code>${a}${variable} - ${b} < ${d} - ${c}${variable}</code>`,
-                answers: { inequality: `${variable}<${sol}`, interval: `(-inf,${sol})` }
+            sol = getRandomInt(-5, -1); d = (a + c) * sol - b;
+            qSet.push({
+                type: 'solve', text: `Solve: ${a}${variable} - ${b} < ${d} - ${c}${variable}`,
+                answers: { inequality: `${variable}<${sol}`, interval: `(-inf,${sol})` },
+                solution: [
+                    `Given: ${a}${variable} - ${b} < ${d} - ${c}${variable}`,
+                    `Add ${c}${variable} to both sides: ${a}${variable} + ${c}${variable} - ${b} < ${d}`,
+                    `Simplify: ${a+c}${variable} - ${b} < ${d}`,
+                    `Add ${b} to both sides: ${a+c}${variable} < ${d} + ${b}`,
+                    `Simplify: ${a+c}${variable} < ${d+b}`,
+                    `Divide by ${a+c}: ${variable} < ${d+b}/${a+c}`,
+                    `Final Answer: ${variable} < ${sol}`
+                ]
+            });
+
+             // 2d. Variables on both sides, negative coefficients
+            a = getRandomInt(2, 5); b = getRandomInt(a + 2, 12); sol = getRandomInt(2, 8);
+            c = getRandomInt(1, 15); d = (b - a) * sol + c;
+            qSet.push({
+                type: 'solve', text: `Solve: ${c} - ${a}${variable} <= ${d} - ${b}${variable}`,
+                answers: { inequality: `${variable}<=${sol}`, interval: `(-inf,${sol}]` },
+                solution: [
+                    `Given: ${c} - ${a}${variable} <= ${d} - ${b}${variable}`,
+                    `Add ${b}${variable} to both sides: ${c} - ${a}${variable} + ${b}${variable} <= ${d}`,
+                    `Simplify: ${c} + ${b-a}${variable} <= ${d}`,
+                    `Subtract ${c} from both sides: ${b-a}${variable} <= ${d} - ${c}`,
+                    `Simplify: ${b-a}${variable} <= ${d-c}`,
+                    `Divide by ${b-a}: ${variable} <= (${d-c})/(${b-a})`,
+                    `Final Answer: ${variable} <= ${sol}`
+                ]
             });
             
-            // d. 5 - 2x <= 35 - 7x
-            a = getRandomInt(2, 5); b = getRandomInt(a + 2, 12); // Ensure b > a so (b-a) is positive
-            sol = getRandomInt(2, 8);
-            c = getRandomInt(1, 15);
-            d = (b - a) * sol + c; // c - ax <= d - bx --> (b-a)x <= d-c --> x <= (d-c)/(b-a) = sol
-            questions.push({
-                type: 'solve', id: 'q2d', text: `<code>${c} - ${a}${variable} \u2264 ${d} - ${b}${variable}</code>`,
-                answers: { inequality: `${variable}<=${sol}`, interval: `(-inf,${sol}]` }
-            });
-
-            // e. -12 < 5x - 2 < 13 (Compound AND)
+            // 2e. Compound AND
             a = getRandomInt(2, 5); b = getRandomInt(-5, 5);
             sol = getRandomInt(-5, 0); sol2 = getRandomInt(1, 5);
             c = a * sol + b; d = a * sol2 + b;
-            questions.push({
-                type: 'solve', id: 'q2e', text: `<code>${c} < ${a}${variable} ${b >= 0 ? '+' : '-'} ${Math.abs(b)} < ${d}</code>`,
-                answers: { inequality: `${sol}<${variable}<${sol2}`, interval: `(${sol},${sol2})` }
+            const bSign = b >= 0 ? '+' : '-';
+            const bVal = Math.abs(b);
+            qSet.push({
+                type: 'solve', text: `Solve: ${c} < ${a}${variable} ${bSign} ${bVal} < ${d}`,
+                answers: { inequality: `${sol}<${variable}<${sol2}`, interval: `(${sol},${sol2})` },
+                solution: [
+                    `Given: ${c} < ${a}${variable} ${bSign} ${bVal} < ${d}`,
+                    `To isolate the variable, perform the same operation on all three parts of the inequality.`,
+                    b >= 0 ? `Subtract ${bVal} from all three parts.` : `Add ${bVal} to all three parts.`,
+                    `${c - b} < ${a}${variable} < ${d - b}`,
+                    `Divide all three parts by ${a}: ${c-b}/${a} < ${variable} < ${d-b}/${a}`,
+                    `Final Answer: ${sol} < ${variable} < ${sol2}`
+                ]
             });
 
-            // f. x/3 - 7 < -8 or 5 - 2x <= -5 (Compound OR)
-            // Part 1
-            a = getRandomInt(2, 5); b = getRandomInt(5, 10);
-            sol = a * getRandomInt(-10, -5); // Ensure sol is divisible by a
+            // 2f. Compound OR
+            a = getRandomInt(2, 5); b = getRandomInt(5, 10); sol = getRandomInt(-10, -5) * a;
             c = (sol / a) - b;
-            // Part 2
-            d = getRandomInt(2, 5); e = getRandomInt(1, 10);
-            sol2 = getRandomInt(4, 10);
-            f = e - d * sol2;
-            questions.push({
-                type: 'solve', id: 'q2f',
-                text: `<code>${variable}/${a} - ${b} < ${c} \xa0\xa0 or \xa0\xa0 ${e} - ${d}${variable} \u2264 ${f}</code>`,
-                answers: {
-                    inequality: `${variable}<${sol} or ${variable}>=${sol2}`,
-                    interval: `(-inf,${sol}) U [${sol2},inf)`
-                }
+            d = getRandomInt(2, 5); e = getRandomInt(1, 10); sol2 = getRandomInt(5, 10);
+            f = e - (d * sol2);
+            qSet.push({
+                type: 'solve', text: `Solve: ${variable}/${a} - ${b} < ${c} or ${e} - ${d}${variable} <= ${f}`,
+                answers: { inequality: `${variable}<${sol} or ${variable}>=${sol2}`, interval: `(-inf,${sol}) U [${sol2},inf)` },
+                solution: [
+                    `Solve each inequality separately.`,
+                    `Part 1: ${variable}/${a} - ${b} < ${c}`,
+                    `Add ${b} to both sides: ${variable}/${a} < ${c+b}`,
+                    `Multiply by ${a}: ${variable} < ${sol}`,
+                    `Part 2: ${e} - ${d}${variable} <= ${f}`,
+                    `Subtract ${e} from both sides: -${d}${variable} <= ${f-e}`,
+                    `Divide by -${d} and **flip the sign**: ${variable} >= (${f-e})/(-${d})`,
+                    `Simplify: ${variable} >= ${sol2}`,
+                    `Combine the solutions with "or": ${variable} < ${sol} or ${variable} >= ${sol2}`
+                ]
             });
 
-            return questions;
+            return qSet;
         }
 
-        // --- CORE QUIZ LOGIC ---
-        function generateAndRenderQuiz() {
-            currentQuestions = generateInequalityQuestions();
-            renderQuizForm(currentQuestions);
-            quizContainer.classList.remove('hidden');
-            resultsSection.classList.add('hidden');
-            window.scrollTo(0, 0);
-        }
 
-        function renderQuizForm(questions) {
-            const prefixes = ['a.', 'b.', 'c.', 'd.', 'e.', 'f.'];
-            const q1 = questions[0];
-            const q2 = questions.slice(1);
+        // --- RENDERING & UI LOGIC ---
+        function renderQuestion() {
+            const q = questions[currentQuestionIndex];
+            let contentHTML = '';
 
-            const q1HTML = `
-                <div class="mb-10">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-2">1. ${q1.text}</h2>
-                    <p class="text-center text-lg my-4">${q1.inequality}</p>
-                    <div id="${q1.id}" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        ${q1.options.map((opt, i) => `
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="q1_option" value="${opt}" class="mr-3 h-5 w-5 rounded">
-                                <span class="font-mono text-lg">${opt}</span>
+            if (q.type === 'checkbox') {
+                contentHTML = `
+                    <h2 class="text-xl font-semibold text-gray-700 mb-2">${q.text}</h2>
+                    <p class="text-center text-2xl font-mono my-6 p-4 bg-gray-50 rounded-lg">${q.inequality}</p>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        ${q.options.map(opt => `
+                            <label class="checkbox-label text-lg">
+                                <input type="checkbox" name="q_option" value="${opt}" class="mr-3 h-5 w-5 rounded">
+                                <span>${opt}</span>
                             </label>
                         `).join('')}
-                    </div>
-                </div>
-            `;
+                    </div>`;
+            } else if (q.type === 'solve') {
+                contentHTML = `
+                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Solve the inequality and provide the solution in both notations.</h2>
+                    <p class="text-center text-2xl font-mono my-6 p-4 bg-gray-50 rounded-lg">${q.text}</p>
+                    <div class="space-y-4">
+                        <input type="text" id="ineq_input" class="w-full p-3 border border-gray-300 rounded-lg text-lg" placeholder="Inequality notation (e.g., x>5)">
+                        <input type="text" id="int_input" class="w-full p-3 border border-gray-300 rounded-lg text-lg" placeholder="Interval notation (e.g., (5,inf))">
+                    </div>`;
+            }
+            questionContainer.innerHTML = contentHTML;
+            navigationContainer.innerHTML = `<button id="checkAnswerBtn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-transform transform hover:scale-105">Check Answer</button>`;
             
-            const q2HTML = q2.map((q, i) => `
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                    <p class="flex items-center gap-4">
-                        <span class="question-prefix">${prefixes[i]}</span>
-                        ${q.text}
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <input type="text" id="${q.id}_ineq" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Inequality notation">
-                        <input type="text" id="${q.id}_int" class="w-full p-2 border border-gray-300 rounded-lg" placeholder="Interval notation">
-                    </div>
-                 </div>
-            `).join('<hr class="my-4 border-dashed">');
-
-            quizContainer.innerHTML = `
-                <form id="quizForm">
-                    ${q1HTML}
-                    <div>
-                        <h2 class="text-xl font-semibold text-gray-700 mb-6">2. Solve each inequality and represent your solution as both inequality and interval notation.</h2>
-                        <div class="space-y-4">${q2HTML}</div>
-                    </div>
-                    <div class="mt-10 text-center">
-                        <button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button>
-                    </div>
-                </form>
-            `;
-            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+            document.getElementById('checkAnswerBtn').addEventListener('click', checkAnswer);
+            feedbackContainer.classList.add('hidden');
         }
-        
-        const normalizeAnswer = (str) => str.replace(/\s+/g, '').toLowerCase().replace(/infinity/g, 'inf');
-        
-        function gradeQuiz(event) {
-            event.preventDefault();
-            let score = 0;
-            let resultsHTML = '';
-            let totalPossibleAnswers = 0;
 
-            // Grade Q1
-            const q1 = currentQuestions[0];
-            totalPossibleAnswers++;
-            const userChecked = Array.from(document.querySelectorAll(`input[name="q1_option"]:checked`)).map(cb => cb.value).sort();
-            const q1Correct = JSON.stringify(userChecked) === JSON.stringify(q1.answers);
-            if (q1Correct) score++;
-             resultsHTML += `<div class="result-item border-l-4 p-4 rounded-md ${q1Correct ? 'correct' : 'incorrect'}">
-                <div class="font-semibold text-gray-800">${q1.text} ${q1.inequality}</div>
-                <p class="mt-2 text-sm">Your answer: <span class="font-medium">${userChecked.join(', ') || '<i>No answer</i>'}</span></p>
-                ${!q1Correct ? `<p class="mt-1 text-sm">Correct answer: <span class="font-medium text-green-700">${q1.answers.join(', ')}</span></p>` : ''}
-            </div>`;
+        function updateProgress() {
+            const totalQuestions = questions.length;
+            const answeredCount = currentQuestionIndex;
+            progressText.textContent = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`;
+            scoreText.textContent = `Score: ${score}/${answeredCount}`;
+            progressBar.style.width = `${((currentQuestionIndex) / totalQuestions) * 100}%`;
+        }
 
-            // Grade Q2
-            currentQuestions.slice(1).forEach(q => {
-                totalPossibleAnswers += 2; // Each has two parts
-                const userIneq = document.getElementById(`${q.id}_ineq`).value;
-                const userInt = document.getElementById(`${q.id}_int`).value;
-                
-                // Normalize OR statements
-                let normUserIneq = normalizeAnswer(userIneq);
+        function checkAnswer() {
+            const q = questions[currentQuestionIndex];
+            let isCorrect = false;
+            let feedbackHTML = '';
+
+            if (q.type === 'checkbox') {
+                const userChecked = Array.from(document.querySelectorAll('input[name="q_option"]:checked')).map(cb => cb.value).sort();
+                isCorrect = JSON.stringify(userChecked) === JSON.stringify(q.answers);
+            } else if (q.type === 'solve') {
+                const userIneq = normalizeAnswer(document.getElementById('ineq_input').value);
+                const userInt = normalizeAnswer(document.getElementById('int_input').value);
+
+                let normUserIneq = userIneq;
                 if (normUserIneq.includes('or')) normUserIneq = normUserIneq.split('or').sort().join('or');
+                
                 let normAnsIneq = normalizeAnswer(q.answers.inequality);
                 if (normAnsIneq.includes('or')) normAnsIneq = normAnsIneq.split('or').sort().join('or');
+                
+                isCorrect = (normUserIneq === normAnsIneq) && (userInt === normalizeAnswer(q.answers.interval));
+            }
 
-                const ineqCorrect = normUserIneq === normAnsIneq;
-                const intCorrect = normalizeAnswer(userInt) === normalizeAnswer(q.answers.interval);
-
-                if (ineqCorrect) score++;
-                if (intCorrect) score++;
-
-                resultsHTML += `<div class="result-item border-l-4 p-4 rounded-md ${ineqCorrect && intCorrect ? 'correct' : 'incorrect'}">
-                    <div class="font-semibold text-gray-800">${q.text}</div>
-                    <p class="mt-2 text-sm">Inequality: <span class="${ineqCorrect ? '' : 'text-red-700'}">${userIneq || '<i>No answer</i>'}</span> ${!ineqCorrect ? `<span class="text-green-700 ml-2">(Correct: ${q.answers.inequality})</span>` : ''}</p>
-                    <p class="mt-1 text-sm">Interval: <span class="${intCorrect ? '' : 'text-red-700'}">${userInt || '<i>No answer</i>'}</span> ${!intCorrect ? `<span class="text-green-700 ml-2">(Correct: ${q.answers.interval})</span>` : ''}</p>
+            if (isCorrect) {
+                score++;
+                feedbackHTML += `<div class="p-4 rounded-lg bg-green-100 border border-green-300 text-green-800">
+                    <h3 class="font-bold text-lg">Correct! 🎉</h3>
                 </div>`;
-            });
+            } else {
+                feedbackHTML += `<div class="p-4 rounded-lg bg-red-100 border border-red-300 text-red-800">
+                    <h3 class="font-bold text-lg">Not quite. Here's the solution:</h3>
+                </div>`;
+            }
+
+            // Solution steps
+            feedbackHTML += `<div class="mt-4">
+                <h4 class="font-semibold text-gray-700 text-lg mb-2">Step-by-Step Solution:</h4>
+                ${q.solution.map(step => `<div class="solution-step">${step}</div>`).join('')}
+            </div>`;
             
-            const percentage = Math.round((score / totalPossibleAnswers) * 100);
-            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
-            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${totalPossibleAnswers} (${percentage}%)</span>`;
-            detailedResultsElement.innerHTML = resultsHTML;
-            quizContainer.classList.add('hidden');
-            resultsSection.classList.remove('hidden');
-            window.scrollTo(0, 0);
+            feedbackContainer.innerHTML = feedbackHTML;
+            feedbackContainer.classList.remove('hidden');
+
+            questionContainer.querySelectorAll('input').forEach(input => input.disabled = true);
+            
+            navigationContainer.innerHTML = `<button id="nextQuestionBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-blue-300 transition-transform transform hover:scale-105">Next Question &rarr;</button>`;
+            document.getElementById('nextQuestionBtn').addEventListener('click', nextQuestion);
+            
+            scoreText.textContent = `Score: ${score}/${currentQuestionIndex + 1}`;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+             progressBar.style.width = `${((currentQuestionIndex) / questions.length) * 100}%`;
+
+            if (currentQuestionIndex < questions.length) {
+                updateProgress();
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+        
+        function showResults() {
+            quizView.classList.add('hidden');
+            const percentage = Math.round((score / questions.length) * 100);
+            
+            let scoreColor;
+            let message;
+
+            if (percentage >= 90) {
+                scoreColor = 'text-green-600';
+                message = "Excellent work! You've mastered this topic.";
+            } else if (percentage >= 70) {
+                scoreColor = 'text-yellow-600';
+                message = "Good job! A little more practice and you'll be an expert.";
+            } else {
+                scoreColor = 'text-red-600';
+                message = "Keep practicing! Review the solutions and try a new quiz.";
+            }
+
+            finalScore.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${questions.length} (${percentage}%)</span>`;
+            finalMessage.textContent = message;
+            resultsView.classList.remove('hidden');
+        }
+
+        function startQuiz() {
+            questions = generateInequalityQuestions();
+            currentQuestionIndex = 0;
+            score = 0;
+
+            resultsView.classList.add('hidden');
+            quizView.classList.remove('hidden');
+            
+            updateProgress();
+            renderQuestion();
         }
 
         // --- EVENT LISTENERS ---
-        retakeQuizBtn.addEventListener('click', () => {
-            renderQuizForm(currentQuestions);
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-        });
-        generateNewBtn.addEventListener('click', generateAndRenderQuiz);
-        document.addEventListener('DOMContentLoaded', generateAndRenderQuiz);
-    </script>
+        generateNewBtn.addEventListener('click', startQuiz);
+        
+        // --- INITIALIZE ---
+        startQuiz();
+
+    });
+</script>
+
 </body>
 </html>
-
-
-

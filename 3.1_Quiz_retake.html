@@ -3,344 +3,693 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Functions and Relations Quiz</title>
+    <title>Algebra I Practice: Relations & Functions</title>
+    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Use the Inter font family */
         body {
             font-family: 'Inter', sans-serif;
         }
-        .quiz-container {
+        /* Add a subtle transition for feedback */
+        .feedback-item {
             transition: all 0.3s ease-in-out;
         }
-        .result-item.correct {
-            background-color: #f0fdf4;
-            border-left-color: #22c55e;
+        /* Custom styles for correct/incorrect feedback */
+        .correct-answer {
+            border: 2px solid #22c55e; /* green-500 */
+            background-color: #f0fdf4; /* green-50 */
         }
-        .result-item.incorrect {
-            background-color: #fef2f2;
-            border-left-color: #ef4444;
+        .incorrect-answer {
+            border: 2px solid #ef4444; /* red-500 */
+            background-color: #fef2f2; /* red-50 */
         }
-        .question-prefix {
-            font-weight: 500;
-            flex-shrink: 0;
+        .correct-text {
+            color: #166534; /* green-800 */
+            font-weight: 600;
         }
-        .radio-label, .checkbox-label {
-            display: flex;
-            align-items: center;
+        .incorrect-text {
+            color: #991b1b; /* red-800 */
+            font-weight: 600;
+        }
+        /* Style for selectable table cells in Question 4 */
+        .variable-option {
             cursor: pointer;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            border: 1px solid #d1d5db;
+            padding: 12px;
+            border: 2px solid transparent;
+            border-radius: 8px;
             transition: all 0.2s;
         }
-        .radio-label:has(input:checked), .checkbox-label:has(input:checked) {
-            background-color: #eff6ff;
-            border-color: #3b82f6;
+        .variable-option:hover {
+            background-color: #f3f4f6; /* gray-100 */
         }
-        .data-table {
-            border-collapse: collapse;
-            margin: 1rem auto;
-            min-width: 120px;
-        }
-        .data-table th, .data-table td {
-            border: 1px solid #d1d5db;
-            padding: 0.5rem;
-            text-align: center;
-        }
-        .data-table th {
-            background-color: #f3f4f6;
-        }
-        .graph-description {
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-top: 0.5rem;
+        .variable-option input:checked + label {
+            background-color: #dbeafe; /* blue-100 */
+            border-color: #3b82f6; /* blue-500 */
         }
     </style>
+    <!-- Import Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
 
-    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl quiz-container">
-        <div class="p-8 border-b border-gray-200">
-            <h1 class="text-3xl font-bold text-gray-800">3.1 Quiz Functions, Relations, and Domain/Range Retake</h1>
-            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 text-center">Algebra I Practice Quiz</h1>
+            <p class="text-lg text-gray-600 text-center mt-2">Relations, Functions, Domain, & Range</p>
+        </header>
+
+        <!-- Quiz Area -->
+        <div id="quiz-area" class="space-y-8">
+            <!-- Questions will be dynamically inserted here -->
         </div>
 
-        <div id="quizContainer" class="p-8">
-            <!-- The quiz form will be dynamically generated and inserted here -->
-        </div>
-
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
-            <div id="score" class="text-xl mb-6 font-semibold"></div>
-            <div id="detailedResults" class="space-y-4"></div>
-             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 transition-transform transform hover:scale-105">Try This Quiz Again</button>
-                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-transform transform hover:scale-105">Generate New Quiz</button>
+        <!-- Submission & Results Area -->
+        <div class="mt-10 text-center">
+            <button id="check-answers-btn" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors shadow-md">
+                Check Answers
+            </button>
+            
+            <div id="results-area" class="hidden mt-8 p-6 bg-white rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Your Score</h2>
+                <p id="score-text" class="text-5xl font-bold text-blue-600 mb-6">0 / 0</p>
+                <button id="reset-btn" class="bg-green-600 text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-green-700 transition-colors shadow-md">
+                    Try Another!
+                </button>
             </div>
         </div>
-    </main>
+    </div>
 
     <script>
-        const quizContainer = document.getElementById('quizContainer');
-        const resultsSection = document.getElementById('resultsSection');
-        const scoreElement = document.getElementById('score');
-        const detailedResultsElement = document.getElementById('detailedResults');
-        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
-        const generateNewBtn = document.getElementById('generateNewBtn');
+        // --- DATA & HELPER FUNCTIONS ---
 
-        let currentQuestions = [];
-
-        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
-        const getRandomIntExclude = (min, max, exclude) => {
-            let num;
-            do {
-                num = getRandomInt(min, max);
-            } while (num === exclude);
-            return num;
-        };
-
-        function generateQuizData() {
-            let questions = [];
-
-            // Q1: Discrete vs Continuous
-            const q1Scenarios = shuffle([
-                { text: "The number of touchdowns in a football game.", answer: "discrete" },
-                { text: "The amount of water in a tank.", answer: "continuous" },
-                { text: "The temperature throughout a day.", answer: "continuous" },
-                { text: "The number of chairs in a classroom.", answer: "discrete" },
-                { text: "The height of a growing tree.", answer: "continuous" },
-                { text: "The number of pages in a book.", answer: "discrete" }
-            ]).slice(0, 3);
-            questions.push({ type: 'multi-radio', id: 'q1', title: 'State whether each relationship described below represents discrete or continuous data.', scenarios: q1Scenarios });
-
-            // Q2: Independent vs Dependent
-            const q2Scenarios = shuffle([
-                { a: "The amount of money raised", b: "The number of tickets sold", answer: "The number of tickets sold" },
-                { a: "The thickness of a scrapbook", b: "The number of photos added", answer: "The number of photos added" },
-                { a: "The number of hours an air conditioner runs", b: "The cost of electricity to run an air conditioner", answer: "The number of hours an air conditioner runs" },
-                { a: "The number of miles that can be driven", b: "The number of gallons of gas in a car's tank", answer: "The number of gallons of gas in a car's tank" }
-            ]);
-            questions.push({ type: 'table-radio', id: 'q2', title: 'Circle the independent variable in each row of the table below.', scenarios: q2Scenarios });
-
-            // Q3: Domain, Range from graphs/tables
-            const q3Scenarios = [];
-            // Discrete points
-            const points1 = new Set();
-            while(points1.size < 4) { points1.add(`${getRandomInt(-5,5)},${getRandomInt(-5,5)}`); }
-            const discretePoints = Array.from(points1).map(p => p.split(',').map(Number));
-            const domain1 = `{${[...new Set(discretePoints.map(p => p[0]))].sort((a,b)=>a-b).join(',')}}`;
-            const range1 = `{${[...new Set(discretePoints.map(p => p[1]))].sort((a,b)=>a-b).join(',')}}`;
-            q3Scenarios.push({ id: 'q3a', type: 'discrete-points', data: discretePoints, answers: { domain: domain1, range: range1, type: 'discrete' } });
-            
-            // Continuous graph
-            const startX = getRandomInt(-8, -4); const endX = getRandomInt(3, 7);
-            const startY = getRandomInt(-5, 0); const endY = getRandomInt(1, 5);
-            q3Scenarios.push({ id: 'q3b', type: 'continuous-graph', data: {startX, endX, startY, endY}, answers: { domain: `[${startX},${endX}]`, range: `[${startY},${endY}]`, type: 'continuous' } });
-
-            // Table of values
-            const points2 = new Set();
-            while(points2.size < 4) { points2.add(`${getRandomInt(-8,8)},${getRandomInt(-8,8)}`); }
-            const tablePoints = Array.from(points2).map(p => p.split(',').map(Number));
-            const domain2 = `{${[...new Set(tablePoints.map(p => p[0]))].sort((a,b)=>a-b).join(',')}}`;
-            const range2 = `{${[...new Set(tablePoints.map(p => p[1]))].sort((a,b)=>a-b).join(',')}}`;
-            q3Scenarios.push({ id: 'q3c', type: 'table', data: tablePoints, answers: { domain: domain2, range: range2, type: 'discrete' } });
-            questions.push({ type: 'domain-range', id: 'q3', title: 'Use the following graphs to answer the questions below each graph.', scenarios: q3Scenarios });
-
-            // Q4: Is it a function? (Rewritten for accuracy)
-            const q4Relations = [];
-            
-            // A: Function (set)
-            const x_vals_a = new Set();
-            while(x_vals_a.size < 4) x_vals_a.add(getRandomInt(-5,5));
-            const p4a = Array.from(x_vals_a).map(x => `(${x},${getRandomInt(-5,5)})`);
-            q4Relations.push({ id:'q4a', type:'set', text:`{${p4a.join(', ')}}`, isFunction: true });
-            
-            // B: Not a function (set)
-            const x_b_repeat = getRandomInt(-5, 5);
-            const x_vals_b = new Set();
-            while(x_vals_b.size < 3) x_vals_b.add(getRandomIntExclude(-5, 5, x_b_repeat));
-            const p4b_unique = Array.from(x_vals_b).map(x => `(${x},${getRandomInt(-5,5)})`);
-            const p4b_repeat = [`(${x_b_repeat},${getRandomInt(-5,0)})`, `(${x_b_repeat},${getRandomInt(1,5)})`];
-            q4Relations.push({ id:'q4b', type:'set', text:`{${shuffle([...p4b_unique, ...p4b_repeat]).join(', ')}}`, isFunction: false });
-            
-            // C: Function (table)
-             const x_vals_c = new Set();
-            while(x_vals_c.size < 4) x_vals_c.add(getRandomInt(-5,5));
-            const p4c_data = Array.from(x_vals_c).map(x => [x, getRandomInt(-5,5)]);
-            q4Relations.push({ id:'q4c', type:'table', data: p4c_data, isFunction: true });
-
-            // D: Not a function (table)
-            const x_d_repeat = getRandomInt(0,5);
-            const x_vals_d = new Set();
-            while(x_vals_d.size < 3) x_vals_d.add(getRandomIntExclude(0, 5, x_d_repeat));
-            const p4d_unique = Array.from(x_vals_d).map(x => [x, getRandomInt(0,5)]);
-            const p4d_repeat = [[x_d_repeat, getRandomInt(0,2)], [x_d_repeat, getRandomInt(3,5)]];
-            q4Relations.push({ id:'q4d', type:'table', data: shuffle([...p4d_unique, ...p4d_repeat]), isFunction: false });
-
-            // E: Function (graph)
-            q4Relations.push({ id:'q4e', type:'graph', text: 'A parabola opening upwards, symmetric about the y-axis.', isFunction: true });
-            // F: Not a Function (graph)
-            q4Relations.push({ id:'q4f', type:'graph', text: 'A circle centered at (2, 1) with a radius of 3.', isFunction: false });
-            questions.push({ type: 'is-function', id: 'q4', title: 'Which of the following relation(s) is/are function(s). Circle all that apply.', relations: shuffle(q4Relations)});
-
-            currentQuestions = questions;
-            return questions;
+        // Helper function to shuffle an array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
 
-        function renderQuizForm(questions) {
-            let html = '<form id="quizForm">';
-            
-            questions.forEach(q => {
-                html += `<div class="mb-12"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.title}</h2>`;
-                if(q.type === 'multi-radio') {
-                    q.scenarios.forEach((s, i) => {
-                        html += `<div class="p-4 border-b"><p class="mb-2">${String.fromCharCode(97 + i)}) ${s.text}</p>
-                                 <div class="flex gap-4"><label class="radio-label"><input type="radio" name="${q.id}_${i}" value="discrete"> Discrete</label>
-                                 <label class="radio-label"><input type="radio" name="${q.id}_${i}" value="continuous"> Continuous</label></div></div>`;
-                    });
-                } else if (q.type === 'table-radio') {
-                    html += `<table class="w-full text-center"><thead><tr class="bg-gray-100">
-                             <th class="p-2 border">Variable A</th><th class="p-2 border">Variable B</th></tr></thead><tbody>`;
-                    q.scenarios.forEach((s, i) => {
-                        html += `<tr><td class="p-2 border"><label class="p-2 block cursor-pointer"><input type="radio" name="${q.id}_${i}" value="${s.a}" class="mr-2">${s.a}</label></td>
-                                     <td class="p-2 border"><label class="p-2 block cursor-pointer"><input type="radio" name="${q.id}_${i}" value="${s.b}" class="mr-2">${s.b}</label></td></tr>`;
-                    });
-                    html += `</tbody></table>`;
-                } else if (q.type === 'domain-range') {
-                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8">`;
-                    q.scenarios.forEach(s => {
-                        html += `<div class="border rounded-lg p-4">`;
-                        if(s.type === 'discrete-points') {
-                             html += `<div class="graph-description">A graph consisting of the following points: <strong>{${s.data.map(p => `(${p[0]},${p[1]})`).join(', ')}}</strong></div>`;
-                        } else if(s.type === 'continuous-graph') {
-                             html += `<div class="graph-description">A continuous graph segment from <strong>(${s.data.startX}, ${s.data.startY})</strong> to <strong>(${s.data.endX}, ${s.data.endY})</strong>, including both endpoints.</div>`;
-                        } else if (s.type === 'table') {
-                            html += `<table class="data-table"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>
-                                     ${s.data.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('')}
-                                     </tbody></table>`;
-                        }
-                        html += `<div class="mt-4 space-y-2">
-                                    <div><label>Domain: </label><input type="text" id="${s.id}_domain" class="w-full p-2 border rounded"></div>
-                                    <div><label>Range: </label><input type="text" id="${s.id}_range" class="w-full p-2 border rounded"></div>
-                                    <div class="flex gap-4"><label class="radio-label"><input type="radio" name="${s.id}_type" value="discrete"> Discrete</label>
-                                    <label class="radio-label"><input type="radio" name="${s.id}_type" value="continuous"> Continuous</label></div>
-                                 </div></div>`;
-                    });
-                    html += `</div>`;
-                } else if (q.type === 'is-function') {
-                    html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`;
-                    q.relations.forEach(r => {
-                        html += `<div class="checkbox-label"><input type="checkbox" id="${r.id}" class="mr-4 h-5 w-5">`;
-                        if(r.type === 'set' || r.type === 'graph') {
-                            html += `<label for="${r.id}">${r.text}</label>`;
-                        } else if (r.type === 'table') {
-                             html += `<label for="${r.id}"><table class="data-table"><thead><tr><th>x</th><th>y</th></tr></thead><tbody>
-                                     ${r.data.map(p => `<tr><td>${p[0]}</td><td>${p[1]}</td></tr>`).join('')}
-                                     </tbody></table></label>`;
-                        }
-                        html += `</div>`;
-                    });
-                    html += `</div>`;
+        // --- QUESTION DATA GENERATORS ---
+
+        // Generator for Question 1
+        function getQ1Data() {
+            const wordBanks = {
+                wb1: { A: 'discrete', B: 'continuous' },
+                wb2: { A: 'are countable', B: 'can take on any value, including fractions' },
+                wb3: { A: 'interval notation', B: 'set notation' }
+            };
+            const scenarios = [
+                { id: 'q1a', text: 'The number of students in a class is (1) ___ data because students (2) ___. The domain can only be stated in (3) ___.', answers: ['A', 'A', 'B'] },
+                { id: 'q1b', text: 'The height of a sunflower is (1) ___ data because height (2) ___. The domain can only be stated in (3) ___.', answers: ['B', 'B', 'A'] },
+                { id: 'q1c', text: 'The number of goals scored in a soccer game is (1) ___ data because goals (2) ___. The domain can only be stated in (3) ___.', answers: ['A', 'A', 'B'] },
+                { id: 'q1d', text: 'The volume of water in a swimming pool is (1) ___ data because volume (2) ___. The domain can only be stated in (3) ___.', answers: ['B', 'B', 'A'] },
+                { id: 'q1e', text: 'The temperature of an oven is (1) ___ data because temperature (2) ___. The domain can only be stated in (3) ___.', answers: ['B', 'B', 'A'] },
+                { id: 'q1f', text: 'The number of books on a shelf is (1) ___ data because books (2) ___. The domain can only be stated in (3) ___.', answers: ['A', 'A', 'B'] },
+                // Added two new scenarios
+                { id: 'q1g', text: 'The number of cars in a parking lot is (1) ___ data because cars (2) ___. The domain can only be stated in (3) ___.', answers: ['A', 'A', 'B'] },
+                { id: 'q1h', text: 'The speed of a runner during a race is (1) ___ data because speed (2) ___. The domain can only be stated in (3) ___.', answers: ['B', 'B', 'A'] }
+            ];
+            return {
+                type: 'fill-in-the-blank',
+                title: '1. Complete each sentence using words from the word bank below:',
+                wordBanks: wordBanks,
+                scenarios: shuffleArray(scenarios).slice(0, 6) // Now selects 6 from the pool of 8
+            };
+        }
+
+        // Generator for Question 2
+        function getQ2Data() {
+            const scenarios = [
+                {
+                    id: 'q2a',
+                    type: 'points',
+                    points: [{x: -4, y: 1}, {x: -2, y: -3}, {x: 0, y: 2}, {x: 3, y: -3}],
+                    viewBox: { minX: -5, maxX: 4, minY: -4, maxY: 3 },
+                    answers: { domain: '{-4, -2, 0, 3}', range: '{-3, 1, 2}', type: 'discrete' }
+                },
+                {
+                    id: 'q2b',
+                    type: 'table',
+                    table: [{x: -1, y: 5}, {x: 0, y: 2}, {x: 3, y: -1}, {x: -4, y: 2}, {x: 7, y: 5}],
+                    answers: { domain: '{-4, -1, 0, 3, 7}', range: '{-1, 2, 5}', type: 'discrete' }
+                },
+                {
+                    // Updated to use continuous-svg and LINEAR path
+                    id: 'q2c',
+                    type: 'continuous-svg',
+                    path: [
+                        { type: 'M', x: -5, y: -2 },
+                        { type: 'L', x: 0, y: -4 }, // Changed from Q to L
+                        { type: 'L', x: 4, y: 6 }  // Added L
+                    ],
+                    endpoints: [{x: -5, y: -2, type: 'open'}, {x: 4, y: 6, type: 'closed'}],
+                    viewBox: { minX: -6, maxX: 5, minY: -5, maxY: 7 },
+                    answers: { domain: '(-5, 4]', range: '[-4, 6]', type: 'continuous' } // Answers are now correct
+                },
+                {
+                    // Updated to use continuous-svg and LINEAR path
+                    id: 'q2d',
+                    type: 'continuous-svg',
+                    path: [
+                        { type: 'M', x: -3, y: 1 },
+                        { type: 'L', x: 0, y: 5 }, // Changed from Q to L
+                        { type: 'L', x: 6, y: -2 } // Added L
+                    ],
+                    endpoints: [{x: -3, y: 1, type: 'closed'}, {x: 6, y: -2, type: 'closed'}],
+                    viewBox: { minX: -4, maxX: 7, minY: -3, maxY: 6 },
+                    answers: { domain: '[-3, 6]', range: '[-2, 5]', type: 'continuous' } // Answers are now correct
                 }
-                html += `</div>`;
-            });
-            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
-            quizContainer.innerHTML = html;
-            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
+            ];
+            return {
+                type: 'graph-analysis',
+                title: '2. Use the following relations to answer the questions below each.',
+                scenarios: shuffleArray(scenarios)
+            };
         }
 
-        const normalizeSet = str => `{${str.replace(/[\s{}]/g, '').split(',').sort((a,b)=>a-b).join(',')}}`;
+        // Generator for Question 3
+        function getQ3Data() {
+            const scenarios = [
+                { id: 'q3a', type: 'set', relation: '{(1, 5), (2, 7), (3, 5), (4, -1)}', isFunction: true },
+                { id: 'q3b', type: 'set', relation: '{(0, 2), (1, 4), (0, 6), (2, 8)}', isFunction: false },
+                { id: 'q3c', type: 'table', table: [{x: -1, y: 2}, {x: 0, y: 3}, {x: 1, y: 4}, {x: 2, y: 5}], isFunction: true },
+                { id: 'q3d', type: 'table', table: [{x: 5, y: 1}, {x: 6, y: 2}, {x: 7, y: 3}, {x: 5, y: 4}], isFunction: false },
+                { id: 'q3e', type: 'mapping', description: 'Input 1 → 5, Input 2 → 6, Input 3 → 5', isFunction: true },
+                { id: 'q3f', type: 'mapping', description: 'Input 10 → A, Input 20 → B, Input 10 → C', isFunction: false },
+                { id: 'q3g', type: 'graph', description: 'The graph of a vertical line (e.g., x = 3)', isFunction: false },
+                { id: 'q3h', type: 'graph', description: 'The graph of a parabola opening sideways (e.g., x = y²)', isFunction: false },
+                { id: 'q3i', type: 'graph', description: 'The graph of a parabola opening up or down (e.g., y = x²)', isFunction: true },
+                { id: 'q3j', type: 'mapping', description: 'Input 4 → 8, Input 5 → 8, Input 6 → 8', isFunction: true },
+            ];
+            return {
+                type: 'function-check',
+                title: '3. Which of the following relation(s) is/are function(s)?',
+                scenarios: shuffleArray(scenarios).slice(0, 6) // Get 6 random scenarios
+            };
+        }
 
-        function gradeQuiz(event) {
-            event.preventDefault();
-            let score = 0, total = 0;
-            let resultsHTML = '';
+        // Generator for Question 4
+        function getQ4Data() {
+            const scenarios = [
+                { id: 'q4a', varA: 'The number of hours you study', varB: 'Your grade on the test', independent: 'varA' },
+                { id: 'q4b', varA: 'The number of gallons of gas in a car\'s tank', varB: 'The number of miles that can be driven', independent: 'varA' },
+                { id: 'q4c', varA: 'The number of calories burned', varB: 'Time spent running', independent: 'varB' },
+                { id: 'q4d', varA: 'The thickness of a scrapbook', varB: 'The number of photos added', independent: 'varB' },
+                { id: 'q4e', varA: 'The cost of electricity to run an air conditioner', varB: 'The number of hours an air conditioner runs', independent: 'varB' },
+                { id: 'q4f', varA: 'The amount of money raised', varB: 'The number of tickets sold', independent: 'varB' }
+            ];
+            return {
+                type: 'variable-id',
+                title: '4. Select the independent variable in each row of the table below:',
+                scenarios: shuffleArray(scenarios).slice(0, 4) // Get 4 random scenarios
+            };
+        }
+
+        // --- RENDER FUNCTIONS ---
+
+        const quizArea = document.getElementById('quiz-area');
+        let allQuestions = []; // To store references to all generated questions for checking
+
+        function renderQuiz() {
+            // Reset state
+            quizArea.innerHTML = '';
+            allQuestions = [];
+            document.getElementById('check-answers-btn').classList.remove('hidden');
+            document.getElementById('results-area').classList.add('hidden');
+            document.getElementById('score-text').textContent = '0 / 0';
+
+            // Generate and render all question sections
+            const q1 = getQ1Data();
+            allQuestions.push(q1);
+            quizArea.appendChild(renderQ1(q1));
+
+            const q2 = getQ2Data();
+            allQuestions.push(q2);
+            quizArea.appendChild(renderQ2(q2));
+
+            const q3 = getQ3Data();
+            allQuestions.push(q3);
+            quizArea.appendChild(renderQ3(q3));
             
-            currentQuestions.forEach(q => {
-                let questionResult = '';
-                if(q.type === 'multi-radio') {
-                    questionResult += `<div class="font-semibold">${q.title}</div>`;
-                    q.scenarios.forEach((s, i) => {
-                        total++;
-                        const userAnswer = document.querySelector(`input[name="${q.id}_${i}"]:checked`)?.value;
-                        const isCorrect = userAnswer === s.answer;
-                        if(isCorrect) score++;
-                        questionResult += `<div class="pl-4 pt-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">${s.text} - Your answer: ${userAnswer || 'none'}. ${!isCorrect ? `Correct: ${s.answer}` : ''}</div>`;
-                    });
-                } else if (q.type === 'table-radio') {
-                    questionResult += `<div class="font-semibold">${q.title}</div>`;
-                     q.scenarios.forEach((s, i) => {
-                        total++;
-                        const userAnswer = document.querySelector(`input[name="${q.id}_${i}"]:checked`)?.value;
-                        const isCorrect = userAnswer === s.answer;
-                        if(isCorrect) score++;
-                        questionResult += `<div class="pl-4 pt-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">Row ${i+1}: You chose '${userAnswer || 'none'}'. ${!isCorrect ? `Correct: '${s.answer}'` : ''}</div>`;
-                    });
-                } else if (q.type === 'domain-range') {
-                    questionResult += `<div class="font-semibold">${q.title}</div>`;
-                    q.scenarios.forEach(s => {
-                        total += 3;
-                        const domainUser = document.getElementById(`${s.id}_domain`).value;
-                        const rangeUser = document.getElementById(`${s.id}_range`).value;
-                        const typeUser = document.querySelector(`input[name="${s.id}_type"]:checked`)?.value;
-                        
-                        const domainCorrect = normalizeSet(domainUser) === normalizeSet(s.answers.domain) || domainUser.replace(/\s/g, '') === s.answers.domain;
-                        const rangeCorrect = normalizeSet(rangeUser) === normalizeSet(s.answers.range) || rangeUser.replace(/\s/g, '') === s.answers.range;
-                        const typeCorrect = typeUser === s.answers.type;
-
-                        if (domainCorrect) score++; if(rangeCorrect) score++; if(typeCorrect) score++;
-
-                        questionResult += `<div class="pl-4 pt-2">
-                            <p class="${domainCorrect ? 'text-green-700' : 'text-red-700'}">Domain: ${domainUser || 'none'} ${!domainCorrect ? `(Correct: ${s.answers.domain})` : ''}</p>
-                            <p class="${rangeCorrect ? 'text-green-700' : 'text-red-700'}">Range: ${rangeUser || 'none'} ${!rangeCorrect ? `(Correct: ${s.answers.range})` : ''}</p>
-                            <p class="${typeCorrect ? 'text-green-700' : 'text-red-700'}">Type: ${typeUser || 'none'} ${!typeCorrect ? `(Correct: ${s.answers.type})` : ''}</p>
-                        </div>`;
-                    });
-                } else if (q.type === 'is-function') {
-                    questionResult += `<div class="font-semibold">${q.title}</div>`;
-                    q.relations.forEach(r => {
-                        total++;
-                        const userAnswer = document.getElementById(r.id).checked;
-                        const isCorrect = userAnswer === r.isFunction;
-                        if (isCorrect) score++;
-                        questionResult += `<div class="pl-4 pt-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">Relation (${r.type}): You said ${userAnswer ? 'Function' : 'Not a function'}. That is ${isCorrect ? 'correct' : 'incorrect'}.</div>`;
-                    });
-                }
-                resultsHTML += `<div class="result-item border-l-4 p-4 rounded-md">${questionResult}</div>`;
-            });
-
-            const percentage = Math.round((score / total) * 100);
-            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
-            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
-            detailedResultsElement.innerHTML = resultsHTML;
-            quizContainer.classList.add('hidden');
-            resultsSection.classList.remove('hidden');
-            window.scrollTo(0, 0);
+            const q4 = getQ4Data();
+            allQuestions.push(q4);
+            quizArea.appendChild(renderQ4(q4));
         }
 
-        retakeQuizBtn.addEventListener('click', () => {
-            renderQuizForm(currentQuestions);
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-            window.scrollTo(0, 0);
+        // Render Section 1
+        function renderQ1(data) {
+            const section = document.createElement('div');
+            section.className = 'p-6 bg-white rounded-lg shadow-md';
+            
+            let wordBankHtml = `
+                <div class="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-6">
+                    <p class="font-semibold">Word Bank 1: (A) discrete, (B) continuous</p>
+                    <p class="font-semibold">Word Bank 2: (A) are countable, (B) can take on any value, including fractions</p>
+                    <p class="font-semibold">Word Bank 3: (A) interval notation, (B) set notation</p>
+                </div>
+            `;
+            
+            let scenariosHtml = data.scenarios.map((scenario, index) => `
+                <div id="${scenario.id}" class="feedback-item mb-4 p-4 rounded-lg border border-gray-200">
+                    <p class="text-gray-800 text-lg">
+                        ${scenario.text.replace('(1) ___', createDropdown(scenario.id, '1', data.wordBanks.wb1))
+                                      .replace('(2) ___', createDropdown(scenario.id, '2', data.wordBanks.wb2))
+                                      .replace('(3) ___', createDropdown(scenario.id, '3', data.wordBanks.wb3))}
+                    </p>
+                    <div id="feedback-${scenario.id}" class="mt-2"></div>
+                </div>
+            `).join('');
+
+            section.innerHTML = `<h2 class="text-xl font-bold text-gray-800 mb-4">${data.title}</h2>${wordBankHtml}${scenariosHtml}`;
+            return section;
+        }
+        
+        function createDropdown(id, num, options) {
+            return `
+                <select name="${id}-wb${num}" data-question-id="${id}" data-part="${num}" class="inline-block mx-1 p-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">(Select)</option>
+                    <option value="A">${options.A}</option>
+                    <option value="B">${options.B}</option>
+                </select>
+            `;
+        }
+        
+        // Render Section 2
+        function renderQ2(data) {
+            const section = document.createElement('div');
+            section.className = 'p-6 bg-white rounded-lg shadow-md';
+            section.innerHTML = `<h2 class="text-xl font-bold text-gray-800 mb-6">${data.title}</h2>`;
+            
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-6';
+            
+            data.scenarios.forEach(scenario => {
+                let contentHtml = '';
+                if (scenario.type === 'points') {
+                    // Use discrete graph generator
+                    contentHtml = createSvgGridDiscrete(scenario.points, scenario.viewBox);
+                } else if (scenario.type === 'table') {
+                    contentHtml = `
+                        <div class="flex justify-center">
+                            <table class="w-1/2 border-collapse border border-gray-400">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th class="border border-gray-300 p-2 text-lg font-semibold"><em>x</em></th>
+                                        <th class="border border-gray-300 p-2 text-lg font-semibold"><em>y</em></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${scenario.table.map(row => `
+                                        <tr class="text-center">
+                                            <td class="border border-gray-300 p-2">${row.x}</td>
+                                            <td class="border border-gray-300 p-2">${row.y}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                } else if (scenario.type === 'continuous-svg') {
+                    // Use NEW continuous graph generator
+                    contentHtml = createSvgGridContinuous(scenario);
+                }
+                
+                gridContainer.innerHTML += `
+                    <div id="${scenario.id}" class="feedback-item p-4 rounded-lg border border-gray-200 space-y-4">
+                        <div class="h-64 flex items-center justify-center">${contentHtml}</div>
+                        <div>
+                            <label for="${scenario.id}-domain" class="block text-sm font-medium text-gray-700">Domain:</label>
+                            <input type="text" id="${scenario.id}-domain" data-question-id="${scenario.id}" data-part="domain" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="e.g., {-1, 0, 1} or [-5, 5)">
+                        </div>
+                        <div>
+                            <label for="${scenario.id}-range" class="block text-sm font-medium text-gray-700">Range:</label>
+                            <input type="text" id="${scenario.id}-range" data-question-id="${scenario.id}" data-part="range" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm" placeholder="e.g., {2, 3, 4} or (-10, 10]">
+                        </div>
+                        <div>
+                            <p class="block text-sm font-medium text-gray-700 mb-1">Discrete or Continuous? (Circle one.)</p>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="${scenario.id}-type" value="discrete" data-question-id="${scenario.id}" data-part="type" class="mr-1"> Discrete
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="${scenario.id}-type" value="continuous" data-question-id="${scenario.id}" data-part="type" class="mr-1"> Continuous
+                                </label>
+                            </div>
+                        </div>
+                        <div id="feedback-${scenario.id}" class="mt-2"></div>
+                    </div>
+                `;
+            });
+            
+            section.appendChild(gridContainer);
+            return section;
+        }
+
+        // Helper to create SVG grid for Q2 (Discrete Points)
+        function createSvgGridDiscrete(points, viewBox) {
+            const { minX, maxX, minY, maxY } = viewBox;
+            const rangeX = maxX - minX;
+            const rangeY = maxY - minY;
+            const width = 250;
+            const height = 250;
+            const padding = 20;
+
+            const scaleX = (x) => ((x - minX) / rangeX) * (width - 2 * padding) + padding;
+            const scaleY = (y) => ((maxY - y) / rangeY) * (height - 2 * padding) + padding;
+
+            let gridLines = '';
+            for (let i = Math.ceil(minX); i <= Math.floor(maxX); i++) {
+                gridLines += `<line x1="${scaleX(i)}" y1="${padding}" x2="${scaleX(i)}" y2="${height - padding}" stroke="${i === 0 ? '#333' : '#e0e0e0'}" stroke-width="${i === 0 ? 2 : 1}"/>`;
+            }
+            for (let i = Math.ceil(minY); i <= Math.floor(maxY); i++) {
+                gridLines += `<line x1="${padding}" y1="${scaleY(i)}" x2="${width - padding}" y2="${scaleY(i)}" stroke="${i === 0 ? '#333' : '#e0e0e0'}" stroke-width="${i === 0 ? 2 : 1}"/>`;
+            }
+            
+            const pointCircles = points.map(p => 
+                `<circle cx="${scaleX(p.x)}" cy="${scaleY(p.y)}" r="5" fill="#3b82f6" />`
+            ).join('');
+
+            return `
+                <svg viewBox="0 0 ${width} ${height}" class="w-full h-full">
+                    ${gridLines}
+                    <!-- X Axis -->
+                    <line x1="${padding}" y1="${scaleY(0)}" x2="${width - padding}" y2="${scaleY(0)}" stroke="#000" stroke-width="2" />
+                    <!-- Y Axis -->
+                    <line x1="${scaleX(0)}" y1="${padding}" x2="${scaleX(0)}" y2="${height - padding}" stroke="#000" stroke-width="2" />
+                    ${pointCircles}
+                </svg>
+            `;
+        }
+
+        // NEW Helper to create SVG grid for Q2 (Continuous Path)
+        function createSvgGridContinuous(scenario) {
+            const { minX, maxX, minY, maxY } = scenario.viewBox;
+            const rangeX = maxX - minX;
+            const rangeY = maxY - minY;
+            const width = 250;
+            const height = 250;
+            const padding = 20;
+
+            const scaleX = (x) => ((x - minX) / rangeX) * (width - 2 * padding) + padding;
+            const scaleY = (y) => ((maxY - y) / rangeY) * (height - 2 * padding) + padding;
+
+            let gridLines = '';
+            // Draw grid lines
+            for (let i = Math.ceil(minX); i <= Math.floor(maxX); i++) {
+                gridLines += `<line x1="${scaleX(i)}" y1="${padding}" x2="${scaleX(i)}" y2="${height - padding}" stroke="${i === 0 ? '#333' : '#e0e0e0'}" stroke-width="${i === 0 ? 2 : 1}"/>`;
+            }
+            for (let i = Math.ceil(minY); i <= Math.floor(maxY); i++) {
+                gridLines += `<line x1="${padding}" y1="${scaleY(i)}" x2="${width - padding}" y2="${scaleY(i)}" stroke="${i === 0 ? '#333' : '#e0e0e0'}" stroke-width="${i === 0 ? 2 : 1}"/>`;
+            }
+
+            // Build path string from scaled coordinates
+            let d = '';
+            scenario.path.forEach(cmd => {
+                if (cmd.type === 'M') {
+                    d += `M ${scaleX(cmd.x)} ${scaleY(cmd.y)} `;
+                } else if (cmd.type === 'Q') {
+                    d += `Q ${scaleX(cmd.x1)} ${scaleY(cmd.y1)} ${scaleX(cmd.x)} ${scaleY(cmd.y)} `;
+                } else if (cmd.type === 'L') { // Added support for L commands
+                    d += `L ${scaleX(cmd.x)} ${scaleY(cmd.y)} `;
+                }
+                // Add more commands like L, C if needed in the future
+            });
+            
+            const pathHtml = `<path d="${d}" stroke="#3b82f6" stroke-width="3" fill="none" />`;
+
+            // Build endpoint circles
+            const endpointCircles = scenario.endpoints.map(p => {
+                return `<circle cx="${scaleX(p.x)}" cy="${scaleY(p.y)}" r="5" 
+                            fill="${p.type === 'open' ? '#fff' : '#3b82f6'}" 
+                            stroke="#3b82f6" stroke-width="2" />`;
+            }).join('');
+
+            return `
+                <svg viewBox="0 0 ${width} ${height}" class="w-full h-full">
+                    ${gridLines}
+                    <!-- X Axis -->
+                    <line x1="${padding}" y1="${scaleY(0)}" x2="${width - padding}" y2="${scaleY(0)}" stroke="#000" stroke-width="2" />
+                    <!-- Y Axis -->
+                    <line x1="${scaleX(0)}" y1="${padding}" x2="${scaleX(0)}" y2="${height - padding}" stroke="#000" stroke-width="2" />
+                    ${pathHtml}
+                    ${endpointCircles}
+                </svg>
+            `;
+        }
+
+        // Render Section 3
+        function renderQ3(data) {
+            const section = document.createElement('div');
+            section.className = 'p-6 bg-white rounded-lg shadow-md';
+            section.innerHTML = `<h2 class="text-xl font-bold text-gray-800 mb-6">${data.title}</h2>`;
+            
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'grid grid-cols-1 md:grid-cols-2 gap-6';
+            
+            data.scenarios.forEach((scenario, index) => {
+                let contentHtml = '';
+                if (scenario.type === 'set') {
+                    contentHtml = `<p class="text-lg font-mono p-4 bg-gray-50 rounded">${scenario.relation}</p>`;
+                } else if (scenario.type === 'table') {
+                    contentHtml = `
+                        <table class="w-full border-collapse border border-gray-400">
+                            <thead><tr class="bg-gray-100"><th class="border border-gray-300 p-2"><em>x</em></th><th class="border border-gray-300 p-2"><em>y</em></th></tr></thead>
+                            <tbody>
+                                ${scenario.table.map(row => `<tr class="text-center"><td class="border border-gray-300 p-2">${row.x}</td><td class="border border-gray-300 p-2">${row.y}</td></tr>`).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else if (scenario.type === 'mapping' || scenario.type === 'graph') {
+                    contentHtml = `<p class="text-lg p-4 bg-gray-50 rounded">${scenario.description}</p>`;
+                }
+                
+                gridContainer.innerHTML += `
+                    <div id="${scenario.id}" class="feedback-item p-4 rounded-lg border border-gray-200">
+                        <div class="mb-4">${contentHtml}</div>
+                        <p class="font-semibold mb-2">Is this a function?</p>
+                        <div class="flex space-x-4">
+                            <label class="flex items-center">
+                                <input type="radio" name="${scenario.id}-isFunc" value="true" data-question-id="${scenario.id}" data-part="isFunction" class="mr-1"> Yes
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="${scenario.id}-isFunc" value="false" data-question-id="${scenario.id}" data-part="isFunction" class="mr-1"> No
+                            </label>
+                        </div>
+                        <div id="feedback-${scenario.id}" class="mt-2"></div>
+                    </div>
+                `;
+            });
+            
+            section.appendChild(gridContainer);
+            return section;
+        }
+
+        // Render Section 4
+        function renderQ4(data) {
+            const section = document.createElement('div');
+            section.className = 'p-6 bg-white rounded-lg shadow-md';
+            
+            const tableHeader = `
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="p-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Variable A</th>
+                        <th class="p-3 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Variable B</th>
+                    </tr>
+                </thead>
+            `;
+            
+            const tableBody = data.scenarios.map(scenario => `
+                <tr id="${scenario.id}" class="feedback-item border-b border-gray-200">
+                    <td class="p-0">
+                        <div class="variable-option">
+                            <input type="radio" id="${scenario.id}-varA" name="${scenario.id}-independent" value="varA" data-question-id="${scenario.id}" data-part="independent" class="hidden">
+                            <label for="${scenario.id}-varA" class="block cursor-pointer p-3">${scenario.varA}</label>
+                        </div>
+                    </td>
+                    <td class="p-0">
+                        <div class="variable-option">
+                            <input type="radio" id="${scenario.id}-varB" name="${scenario.id}-independent" value="varB" data-question-id="${scenario.id}" data-part="independent" class="hidden">
+                            <label for="${scenario.id}-varB" class="block cursor-pointer p-3">${scenario.varB}</label>
+                        </div>
+                    </td>
+                </tr>
+                <tr id="feedback-row-${scenario.id}" class="hidden"><td colspan="2" class="p-2"></td></tr>
+            `).join('');
+            
+            section.innerHTML = `
+                <h2 class="text-xl font-bold text-gray-800 mb-4">${data.title}</h2>
+                <table class="w-full border border-gray-200 rounded-lg overflow-hidden">
+                    ${tableHeader}
+                    <tbody class="bg-white">
+                        ${tableBody}
+                    </tbody>
+                </table>
+            `;
+            return section;
+        }
+
+        // --- CHECKING & FEEDBACK LOGIC ---
+
+        function checkAnswers() {
+            let totalCorrect = 0;
+            let totalQuestions = 0;
+
+            // Check Section 1
+            const q1Data = allQuestions[0];
+            q1Data.scenarios.forEach(scenario => {
+                const userAnswers = {
+                    '1': document.querySelector(`select[name="${scenario.id}-wb1"]`).value,
+                    '2': document.querySelector(`select[name="${scenario.id}-wb2"]`).value,
+                    '3': document.querySelector(`select[name="${scenario.id}-wb3"]`).value,
+                };
+                
+                let allCorrect = true;
+                // Each scenario has 3 parts
+                totalQuestions += 3;
+                let feedbackHtml = '';
+                
+                for(let i = 1; i <= 3; i++) {
+                    if(userAnswers[i] === scenario.answers[i-1]) {
+                        totalCorrect++;
+                    } else {
+                        allCorrect = false;
+                    }
+                }
+                
+                const itemEl = document.getElementById(scenario.id);
+                const feedbackEl = document.getElementById(`feedback-${scenario.id}`);
+                if(allCorrect) {
+                    itemEl.classList.add('correct-answer');
+                    feedbackEl.innerHTML = `<p class="correct-text">Correct!</p>`;
+                } else {
+                    itemEl.classList.add('incorrect-answer');
+                    feedbackEl.innerHTML = `<p class="incorrect-text">Incorrect. Correct answer: (1) ${q1Data.wordBanks.wb1[scenario.answers[0]]}, (2) ${q1Data.wordBanks.wb2[scenario.answers[1]]}, (3) ${q1Data.wordBanks.wb3[scenario.answers[2]]}</p>`;
+                }
+            });
+
+            // Check Section 2
+            const q2Data = allQuestions[1];
+            q2Data.scenarios.forEach(scenario => {
+                const userAnswerDomain = document.getElementById(`${scenario.id}-domain`).value.replace(/\s/g, '');
+                const userAnswerRange = document.getElementById(`${scenario.id}-range`).value.replace(/\s/g, '');
+                const userAnswerType = document.querySelector(`input[name="${scenario.id}-type"]:checked`)?.value;
+                
+                // Each scenario has 3 parts
+                totalQuestions += 3;
+                let correctCount = 0;
+                let feedbackHtml = '<ul class="list-disc list-inside space-y-1">';
+
+                if (userAnswerDomain === scenario.answers.domain.replace(/\s/g, '')) {
+                    totalCorrect++;
+                    correctCount++;
+                    feedbackHtml += `<li class="correct-text">Domain is correct!</li>`;
+                } else {
+                    feedbackHtml += `<li class="incorrect-text">Domain is incorrect. Correct: ${scenario.answers.domain}</li>`;
+                }
+
+                if (userAnswerRange === scenario.answers.range.replace(/\s/g, '')) {
+                    totalCorrect++;
+                    correctCount++;
+                    feedbackHtml += `<li class="correct-text">Range is correct!</li>`;
+                } else {
+                    feedbackHtml += `<li class="incorrect-text">Range is incorrect. Correct: ${scenario.answers.range}</li>`;
+                }
+
+                if (userAnswerType === scenario.answers.type) {
+                    totalCorrect++;
+                    correctCount++;
+                    feedbackHtml += `<li class="correct-text">Type is correct!</li>`;
+                } else {
+                    feedbackHtml += `<li class="incorrect-text">Type is incorrect. Correct: ${scenario.answers.type}</li>`;
+                }
+                feedbackHtml += '</ul>';
+
+                const itemEl = document.getElementById(scenario.id);
+                const feedbackEl = document.getElementById(`feedback-${scenario.id}`);
+                itemEl.classList.add(correctCount === 3 ? 'correct-answer' : 'incorrect-answer');
+                feedbackEl.innerHTML = feedbackHtml;
+            });
+
+            // Check Section 3
+            const q3Data = allQuestions[2];
+            q3Data.scenarios.forEach(scenario => {
+                totalQuestions++;
+                const userAnswer = document.querySelector(`input[name="${scenario.id}-isFunc"]:checked`)?.value;
+                const correctAnswer = String(scenario.isFunction);
+                
+                const itemEl = document.getElementById(scenario.id);
+                const feedbackEl = document.getElementById(`feedback-${scenario.id}`);
+
+                if (userAnswer === correctAnswer) {
+                    totalCorrect++;
+                    itemEl.classList.add('correct-answer');
+                    feedbackEl.innerHTML = `<p class="correct-text">Correct!</p>`;
+                } else {
+                    itemEl.classList.add('incorrect-answer');
+                    let reason = '';
+                    if (!scenario.isFunction) {
+                        reason = ` (The input ${scenario.id === 'q3b' || scenario.id === 'q3d' ? (scenario.id === 'q3b' ? 0 : 5) : (scenario.id === 'q3f' ? 10 : 'value')} has more than one output.)`;
+                    }
+                    feedbackEl.innerHTML = `<p class="incorrect-text">Incorrect. This ${scenario.isFunction ? 'is' : 'is not'} a function${reason}</p>`;
+                }
+            });
+
+            // Check Section 4
+            const q4Data = allQuestions[3];
+            q4Data.scenarios.forEach(scenario => {
+                totalQuestions++;
+                const userAnswer = document.querySelector(`input[name="${scenario.id}-independent"]:checked`)?.value;
+                const correctAnswer = scenario.independent;
+                
+                const itemEl = document.getElementById(scenario.id);
+                const feedbackRow = document.getElementById(`feedback-row-${scenario.id}`);
+                const feedbackCell = feedbackRow.querySelector('td');
+
+                if (userAnswer === correctAnswer) {
+                    totalCorrect++;
+                    itemEl.querySelector(`label[for="${scenario.id}-${userAnswer}"]`).closest('.variable-option').classList.add('correct-answer');
+                } else {
+                    // Show which was wrong
+                    if (userAnswer) {
+                        itemEl.querySelector(`label[for="${scenario.id}-${userAnswer}"]`).closest('.variable-option').classList.add('incorrect-answer');
+                    }
+                    // Show which was right
+                    itemEl.querySelector(`label[for="${scenario.id}-${correctAnswer}"]`).closest('.variable-option').classList.add('correct-answer');
+
+                    // Add feedback row
+                    feedbackRow.classList.remove('hidden');
+                    feedbackCell.innerHTML = `<p class="incorrect-text p-2">The independent variable is the one that causes the change.</p>`;
+                }
+            });
+
+            // Display final score
+            document.getElementById('score-text').textContent = `${totalCorrect} / ${totalQuestions}`;
+            document.getElementById('results-area').classList.remove('hidden');
+            document.getElementById('check-answers-btn').classList.add('hidden');
+            
+            // Scroll to results
+            document.getElementById('results-area').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- EVENT LISTENERS ---
+        document.getElementById('check-answers-btn').addEventListener('click', checkAnswers);
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            renderQuiz();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
-        generateNewBtn.addEventListener('click', () => {
-            generateQuizData();
-            renderQuizForm(currentQuestions);
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-            window.scrollTo(0, 0);
-        });
-        document.addEventListener('DOMContentLoaded', () => {
-             generateQuizData();
-             renderQuizForm(currentQuestions);
-        });
+
+        // Initial render on page load
+        document.addEventListener('DOMContentLoaded', renderQuiz);
     </script>
 </body>
 </html>
+
+
+
 

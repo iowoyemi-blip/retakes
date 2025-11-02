@@ -41,6 +41,33 @@
             border: 1px solid #d1d5db;
             border-radius: 0.5rem;
         }
+        .nav-btn {
+            background-color: #4b5563; /* gray-600 */
+            color: white;
+            font-weight: bold;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .nav-btn:hover {
+            background-color: #374151; /* gray-700 */
+        }
+        .check-btn {
+            background-color: #2563eb; /* blue-600 */
+        }
+        .check-btn:hover {
+             background-color: #1d4ed8; /* blue-700 */
+        }
+        .grade-btn {
+            background-color: #16a34a; /* green-600 */
+        }
+        .grade-btn:hover {
+            background-color: #15803d; /* green-700 */
+        }
+        .nav-btn:disabled {
+            background-color: #d1d5db; /* gray-300 */
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
@@ -51,14 +78,25 @@
             <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
         </div>
 
-        <div id="quizContainer" class="p-8">
-            <!-- The quiz form will be dynamically generated and inserted here -->
+        <div id="quizSection">
+            <div id="quizContainer" class="p-8">
+                </div>
+    
+            <div id="quizNavigation" class="p-8 border-t border-gray-200">
+                <div class="flex justify-between items-center">
+                    <button id="prevBtn" class="nav-btn">Previous</button>
+                    <div id="quizProgress" class="text-gray-600 font-semibold">Question 1 of 4</div>
+                    
+                    <button id="checkBtn" class="nav-btn check-btn">Check Answer</button>
+                    <button id="nextBtn" class="nav-btn hidden">Next</button>
+                    <button id="gradeBtn" class="nav-btn grade-btn hidden">See Results</button>
+                </div>
+            </div>
         </div>
 
-        <!-- Results Section -->
         <div id="resultsSection" class="hidden p-8">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
-            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <div id="score" class="text-xl mb-6 font-semibold space-y-2"></div>
             <div id="detailedResults" class="space-y-4"></div>
              <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
                 <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 transition-transform transform hover:scale-105">Try This Quiz Again</button>
@@ -68,34 +106,68 @@
     </main>
 
     <script>
+        // Get container elements
+        const quizSection = document.getElementById('quizSection');
         const quizContainer = document.getElementById('quizContainer');
         const resultsSection = document.getElementById('resultsSection');
+        
+        // Get result display elements
         const scoreElement = document.getElementById('score');
         const detailedResultsElement = document.getElementById('detailedResults');
+        
+        // Get main action buttons
         const retakeQuizBtn = document.getElementById('retakeQuizBtn');
         const generateNewBtn = document.getElementById('generateNewBtn');
 
+        // Get new navigation elements
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const checkBtn = document.getElementById('checkBtn'); 
+        const gradeBtn = document.getElementById('gradeBtn');
+        const quizProgress = document.getElementById('quizProgress');
+
+        // State variables
         let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = {}; // Stores the latest answer for each sub-question
+        let questionState = {}; // Tracks if a question has been answered correctly *at all*
+        
+        // --- NEW STATE VARIABLES ---
+        let firstTryCorrect = 0; // Tracks questions correct on the first attempt
+        let questionChecked = {}; // Tracks if a question has been checked (e.g., {'q1': true})
 
         const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
 
+        // --- MODIFIED: generateQuizData now resets the new state variables ---
         function generateQuizData() {
             let questions = [];
             
             // Q1: Evaluate from equation
-            const m1 = getRandomInt(-4, 4) || 1; // avoid 0
+            const m1 = getRandomInt(-4, 4) || 1; 
             const b1 = getRandomInt(-10, 10);
             const x1a = getRandomInt(-3, 3);
-            const x1b = getRandomInt(-3, 3);
+            const q1a_ans = m1 * x1a + b1;
             const x1c_sol = getRandomInt(-5, 5);
             const f_x1c = m1 * x1c_sol + b1;
             questions.push({
                 type: 'equation', id: 'q1',
                 text: `Given f(x) = ${m1}x ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)} determine:`,
                 subQuestions: [
-                    { id: 'q1a', text: `f(${x1a})`, answer: (m1 * x1a + b1).toString() },
-                    { id: 'q1b', text: `f(x) = ${f_x1c}`, answer: x1c_sol.toString() }
+                    { 
+                        id: 'q1a', text: `f(${x1a})`, answer: q1a_ans.toString(),
+                        feedback: `To find f(${x1a}), substitute ${x1a} for x:<br>
+                                   f(${x1a}) = ${m1}(${x1a}) ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)}<br>
+                                   f(${x1a}) = ${m1 * x1a} ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)} = <strong>${q1a_ans}</strong>`
+                    },
+                    { 
+                        id: 'q1b', text: `f(x) = ${f_x1c}`, answer: x1c_sol.toString(),
+                        feedback: `To solve f(x) = ${f_x1c}, set the function equal to ${f_x1c} and solve for x:<br>
+                                   ${f_x1c} = ${m1}x ${b1 >= 0 ? '+' : '-'} ${Math.abs(b1)}<br>
+                                   ${f_x1c - b1} = ${m1}x<br>
+                                   ${(f_x1c - b1) / m1} = x<br>
+                                   x = <strong>${x1c_sol}</strong>`
+                    }
                 ]
             });
 
@@ -104,196 +176,329 @@
             const h_vals = x_vals.map(() => getRandomInt(1, 15));
             const tableData = x_vals.map((x, i) => ({ x, h: h_vals[i] }));
             const [q2a_x1, q2a_x2] = shuffle(x_vals).slice(0, 2);
+            const h1 = tableData.find(d=>d.x===q2a_x1).h;
+            const h2 = tableData.find(d=>d.x===q2a_x2).h;
+            const q2a_ans = h1 - h2;
             const q2b_h = shuffle(h_vals)[0];
             const q2b_x = tableData.find(d => d.h === q2b_h).x;
             questions.push({
                 type: 'table', id: 'q2', text: 'Consider the following table of values for h(x):',
                 data: tableData,
                 subQuestions: [
-                    { id: 'q2a', text: `h(${q2a_x1}) - h(${q2a_x2})`, answer: (tableData.find(d=>d.x===q2a_x1).h - tableData.find(d=>d.x===q2a_x2).h).toString() },
-                    { id: 'q2b', text: `h(x) = ${q2b_h}`, answer: q2b_x.toString() }
+                    { 
+                        id: 'q2a', text: `h(${q2a_x1}) - h(${q2a_x2})`, answer: q2a_ans.toString(),
+                        feedback: `First, find the values from the table:<br>
+                                   h(${q2a_x1}) = ${h1} (when x is ${q2a_x1}, h(x) is ${h1})<br>
+                                   h(${q2a_x2}) = ${h2} (when x is ${q2a_x2}, h(x) is ${h2})<br>
+                                   Then, subtract: ${h1} - ${h2} = <strong>${q2a_ans}</strong>`
+                    },
+                    { 
+                        id: 'q2b', text: `h(x) = ${q2b_h}`, answer: q2b_x.toString(),
+                        feedback: `Look in the <strong>h(x)</strong> row for the value ${q2b_h}.<br>
+                                   The corresponding value in the <strong>x</strong> row is <strong>${q2b_x}</strong>.`
+                    }
                 ]
             });
             
-            // Q3: Evaluate from graph, ensuring points are on the grid
+            // Q3: Evaluate from graph
             let m3, b3, x3a, y3a, x3b, y3b;
-            
-            // Loop to ensure the line is reasonably placed and doesn't produce off-grid values for questions
             do {
-                m3 = getRandomInt(-2, 2) || 1; // Keep slope gentle
-                b3 = getRandomInt(-3, 3);     // Keep y-intercept close to origin
-                x3a = getRandomInt(-4, 4);
+                m3 = getRandomInt(-2, 2) || 1; b3 = getRandomInt(-3, 3); x3a = getRandomInt(-4, 4);
                 y3a = m3 * x3a + b3;
-                
-                // Find a different x for the second question
                 let temp_x3b;
-                do {
-                    temp_x3b = getRandomInt(-4, 4);
-                } while (temp_x3b === x3a);
-                x3b = temp_x3b;
-                y3b = m3 * x3b + b3;
-
-            } while (Math.abs(y3a) > 5 || Math.abs(y3b) > 5); // Regenerate if points are off-grid
-
+                do { temp_x3b = getRandomInt(-4, 4); } while (temp_x3b === x3a);
+                x3b = temp_x3b; y3b = m3 * x3b + b3;
+            } while (Math.abs(y3a) > 5 || Math.abs(y3b) > 5); 
             questions.push({
                 type: 'graph', id: 'q3', text: 'The graph of y = f(x) is shown below. Determine the values represented below the graph.',
                 data: { m: m3, b: b3 },
                 subQuestions: [
-                     { id: 'q3a', text: `f(${x3a})`, answer: y3a.toString() },
-                     { id: 'q3b', text: `f(x) = ${y3b}`, answer: x3b.toString() }
+                     { 
+                        id: 'q3a', text: `f(${x3a})`, answer: y3a.toString(),
+                        feedback: `To find f(${x3a}), find <strong>x = ${x3a}</strong> on the horizontal axis.<br>
+                                   Move up or down to the line, and find the corresponding y-value on the vertical axis, which is <strong>${y3a}</strong>.`
+                     },
+                     { 
+                        id: 'q3b', text: `f(x) = ${y3b}`, answer: x3b.toString(),
+                        feedback: `To solve f(x) = ${y3b}, find <strong>y = ${y3b}</strong> on the vertical axis.<br>
+                                   Move left or right to the line, and find the corresponding x-value on the horizontal axis, which is <strong>${x3b}</strong>.`
+                     }
+                ]
+            });
+
+            // Q4: Word Problem
+            const m4 = getRandomInt(-5, -2); const b4 = getRandomInt(20, 50); 
+            const context = "A person is driving home from work. Their distance (in miles) from home after 't' minutes is modeled by the equation:";
+            const equation = `d(t) = ${m4}t + ${b4}`;
+            const t4a = getRandomInt(3, 8);
+            const d4a_sol = m4 * t4a + b4;
+            let t4b_sol;
+            do { t4b_sol = getRandomInt(3, 8); } while (t4b_sol === t4a); 
+            const d4b = m4 * t4b_sol + b4; 
+            questions.push({
+                type: 'equation', id: 'q4',
+                text: `${context}<br><strong class="block text-center text-lg my-2">${equation}</strong>`,
+                subQuestions: [
+                    { 
+                        id: 'q4a', text: `Find d(${t4a}) and explain what it means. <span class="block text-sm text-gray-500">Enter the numerical value for d(${t4a}) below:</span>`, answer: d4a_sol.toString(),
+                        feedback: `Plug in t = ${t4a} into the equation:<br>
+                                   d(${t4a}) = ${m4}(${t4a}) + ${b4}<br>
+                                   d(${t4a}) = ${m4 * t4a} + ${b4} = <strong>${d4a_sol}</strong><br>
+                                   <strong>Meaning:</strong> After ${t4a} minutes, the person is ${d4a_sol} miles from home.`
+                    },
+                    { 
+                        id: 'q4b', text: `Solve d(t) = ${d4b} and explain what it means. <span class="block text-sm text-gray-500">Enter the numerical value for 't' below:</span>`, answer: t4b_sol.toString(),
+                        feedback: `Set the equation equal to ${d4b} and solve for t:<br>
+                                   ${d4b} = ${m4}t + ${b4}<br>
+                                   ${d4b - b4} = ${m4}t<br>
+                                   ${(d4b - b4) / m4} = t<br>
+                                   t = <strong>${t4b_sol}</strong><br>
+                                   <strong>Meaning:</strong> The person is ${d4b} miles from home after ${t4b_sol} minutes.`
+                    }
                 ]
             });
 
             currentQuestions = questions;
+            currentQuestionIndex = 0; 
+            userAnswers = {}; 
+            questionState = {}; 
+            
+            // Reset new trackers
+            firstTryCorrect = 0;
+            questionChecked = {};
         }
 
+        // --- Renders question and feedback container ---
+        function renderCurrentQuestion() {
+            const q = currentQuestions[currentQuestionIndex];
+            let html = '';
+
+            html += `<div class="mb-10"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.id.toUpperCase()}. ${q.text}</h2>`;
+            if(q.type === 'equation' || q.type === 'table') {
+                if (q.type === 'table') {
+                    html += `<table class="data-table"><thead><tr><th>x</th>${q.data.map(d=>`<td>${d.x}</td>`).join('')}</tr>
+                                <tr><th>h(x)</th>${q.data.map(d=>`<td>${d.h}</td>`).join('')}</tr></thead></table>`;
+                }
+                html += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">`;
+                q.subQuestions.forEach((sq, i) => {
+                    const savedValue = userAnswers[sq.id] || ''; 
+                    html += `<div><label for="${sq.id}" class="block mb-1">${String.fromCharCode(97+i)}) ${sq.text}</label>
+                                <input type="text" id="${sq.id}" class="w-full p-2 border rounded-lg" value="${savedValue}"></div>`;
+                });
+                html += `</div>`;
+            } else if (q.type === 'graph') {
+                html += `<div class="flex flex-col md:flex-row gap-8 items-center">
+                            <canvas id="linearGraph" width="300" height="300"></canvas>
+                            <div class="flex-grow space-y-4">`;
+                q.subQuestions.forEach((sq, i) => {
+                    const savedValue = userAnswers[sq.id] || ''; 
+                    html += `<div><label for="${sq.id}" class="block mb-1">${String.fromCharCode(97+i)}) ${sq.text}</label>
+                                <input type="text" id="${sq.id}" class="w-full p-2 border rounded-lg" value="${savedValue}"></div>`;
+                });
+                html += `</div></div>`;
+            }
+            html += `</div>`;
+            
+            html += `<div id="feedbackContainer" class="mt-6 space-y-3"></div>`;
+            quizContainer.innerHTML = html;
+            
+            if (q.type === 'graph') {
+                drawGraph();
+            }
+
+            updateNavButtons(); 
+            
+            if (questionState[q.id]) {
+                checkCurrentAnswer(false); // Rerun check to show feedback, but don't count as 'first try'
+            }
+        }
+        
+        // --- MODIFIED: checkCurrentAnswer now tracks first-try logic ---
+        function checkCurrentAnswer(isFirstTryCheck = true) {
+            const q = currentQuestions[currentQuestionIndex];
+            let allCorrect = true;
+            let feedbackHTML = '';
+
+            // Check if this is the very first time this question is being checked
+            const isFirstAttempt = !questionChecked[q.id] && isFirstTryCheck;
+            
+            // Mark it as checked
+            if (isFirstAttempt) {
+                questionChecked[q.id] = true;
+            }
+
+            q.subQuestions.forEach(sq => {
+                const inputElement = document.getElementById(sq.id);
+                const userInput = inputElement.value.trim();
+                userAnswers[sq.id] = userInput; // Save answer
+                
+                const isCorrect = (userInput === sq.answer);
+                if (!isCorrect) allCorrect = false;
+
+                feedbackHTML += `<div class="result-item border-l-4 p-4 rounded-md ${isCorrect ? 'correct' : 'incorrect'}">
+                    <div class="font-semibold text-gray-800">${String.fromCharCode(97 + q.subQuestions.indexOf(sq))}) ${sq.text.split('<span')[0]}</div>
+                    <p class="mt-2 text-sm">Your answer: <span class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">${userInput || '<i>No answer</i>'}</span></p>
+                    ${!isCorrect ? `<p class="mt-1 text-sm">Correct answer: <span class="font-medium text-green-700">${sq.answer}</span></p>` : ''}
+                    <p class="mt-2 pt-2 border-t border-gray-200 text-sm text-gray-600"><strong>Feedback:</strong><br>${sq.feedback}</p>
+                </div>`;
+            });
+            
+            document.getElementById('feedbackContainer').innerHTML = feedbackHTML;
+
+            if (allCorrect) {
+                questionState[q.id] = true; // Mark question as correctly answered
+                
+                // If this was the first attempt and it was all correct, increment counter
+                if (isFirstAttempt) {
+                    firstTryCorrect++;
+                }
+
+                // Show 'Next' or 'Grade' button
+                checkBtn.classList.add('hidden');
+                if (currentQuestionIndex === currentQuestions.length - 1) {
+                    gradeBtn.classList.remove('hidden');
+                    nextBtn.classList.add('hidden');
+                } else {
+                    nextBtn.classList.remove('hidden');
+                    gradeBtn.classList.add('hidden');
+                }
+            } else {
+                questionState[q.id] = false;
+                // Keep "Check Answer" button visible for retry
+                checkBtn.classList.remove('hidden');
+                nextBtn.classList.add('hidden');
+                gradeBtn.classList.add('hidden');
+            }
+        }
+
+        // --- Updates nav buttons based on state ---
+        function updateNavButtons() {
+            prevBtn.disabled = (currentQuestionIndex === 0);
+            
+            // Show 'Check Answer' by default
+            checkBtn.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            gradeBtn.classList.add('hidden');
+
+            quizProgress.textContent = `Question ${currentQuestionIndex + 1} of ${currentQuestions.length}`;
+        }
+
+        // --- Graph drawing function (unchanged) ---
         function drawGraph() {
             const graphData = currentQuestions.find(q => q.type === 'graph').data;
             const { m, b } = graphData;
-            
             const canvas = document.getElementById('linearGraph');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-
-            const width = canvas.width;
-            const height = canvas.height;
-            const scale = 30;
-            const originX = width / 2;
-            const originY = height / 2;
-
+            const width = canvas.width, height = canvas.height, scale = 30;
+            const originX = width / 2, originY = height / 2;
             ctx.clearRect(0, 0, width, height);
-
-            // Draw grid
-            ctx.strokeStyle = '#d1d5db'; // A darker, more visible gray
-            ctx.lineWidth = 1;
-            for (let i = scale; i < width; i += scale) { // Vertical lines
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, height);
-                ctx.stroke();
-            }
-            for (let i = scale; i < height; i += scale) { // Horizontal lines
-                ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(width, i);
-                ctx.stroke();
-            }
-            
-            // Draw axes
-            ctx.strokeStyle = '#374151';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(0, originY); ctx.lineTo(width, originY); // X-axis
-            ctx.moveTo(originX, 0); ctx.lineTo(originX, height); // Y-axis
-            ctx.stroke();
-
-            // Draw labels
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '10px Inter';
+            ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 1;
+            for (let i = scale; i < width; i += scale) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke(); }
+            for (let i = scale; i < height; i += scale) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke(); }
+            ctx.strokeStyle = '#374151'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(width, originY); ctx.moveTo(originX, 0); ctx.lineTo(originX, height); ctx.stroke();
+            ctx.fillStyle = '#6b7280'; ctx.font = '10px Inter';
             for (let i = -5; i <= 5; i++) {
                 if (i === 0) continue;
                 ctx.fillText(i, originX + i * scale - 3, originY + 12);
                 ctx.fillText(i, originX - 12, originY - i * scale + 3);
             }
-
-            // Draw the line
-            ctx.strokeStyle = '#3b82f6';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            const x_min = -5;
-            const y_min = m * x_min + b;
+            ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; ctx.beginPath();
+            const x_min = -5, y_min = m * x_min + b;
             ctx.moveTo(originX + x_min * scale, originY - y_min * scale);
-            const x_max = 5;
-            const y_max = m * x_max + b;
+            const x_max = 5, y_max = m * x_max + b;
             ctx.lineTo(originX + x_max * scale, originY - y_max * scale);
             ctx.stroke();
         }
 
-        function renderQuizForm() {
-            let html = '<form id="quizForm">';
-            currentQuestions.forEach(q => {
-                html += `<div class="mb-10"><h2 class="text-xl font-semibold text-gray-700 mb-6">${q.id.toUpperCase()}. ${q.text}</h2>`;
-                if(q.type === 'equation' || q.type === 'table') {
-                    if (q.type === 'table') {
-                        html += `<table class="data-table"><thead><tr><th>x</th>${q.data.map(d=>`<td>${d.x}</td>`).join('')}</tr>
-                                 <tr><th>h(x)</th>${q.data.map(d=>`<td>${d.h}</td>`).join('')}</tr></thead></table>`;
-                    }
-                    html += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">`;
-                    q.subQuestions.forEach((sq, i) => {
-                         html += `<div><label for="${sq.id}" class="block mb-1">${String.fromCharCode(97+i)}) ${sq.text}</label>
-                                  <input type="text" id="${sq.id}" class="w-full p-2 border rounded-lg"></div>`;
-                    });
-                    html += `</div>`;
-                } else if (q.type === 'graph') {
-                    html += `<div class="flex flex-col md:flex-row gap-8 items-center">
-                                <canvas id="linearGraph" width="300" height="300"></canvas>
-                                <div class="flex-grow space-y-4">`;
-                    q.subQuestions.forEach((sq, i) => {
-                         html += `<div><label for="${sq.id}" class="block mb-1">${String.fromCharCode(97+i)}) ${sq.text}</label>
-                                  <input type="text" id="${sq.id}" class="w-full p-2 border rounded-lg"></div>`;
-                    });
-                    html += `</div></div>`;
-                }
-                html += `</div>`;
-            });
-            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
-            quizContainer.innerHTML = html;
-            
-            if (currentQuestions.some(q => q.type === 'graph')) {
-                drawGraph();
-            }
-
-            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
-        }
-
-        function gradeQuiz(event) {
-            event.preventDefault();
-            let score = 0, total = 0;
+        // --- MODIFIED: gradeQuiz now shows both scores ---
+        function gradeQuiz() {
+            let finalScore = 0, totalSubQuestions = 0;
             let resultsHTML = '';
             
             currentQuestions.forEach(q => {
                 q.subQuestions.forEach(sq => {
-                    total++;
-                    const userInput = document.getElementById(sq.id).value.trim();
+                    totalSubQuestions++;
+                    const userInput = userAnswers[sq.id] || ''; // Get saved answer
                     const isCorrect = userInput === sq.answer;
-                    if(isCorrect) score++;
+                    if(isCorrect) finalScore++;
 
                      resultsHTML += `<div class="result-item border-l-4 p-4 rounded-md ${isCorrect ? 'correct' : 'incorrect'}">
-                        <div class="font-semibold text-gray-800">${q.text} <span class="font-normal italic">- Part: ${sq.text}</span></div>
+                        <div class="font-semibold text-gray-800">${q.id.toUpperCase()}) ${q.text.split('<br>')[0]} <span class="font-normal italic">- Part: ${sq.text.split('<span')[0]}</span></div>
                         <p class="mt-2 text-sm">Your answer: <span class="font-medium ${isCorrect ? 'text-green-700' : 'text-red-700'}">${userInput || '<i>No answer</i>'}</span></p>
                         ${!isCorrect ? `<p class="mt-1 text-sm">Correct answer: <span class="font-medium text-green-700">${sq.answer}</span></p>` : ''}
                     </div>`;
                 });
             });
 
-            const percentage = Math.round((score / total) * 100);
+            // Display Final Score (based on all sub-parts)
+            const percentage = Math.round((finalScore / totalSubQuestions) * 100);
             let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
-            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
+            
+            // Display First Try Score (based on whole questions)
+            const firstTryPercentage = Math.round((firstTryCorrect / currentQuestions.length) * 100);
+            let firstTryColor = firstTryPercentage >= 80 ? 'text-green-600' : (firstTryPercentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+
+            scoreElement.innerHTML = `
+                <div>First Try Score: <span class="${firstTryColor}">${firstTryCorrect} out of ${currentQuestions.length} Questions (${firstTryPercentage}%)</span></div>
+                <div>Final Score: <span class="${scoreColor}">${finalScore} out of ${totalSubQuestions} Parts (${percentage}%)</span></div>
+            `;
+            
             detailedResultsElement.innerHTML = resultsHTML;
-            quizContainer.classList.add('hidden');
+            
+            quizSection.classList.add('hidden');
             resultsSection.classList.remove('hidden');
             window.scrollTo(0, 0);
         }
         
+        // --- Event Listeners for Nav Buttons ---
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                renderCurrentQuestion();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < currentQuestions.length - 1) {
+                currentQuestionIndex++;
+                renderCurrentQuestion();
+            }
+        });
+
+        checkBtn.addEventListener('click', () => checkCurrentAnswer(true));
+        gradeBtn.addEventListener('click', gradeQuiz);
+
+        // --- MODIFIED: retakeQuizBtn now resets the new trackers ---
         retakeQuizBtn.addEventListener('click', () => {
-            renderQuizForm();
+            currentQuestionIndex = 0;
+            userAnswers = {}; 
+            questionState = {};
+            // Reset new trackers
+            firstTryCorrect = 0;
+            questionChecked = {};
+            
+            renderCurrentQuestion();
             resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
+            quizSection.classList.remove('hidden');
             window.scrollTo(0, 0);
         });
+
+        // --- generateNewBtn calls generateQuizData, which already resets everything ---
         generateNewBtn.addEventListener('click', () => {
-            generateQuizData();
-            renderQuizForm();
+            generateQuizData(); 
+            renderCurrentQuestion();
             resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
+            quizSection.classList.remove('hidden');
             window.scrollTo(0, 0);
         });
+        
+        // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
              generateQuizData();
-             renderQuizForm();
+             renderCurrentQuestion();
         });
     </script>
 </body>
 </html>
-
-

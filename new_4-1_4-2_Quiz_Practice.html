@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphing & Writing Linear Equations Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .quiz-container { transition: all 0.3s ease-in-out; }
+        .feedback-correct { background-color: #f0fdf4; border-left-color: #22c55e; }
+        .feedback-incorrect { background-color: #fef2f2; border-left-color: #ef4444; }
+        canvas { border: 1px solid #d1d5db; border-radius: 0.5rem; }
+        .radio-label { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #d1d5db; transition: all 0.2s; }
+        .radio-label:has(input:checked), .radio-label:has(input:disabled:checked) { background-color: #eff6ff; border-color: #3b82f6; }
+        .nav-button { font-weight: bold; padding: 0.75rem 2rem; border-radius: 0.5rem; transition: background-color 0.2s; }
+        .solution-step { padding-left: 1rem; border-left: 2px solid #e5e7eb; margin-top: 0.75rem; }
+
+        /* --- INTERACTIVE GRAPH STYLES --- */
+        .graph-container {
+            width: 100%;
+            max-width: 480px; /* Max width to keep grid visible */
+            margin: 1.5rem auto;
+            position: relative;
+            aspect-ratio: 1 / 1;
+            border: 1px solid #ccc;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: crosshair;
+            border-radius: 0.5rem;
+        }
+        .graph-container svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 0.5rem;
+        }
+        .grid-line {
+            stroke: #e5e7eb;
+            stroke-width: 1;
+        }
+        .axis-line {
+            stroke: #4b5563;
+            stroke-width: 2;
+        }
+        .axis-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 10px;
+            fill: #4b5563;
+        }
+        .student-point {
+            fill: #2563eb; /* blue-600 */
+            stroke: #ffffff;
+            stroke-width: 2;
+        }
+        .student-line {
+            stroke: #2563eb; /* blue-600 */
+            stroke-width: 3;
+            stroke-dasharray: 5 5; /* Dashed line */
+        }
+        .correct-line {
+            stroke: #16a34a; /* green-600 */
+            stroke-width: 4;
+        }
+        .interactive-feedback {
+            font-weight: 600;
+            margin-top: 0.5rem;
+            height: 1.5rem;
+        }
+        .correct-text { color: #166534; }
+        .incorrect-text { color: #991b1b; }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl quiz-container">
+        <div class="p-8 border-b border-gray-200">
+            <h1 class="text-3xl font-bold text-gray-800">Graphing & Writing Linear Equations Quiz</h1>
+            <p class="text-gray-600 mt-2">Get instant feedback after every question.</p>
+        </div>
+
+        <div id="quizArea">
+            <div id="progressIndicator" class="p-6 text-center text-lg font-semibold text-gray-600"></div>
+            <div id="questionContainer" class="p-8 pt-0"></div>
+            <div id="feedbackContainer" class="p-8 pt-4"></div>
+            <div id="navigationContainer" class="p-8 pt-0 flex justify-end items-center"></div>
+        </div>
+
+        <div id="resultsSection" class="hidden p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Complete!</h2>
+            <div id="score" class="text-xl mb-6 font-semibold"></div>
+            <p class="text-gray-600">You can generate a new quiz with different problems at any time.</p>
+             <div class="mt-8 text-center">
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+<script>
+    // --- DOM ELEMENTS ---
+    const quizArea = document.getElementById('quizArea'), progressIndicator = document.getElementById('progressIndicator'),
+          questionContainer = document.getElementById('questionContainer'), feedbackContainer = document.getElementById('feedbackContainer'),
+          navigationContainer = document.getElementById('navigationContainer'), resultsSection = document.getElementById('resultsSection'),
+          scoreElement = document.getElementById('score'), generateNewBtn = document.getElementById('generateNewBtn');
+    
+    // --- QUIZ STATE ---
+    let currentQuestions = [], currentQuestionIndex = 0, score = 0, totalPossible = 0;
+
+    // --- INTERACTIVE GRAPHING STATE & CONSTANTS ---
+    let currentInteractiveEquation = null; // Stores {m, b} for the solution
+    let clickedPoints = []; // Stores {x, y} cartesian coordinates
+    let isInteractiveMode = false;
+
+    const SVG_SIZE = 480;
+    const GRID_RANGE = 8; // -8 to 8
+    const NUM_GRIDS = GRID_RANGE * 2; // 16
+    const GRID_SIZE = SVG_SIZE / NUM_GRIDS; // 30px
+    const MID = SVG_SIZE / 2;
+
+    // --- HELPER FUNCTIONS ---
+    const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const shuffle = arr => arr.sort(() => Math.random() - 0.5);
+    const gcd = (a, b) => { a=Math.abs(a); b=Math.abs(b); return b === 0 ? a : gcd(b, a % b); }
+    function simplifyFrac(num, den) {
+        if (den === 0) return "undefined"; if (num === 0) return "0";
+        const commonDivisor = gcd(num, den); let n = num / commonDivisor, d = den / commonDivisor;
+        if (d < 0) { n = -n; d = -d; }
+        return d === 1 ? `${n}` : `${n}/${d}`;
+    }
+    function formatB(b_str) {
+        if (b_str.includes('/')) { return b_str.startsWith('-') ? b_str : `+${b_str}`; }
+        const b_num = parseFloat(b_str); if (b_num === 0) return '';
+        return b_num > 0 ? `+${b_num}` : `${b_num}`;
+    }
+    const normalizeEq = str => { let s = str.replace(/\s+/g, '').toLowerCase(); s = s.replace('+-', '-'); s = s.replace(/\(\s*(-?\d+\/\d+)\s*\)/g, '$1'); if (s.startsWith('y=-x')) s = 'y=-1x' + s.substring(4); if (s.startsWith('y=x')) s = 'y=1x' + s.substring(3); if (s.endsWith('+0') || s.endsWith('-0')) s = s.slice(0, -2); return s; };
+    const normalizePoint = str => str.replace(/\s+/g, '');
+    const normalizeSlope = str => { const s = str.replace(/\s+/g, '').toLowerCase(); return (s === 'undef' || s === 'undefined' || s === 'noslope') ? 'undefined' : s; };
+    
+    // --- COORDINATE CONVERSION (From 4-2_graphing_lines.html) ---
+    function toPixelCoords(cx, cy) {
+        return {
+            x: MID + (cx * GRID_SIZE),
+            y: MID - (cy * GRID_SIZE) // SVG y-axis is inverted
+        };
+    }
+
+    function toCartesianCoords(px, py) {
+        return {
+            x: Math.round((px - MID) / GRID_SIZE),
+            y: Math.round((MID - py) / GRID_SIZE) // SVG y-axis is inverted
+        };
+    }
+
+    // --- SVG DRAWING (From 4-2_graphing_lines.html) ---
+    function createSvgGrid(svgGrid, isInteractive) {
+        if (!svgGrid) return;
+        svgGrid.innerHTML = ''; // Clear previous grid
+
+        for (let i = 0; i <= NUM_GRIDS; i++) {
+            let pos = i * GRID_SIZE;
+            // Horizontal
+            let hLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            hLine.setAttribute('x1', 0); hLine.setAttribute('y1', pos);
+            hLine.setAttribute('x2', SVG_SIZE); hLine.setAttribute('y2', pos);
+            hLine.classList.add('grid-line');
+            svgGrid.appendChild(hLine);
+            // Vertical
+            let vLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            vLine.setAttribute('x1', pos); vLine.setAttribute('y1', 0);
+            vLine.setAttribute('x2', pos); vLine.setAttribute('y2', SVG_SIZE);
+            vLine.classList.add('grid-line');
+            svgGrid.appendChild(vLine);
+        }
+
+        // Draw axes
+        let xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        xAxis.setAttribute('x1', 0); xAxis.setAttribute('y1', MID);
+        xAxis.setAttribute('x2', SVG_SIZE); xAxis.setAttribute('y2', MID);
+        xAxis.classList.add('axis-line');
+        svgGrid.appendChild(xAxis);
+
+        let yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        yAxis.setAttribute('x1', MID); yAxis.setAttribute('y1', 0);
+        yAxis.setAttribute('x2', MID); yAxis.setAttribute('y2', SVG_SIZE);
+        yAxis.classList.add('axis-line');
+        svgGrid.appendChild(yAxis);
+
+        // Add axis labels (Simplified version)
+        function addLabel(x, y, text) {
+            let label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            label.setAttribute('x', x); label.setAttribute('y', y);
+            label.setAttribute('text-anchor', 'middle'); label.setAttribute('dominant-baseline', 'central');
+            label.textContent = text; label.classList.add('axis-label'); svgGrid.appendChild(label);
+        }
+        for(let i = 1; i <= GRID_RANGE; i++) {
+            if (i % 2 === 0) {
+                addLabel(MID + (i * GRID_SIZE), MID + 12, i); // +x
+                addLabel(MID - (i * GRID_SIZE), MID + 12, -i); // -x
+                addLabel(MID - 12, MID - (i * GRID_SIZE), i); // +y
+                addLabel(MID - 12, MID + (i * GRID_SIZE), -i); // -y
+            }
+        }
+    }
+
+    function drawPoint(cx, cy, id, svgGrid) {
+        const p = toPixelCoords(cx, cy);
+        let circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('id', id);
+        circle.setAttribute('cx', p.x);
+        circle.setAttribute('cy', p.y);
+        circle.setAttribute('r', 5);
+        circle.classList.add('student-point');
+        svgGrid.appendChild(circle);
+    }
+
+    function drawFullLine(m, b, id, lineClass, svgGrid) {
+        if (!svgGrid) return;
+        const x1 = -GRID_RANGE;
+        const y1 = m * x1 + b;
+        const x2 = GRID_RANGE;
+        const y2 = m * x2 + b;
+        const px1 = toPixelCoords(x1, y1);
+        const px2 = toPixelCoords(x2, y2);
+        
+        let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('id', id);
+        line.setAttribute('x1', px1.x);
+        line.setAttribute('y1', px1.y);
+        line.setAttribute('x2', px2.x);
+        line.setAttribute('y2', px2.y);
+        line.classList.add(lineClass);
+        svgGrid.appendChild(line);
+    }
+
+    function drawVerticalLine(x, id, lineClass, svgGrid) {
+        if (!svgGrid) return;
+        const px1 = toPixelCoords(x, -GRID_RANGE);
+        const px2 = toPixelCoords(x, GRID_RANGE);
+
+        let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('id', id);
+        line.setAttribute('x1', px1.x);
+        line.setAttribute('y1', px1.y);
+        line.setAttribute('x2', px2.x);
+        line.setAttribute('y2', px2.y);
+        line.classList.add(lineClass);
+        svgGrid.appendChild(line);
+    }
+
+    function clearStudentDrawings(svgGrid) {
+        if (!svgGrid) return;
+        const ids = ['point-1', 'point-2', 'student-line', 'answer-line'];
+        ids.forEach(id => {
+            const el = svgGrid.querySelector(`#${id}`);
+            if (el) el.remove();
+        });
+    }
+
+    // --- INTERACTIVE LOGIC (Adapted from 4-2_graphing_lines.html) ---
+
+    function handleInteractiveGraphClick(event) {
+        if (!isInteractiveMode) return;
+        const graphContainer = document.getElementById('interactive-graph-container');
+        const svgGrid = document.getElementById('interactive-svg-grid');
+        const instructionText = document.getElementById('interactive-instruction');
+        const checkBtn = document.getElementById('interactive-check-btn');
+        const resetBtn = document.getElementById('interactive-reset-btn');
+
+        if (!graphContainer || !svgGrid || checkBtn.disabled) return;
+        
+        const rect = svgGrid.getBoundingClientRect();
+        const px = event.clientX - rect.left;
+        const py = event.clientY - rect.top;
+        
+        const p = toCartesianCoords(px, py);
+        
+        if (clickedPoints.length === 0) {
+            // First click (y-intercept)
+            clickedPoints.push(p);
+            drawPoint(p.x, p.y, 'point-1', svgGrid);
+            instructionText.textContent = '2. Use the slope to find a second point.';
+            resetBtn.classList.remove('hidden');
+        } else if (clickedPoints.length === 1) {
+            // Second click (slope point)
+            if (p.x === clickedPoints[0].x && p.y === clickedPoints[0].y) return; // Ignore same point
+            
+            clickedPoints.push(p);
+            drawPoint(p.x, p.y, 'point-2', svgGrid);
+
+            // Calculate slope and intercept from student's two points
+            const p1_stu = clickedPoints[0];
+            const p2_stu = clickedPoints[1];
+
+            if (p1_stu.x === p2_stu.x) {
+                drawVerticalLine(p1_stu.x, 'student-line', 'student-line', svgGrid);
+            } else {
+                const m_stu = (p2_stu.y - p1_stu.y) / (p2_stu.x - p1_stu.x);
+                const b_stu = p1_stu.y - m_stu * p1_stu.x;
+                drawFullLine(m_stu, b_stu, 'student-line', 'student-line', svgGrid);
+            }
+            
+            instructionText.textContent = "Click Check Answer!";
+            graphContainer.style.pointerEvents = 'none'; // Disable more clicks
+            checkBtn.classList.remove('hidden');
+            resetBtn.classList.remove('hidden');
+        }
+    }
+
+    function resetInteractivePoints() {
+        const svgGrid = document.getElementById('interactive-svg-grid');
+        const instructionText = document.getElementById('interactive-instruction');
+        const graphContainer = document.getElementById('interactive-graph-container');
+        const checkBtn = document.getElementById('interactive-check-btn');
+        const resetBtn = document.getElementById('interactive-reset-btn');
+        const feedbackEl = document.getElementById('interactive-feedback');
+
+        clickedPoints = [];
+        clearStudentDrawings(svgGrid);
+        graphContainer.style.pointerEvents = 'auto';
+        instructionText.textContent = '1. Click the y-intercept.';
+        feedbackEl.innerHTML = '';
+        checkBtn.classList.add('hidden');
+        resetBtn.classList.add('hidden');
+        checkBtn.disabled = false;
+    }
+
+    function checkInteractiveAnswer() {
+        const q = currentQuestions[currentQuestionIndex];
+        const feedbackEl = document.getElementById('interactive-feedback');
+        const checkBtn = document.getElementById('interactive-check-btn');
+        const resetBtn = document.getElementById('interactive-reset-btn');
+        const svgGrid = document.getElementById('interactive-svg-grid');
+
+        if (clickedPoints.length < 2) {
+             feedbackEl.innerHTML = `<p class="incorrect-text">Please select two points first.</p>`;
+             return;
+        }
+
+        const p1 = clickedPoints[0];
+        const p2 = clickedPoints[1];
+        const { m, b } = currentInteractiveEquation;
+
+        const isInterceptCorrect = (p1.x === 0 && p1.y === b);
+        // Check if p2 is *any* valid point on the line (and not the same as p1)
+        const isSlopePointCorrect = (p2.y === (m * p2.x + b));
+        
+        checkBtn.disabled = true; // Prevent multiple checks
+
+        let pointsEarned = 0;
+        let pointsAvailable = 2; // 1 point for y-int, 1 point for correct slope/point
+
+        if (isInterceptCorrect && isSlopePointCorrect) {
+            // CORRECT
+            pointsEarned = 2;
+            score += 2;
+            totalPossible += 2;
+            const m_str = simplifyFrac(m * 10, 10);
+            feedbackEl.innerHTML = `<p class="correct-text">Correct! Equation: $y = ${m_str}x ${formatB(String(b))}$</p>`;
+            
+            // Remove student line and draw solid correct line
+            clearStudentDrawings(svgGrid);
+            drawFullLine(m, b, 'answer-line', 'correct-line', svgGrid);
+            
+            // Show standard next button
+            const nextButtonText = (currentQuestionIndex < currentQuestions.length - 1) ? 'Next Question &rarr;' : 'Finish Quiz';
+            navigationContainer.innerHTML = `<button onclick="navigateNext()" class="nav-button bg-green-600 text-white hover:bg-green-700">${nextButtonText}</button>`;
+            resetBtn.classList.add('hidden');
+
+        } else {
+            // INCORRECT
+            totalPossible += 2;
+            let errorMsg = '';
+            if (isInterceptCorrect) {
+                pointsEarned = 1;
+                errorMsg = "Your y-intercept is correct, but your second point is not on the line. Try again.";
+            } else {
+                 // Check if the student somehow got the correct slope but wrong intercept
+                 const m_stu = (p2.y - p1.y) / (p2.x - p1.x);
+                 if (m_stu === m) {
+                     pointsEarned = 1;
+                     errorMsg = "You found the correct slope, but the y-intercept is wrong. Try again.";
+                 } else {
+                     errorMsg = "Incorrect! Your line does not match the equation. Try again.";
+                 }
+            }
+            
+            score += pointsEarned;
+            feedbackEl.innerHTML = `<p class="incorrect-text">${errorMsg} (${pointsEarned}/${pointsAvailable} points)</p>`;
+            
+            // Keep the interactive buttons, enable reset
+            resetBtn.classList.remove('hidden');
+            checkBtn.classList.add('hidden');
+        }
+    }
+
+
+    // --- QUIZ DATA GENERATION ---
+    function generateQuizData() {
+        let questions = [];
+        //<editor-fold desc="Original Question Generation Logic (Q1-Q10)">
+        const q1a_data = { m_num: getRandomInt(-3, -1), m_den: getRandomInt(1, 3), b: getRandomInt(-4, 4) }; q1a_data.m_str = simplifyFrac(q1a_data.m_num, q1a_data.m_den);
+        const q1b_data = { m_num: getRandomInt(1, 3), m_den: getRandomInt(1, 3), b: getRandomInt(-4, 4) }; q1b_data.m_str = simplifyFrac(q1b_data.m_num, q1b_data.m_den);
+        questions.push({ type: 'from-graph', id: 'q1', title: 'Write the equation of each line.', subQuestions: [ { id: 'q1a', data: q1a_data, answer: `y=${q1a_data.m_str}x${formatB(String(q1a_data.b))}` }, { id: 'q1b', data: q1b_data, answer: `y=${q1b_data.m_str}x${formatB(String(q1b_data.b))}` } ] });
+        const q2_m_num = getRandomInt(-2, 2) || 1, q2_m_den = getRandomInt(2, 3), q2_b = getRandomInt(-3, 3); const q2_m_str = simplifyFrac(q2_m_num, q2_m_den); const q2_correct = { m_num: q2_m_num, m_den: q2_m_den, b: q2_b };
+        const q2_options = shuffle([ q2_correct, { m_num: q2_m_num, m_den: q2_m_den, b: -q2_b || 1 }, { m_num: -q2_m_num, m_den: q2_m_den, b: q2_b }, { m_num: q2_m_den, m_den: q2_m_num, b: q2_b } ]);
+        questions.push({ type: 'match-graph', id: 'q2', title: `Which graph represents y = ${q2_m_str}x ${q2_b === 0 ? '' : (q2_b > 0 ? '+ ' + q2_b : '- ' + Math.abs(q2_b))}`, options: q2_options, answer: q2_correct, data: {m: q2_m_str, b: q2_b} });
+        const q3_A = getRandomInt(-3, 3) || 1, q3_B = getRandomInt(2, 4), q3_C = q3_B * getRandomInt(1,3); const q3_m_num = -q3_A, q3_m_den = q3_B, q3_b = q3_C/q3_B; const q3_correct = { m_num: q3_m_num, m_den: q3_m_den, b: q3_b };
+        const q3_options = shuffle([ q3_correct, { m_num: q3_A, m_den: q3_B, b: -q3_b }, { m_num: -q3_B, m_den: q3_A, b: q3_C/q3_A }, { m_num: q3_A, m_den: q3_B, b: q3_b } ]);
+        questions.push({ type: 'match-graph', id: 'q3', title: `Which graph represents ${q3_A}x + ${q3_B}y = ${q3_C}?`, options: q3_options, answer: q3_correct, data: {A: q3_A, B: q3_B, C: q3_C} });
+        const q4_A = getRandomInt(1,4), q4_B = getRandomInt(-4,-1), q4_C = q4_A * getRandomInt(2,5) * q4_B;
+        questions.push({ type: 'intercepts', id: 'q4', title: 'Find the x- and y-intercepts.', data: {A: q4_A, B: q4_B, C: q4_C}, text: `${q4_A}x ${q4_B > 0 ? '+':'-'} ${Math.abs(q4_B)}y = ${q4_C}`, answers: { x: `(${q4_C/q4_A},0)`, y: `(0,${q4_C/q4_B})` } });
+        const q5_A = getRandomInt(1,10), q5_B = getRandomInt(2,5), q5_C = getRandomInt(1,20);
+        questions.push({ type: 'rewrite', id: 'q5', title: 'Rewrite in slope-intercept form.', data: {A: q5_A, B: q5_B, C: q5_C}, text: `${q5_A}x + ${q5_B}y = ${q5_C}`, answers: { equation: `y=${simplifyFrac(-q5_A, q5_B)}x${formatB(simplifyFrac(q5_C, q5_B))}`, slope: simplifyFrac(-q5_A, q5_B), y_int: `(0,${simplifyFrac(q5_C, q5_B)})` } });
+        const q6_A = getRandomInt(-10, -1), q6_B = getRandomInt(2, 5), q6_C = getRandomInt(1, 20);
+        questions.push({ type: 'rewrite', id: 'q6', title: 'Rewrite in slope-intercept form.', data: {A: q6_A, B: q6_B, C: q6_C}, text: `${q6_A}x + ${q6_B}y = ${q6_C}`, answers: { equation: `y=${simplifyFrac(-q6_A, q6_B)}x${formatB(simplifyFrac(q6_C, q6_B))}`, slope: simplifyFrac(-q6_A, q6_B), y_int: `(0,${simplifyFrac(q6_C, q6_B)})` } });
+        const q7_m_num = getRandomInt(-4, 4) || 1, q7_m_den = getRandomInt(2, 5), q7_m_str = simplifyFrac(q7_m_num, q7_m_den), q7_x = getRandomInt(-5, 5), q7_y = getRandomInt(-5, 5); const q7_b_val = q7_y - (q7_m_num / q7_m_den) * q7_x, q7_b_str = simplifyFrac(Math.round(q7_b_val * q7_m_den), q7_m_den);
+        questions.push({ type: 'point-slope', id: 'q7', title: 'Write the equation in slope-intercept form.', data: {m: q7_m_str, x: q7_x, y: q7_y}, text: `The line passes through (${q7_x}, ${q7_y}) and has a slope of ${q7_m_str}.`, answer: `y=${q7_m_str}x${formatB(q7_b_str)}` });
+        const q8_x1 = getRandomInt(-5, 5); let q8_x2 = getRandomInt(-5, 5); if (q8_x1 === q8_x2) q8_x2++; const q8_y1 = getRandomInt(-5, 5), q8_y2 = getRandomInt(-5, 5); const q8_m_num = q8_y2 - q8_y1, q8_m_den = q8_x2 - q8_x1, q8_m_str = simplifyFrac(q8_m_num, q8_m_den); const q8_b_val = q8_y1 - (q8_m_num / q8_m_den) * q8_x1, q8_b_str = simplifyFrac(Math.round(q8_b_val * q8_m_den), q8_m_den);
+        questions.push({ type: 'two-points', id: 'q8', title: 'Write the equation in slope-intercept form.', data: {x1: q8_x1, y1: q8_y1, x2: q8_x2, y2: q8_y2}, text: `The line passes through (${q8_x1}, ${q8_y1}) and (${q8_x2}, ${q8_y2}).`, answer: `y=${q8_m_str}x${formatB(q8_b_str)}` });
+        if (Math.random() > 0.5) { const q9_val = getRandomInt(-4, 4); questions.push({ type: 'graph-special', id: 'q9', title: 'Write the equation of the line and state its slope.', data: { type: 'vertical', val: q9_val }, answers: { eq: `x=${q9_val}`, slope: 'undefined' } }); const q10_val = getRandomInt(-4, 4); questions.push({ type: 'graph-special', id: 'q10', title: 'Write the equation of the line and state its slope.', data: { type: 'horizontal', val: q10_val }, answers: { eq: `y=${q10_val}`, slope: '0' } }); } else { const q9_val = getRandomInt(-4, 4); questions.push({ type: 'graph-special', id: 'q9', title: 'Write the equation of the line and state its slope.', data: { type: 'horizontal', val: q9_val }, answers: { eq: `y=${q9_val}`, slope: '0' } }); const q10_val = getRandomInt(-4, 4); questions.push({ type: 'graph-special', id: 'q10', title: 'Write the equation of the line and state its slope.', data: { type: 'vertical', val: q10_val }, answers: { eq: `x=${q10_val}`, slope: 'undefined' } }); }
+        //</editor-fold>
+
+        // --- NEW Q11: Interactive Graphing from Slope-Intercept Form (y = mx + b) ---
+        let q11_m_num, q11_m_den, q11_b;
+        do {
+            q11_m_num = getRandomInt(-3, 3);
+            q11_m_den = getRandomInt(1, 3);
+            q11_b = getRandomInt(-5, 5);
+        } while (q11_m_num === 0 || q11_m_den === 0 || Math.abs(q11_b) > 4); // Keep y-int close to center
+
+        const q11_m = q11_m_num / q11_m_den;
+        const q11_m_str = simplifyFrac(q11_m_num, q11_m_den);
+        const q11_equation = `y = ${q11_m_str}x ${formatB(String(q11_b))}`;
+
+        questions.push({ 
+            type: 'graph-interactive', 
+            id: 'q11', 
+            title: `Question 11: Graph the linear equation in slope-intercept form.`, 
+            data: { 
+                eq_text: q11_equation,
+                m: q11_m,
+                b: q11_b
+            } 
+        });
+
+        // --- NEW Q12: Interactive Graphing from Standard Form (Ax + By = C) ---
+        let q12_A, q12_B, q12_C;
+        let q12_m, q12_b;
+        do {
+            q12_B = getRandomInt(2, 4); // B > 0 is easier to manage
+            q12_A = getRandomInt(1, 5) * (Math.random() > 0.5 ? 1 : -1); // A can be anything
+            q12_b = getRandomInt(-4, 4); // Target y-intercept (b)
+            q12_C = q12_B * q12_b;
+            q12_m = -q12_A / q12_B;
+        } while (q12_A === 0 || q12_B === 0 || q12_m === 0);
+
+        const q12_equation = `${q12_A}x ${q12_B > 0 ? '+ ' + q12_B : '- ' + Math.abs(q12_B)}y = ${q12_C}`;
+
+        questions.push({ 
+            type: 'graph-interactive', 
+            id: 'q12', 
+            title: `Question 12: Graph the linear equation in standard form.`, 
+            data: { 
+                eq_text: q12_equation,
+                m: q12_m,
+                b: q12_b
+            } 
+        });
+
+        currentQuestions = questions;
+    }
+
+    // --- DRAWING & RENDERING ---
+    function drawGraph(canvasId, graphData) { /* Original quiz drawing logic for static images */
+        const canvas = document.getElementById(canvasId); if (!canvas) return; const ctx = canvas.getContext('2d'); const { width, height, scale, originX, originY } = { width: 200, height: 200, scale: 20, originX: 100, originY: 100 }; canvas.width = width; canvas.height = height; ctx.clearRect(0, 0, width, height); ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 1; for (let i = scale; i < width; i += scale) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke(); } for (let i = scale; i < height; i += scale) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke(); } ctx.strokeStyle = '#374151'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, originY); ctx.lineTo(width, originY); ctx.moveTo(originX, 0); ctx.lineTo(originX, height); ctx.stroke(); if (graphData.type === 'vertical' || graphData.type === 'horizontal') { const { type, val } = graphData; ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2.5; ctx.beginPath(); if (type === 'vertical') { ctx.moveTo(originX + val * scale, 0); ctx.lineTo(originX + val * scale, height); } else { ctx.moveTo(0, originY - val * scale); ctx.lineTo(width, originY - val * scale); } ctx.stroke(); } else { const { m_num, m_den, b } = graphData; ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2; ctx.beginPath(); const x_min = -5, y_min = (m_num / m_den) * x_min + b; ctx.moveTo(originX + x_min * scale, originY - y_min * scale); const x_max = 5, y_max = (m_num / m_den) * x_max + b; ctx.lineTo(originX + x_max * scale, originY - y_max * scale); ctx.stroke(); } 
+    }
+    
+    function renderCurrentQuestion() {
+        // Reset interactive state
+        isInteractiveMode = false;
+        currentInteractiveEquation = null;
+        clickedPoints = [];
+
+        feedbackContainer.innerHTML = '';
+        const q = currentQuestions[currentQuestionIndex];
+        progressIndicator.textContent = `Question ${currentQuestionIndex + 1} of ${currentQuestions.length}`;
+        let html = `<h2 class="text-xl font-semibold text-gray-700 mb-6">${q.title}</h2>`;
+
+        // Check for interactive question type
+        if (q.type === 'graph-interactive') {
+            isInteractiveMode = true;
+            currentInteractiveEquation = { m: q.data.m, b: q.data.b };
+            
+            html += `<div class="text-center mb-4">
+                        <p class="text-lg text-gray-600">Plot the line for:</p>
+                        <p class="text-4xl font-bold text-blue-600 my-3" style="font-family: 'Times New Roman', Times, serif;">${q.data.eq_text}</p>
+                        <p id="interactive-instruction" class="text-lg text-gray-700 font-semibold h-6">1. Click the y-intercept.</p>
+                     </div>
+                     <div class="graph-container" id="interactive-graph-container">
+                         <svg id="interactive-svg-grid" viewBox="0 0 ${SVG_SIZE} ${SVG_SIZE}"></svg>
+                     </div>
+                     <div id="interactive-feedback" class="text-center interactive-feedback"></div>
+                     <div class="grid grid-cols-2 gap-4 mt-4">
+                        <button id="interactive-reset-btn" onclick="resetInteractivePoints()" class="w-full bg-gray-500 text-white px-6 py-3 rounded-lg font-semibold text-lg hover:bg-gray-600 transition-colors shadow-md hidden">
+                            Reset Points
+                        </button>
+                        <button id="interactive-check-btn" onclick="checkInteractiveAnswer()" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors shadow-md col-span-2">
+                            Check Answer
+                        </button>
+                     </div>`;
+        } else {
+            // Original non-interactive questions rendering logic
+            const typesWithOptions = ['from-graph', 'match-graph', 'intercepts', 'rewrite', 'graph-special'];
+            const containerClass = typesWithOptions.includes(q.type) ? 'class="text-center"' : '';
+            html += `<div ${containerClass}>`;
+
+            if (q.text) html += `<p class="text-lg mb-4 font-mono">${q.text}</p>`;
+            
+            if(q.type === 'from-graph') { html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">`; q.subQuestions.forEach((sq, i) => { html += `<div class="flex flex-col items-center"><p class="mb-2 font-medium">${String.fromCharCode(97+i)}.</p><canvas id="${sq.id}_canvas"></canvas><input type="text" id="${sq.id}" class="w-full max-w-xs mt-2 p-2 border rounded-lg" placeholder="y=mx+b"></div>`; }); html += `</div>`;
+            } else if (q.type === 'match-graph') { html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">`; q.options.forEach((opt, i) => { html += `<label class="radio-label"><p class="font-bold mb-2">${String.fromCharCode(65+i)}</p><canvas id="${q.id}_opt${i}_canvas"></canvas><input type="radio" name="${q.id}_option" value="${i}" class="mt-2 h-5 w-5"></label>`; }); html += `</div>`;
+            } else if (q.type === 'intercepts') { html += `<div class="inline-block text-left space-y-2"><div><label>x-intercept: </label><input id="${q.id}_x" class="p-1 border rounded-lg w-24" placeholder="(x, 0)"></div><div><label>y-intercept: </label><input id="${q.id}_y" class="p-1 border rounded-lg w-24" placeholder="(0, y)"></div></div>`;
+            } else if (q.type === 'rewrite') { html += `<div class="inline-block text-left space-y-2"><div><label>Equation: </label><input id="${q.id}_eq" class="p-1 border rounded-lg"></div><div><label>Slope: </label><input id="${q.id}_m" class="p-1 border rounded-lg w-24"></div><div><label>y-intercept: </label><input id="${q.id}_b" class="p-1 border rounded-lg w-24" placeholder="(0, y)"></div></div>`;
+            } else if (['point-slope', 'two-points', 'parallel', 'perpendicular'].includes(q.type)) { html += `<input id="${q.id}" class="p-2 border rounded-lg" placeholder="y=mx+b">`;
+            } else if (q.type === 'graph-special') { html += `<div class="flex flex-col md:flex-row items-center justify-center gap-8"><canvas id="${q.id}_canvas"></canvas><div class="space-y-3"><div><label>Slope: </label><input id="${q.id}_slope" class="p-1 border rounded-lg w-32"></div><div><label>Equation: </label><input id="${q.id}_eq" class="p-1 border rounded-lg w-32"></div></div></div>`; }
+            
+            html += '</div>';
+            navigationContainer.innerHTML = `<button onclick="checkCurrentAnswer()" class="nav-button bg-blue-600 text-white hover:bg-blue-700">Check Answer</button>`;
+        }
+
+        questionContainer.innerHTML = html;
+        
+        // Final DOM updates
+        if (q.type === 'graph-interactive') {
+            const svgGrid = document.getElementById('interactive-svg-grid');
+            createSvgGrid(svgGrid, true);
+            svgGrid.addEventListener('click', handleInteractiveGraphClick);
+        } else {
+            // Draw canvases after they are in the DOM for non-interactive questions
+            if (q.type === 'from-graph') q.subQuestions.forEach(sq => drawGraph(`${sq.id}_canvas`, sq.data));
+            if (q.type === 'match-graph') q.options.forEach((opt, i) => drawGraph(`${q.id}_opt${i}_canvas`, opt));
+            if (q.type === 'graph-special') drawGraph(`${q.id}_canvas`, q.data);
+        }
+    }
+
+    // --- GRADING AND FEEDBACK (For non-interactive questions) ---
+    function checkCurrentAnswer() {
+        const q = currentQuestions[currentQuestionIndex];
+        let allCorrect = true;
+        let pointsEarned = 0;
+        let pointsAvailable = 0;
+        let feedbackHtml = '';
+
+        if (q.type === 'graph-interactive') {
+             // Interactive check happens inside checkInteractiveAnswer, which handles navigation.
+             // This function should not be called for interactive questions if navigation is set up correctly.
+             return;
+        }
+
+        // Grading logic for non-interactive question types
+        // ... (rest of the original grading logic) ...
+        //<editor-fold desc="Non-Interactive Grading Logic">
+        if (q.type === 'from-graph') {
+            pointsAvailable = 2;
+            q.subQuestions.forEach(sq => {
+                const userInput = document.getElementById(sq.id).value;
+                if (normalizeEq(userInput) === normalizeEq(sq.answer)) { pointsEarned++; }
+            });
+            allCorrect = pointsEarned === pointsAvailable;
+        } else if (q.type === 'match-graph') {
+            pointsAvailable = 1;
+            const userChoice = document.querySelector(`input[name="${q.id}_option"]:checked`)?.value;
+            const correctIndex = q.options.findIndex(opt => JSON.stringify(opt) === JSON.stringify(q.answer));
+            if (userChoice == correctIndex) { pointsEarned++; }
+            allCorrect = pointsEarned > 0;
+        } else if (q.type === 'intercepts' || q.type === 'graph-special') {
+            pointsAvailable = 2;
+            const answers = (q.type === 'intercepts') ? { a: document.getElementById(`${q.id}_x`).value, b: document.getElementById(`${q.id}_y`).value } : { a: document.getElementById(`${q.id}_slope`).value, b: document.getElementById(`${q.id}_eq`).value };
+            const correct = (q.type === 'intercepts') ? { a: q.answers.x, b: q.answers.y } : { a: q.answers.slope, b: q.answers.eq };
+            if ((q.type === 'intercepts' ? normalizePoint(answers.a) : normalizeSlope(answers.a)) === correct.a) pointsEarned++;
+            if ((q.type === 'intercepts' ? normalizePoint(answers.b) : normalizeEq(answers.b)) === correct.b) pointsEarned++;
+            allCorrect = pointsEarned === pointsAvailable;
+        } else if (q.type === 'rewrite') {
+            pointsAvailable = 3;
+            if (normalizeEq(document.getElementById(`${q.id}_eq`).value) === normalizeEq(q.answers.equation)) pointsEarned++;
+            if (normalizePoint(document.getElementById(`${q.id}_m`).value) === normalizePoint(q.answers.slope)) pointsEarned++;
+            if (normalizePoint(document.getElementById(`${q.id}_b`).value) === normalizePoint(q.answers.y_int)) pointsEarned++;
+            allCorrect = pointsEarned === pointsAvailable;
+        } else { // single input types
+            pointsAvailable = 1;
+            const userInput = document.getElementById(q.id).value;
+            if (normalizeEq(userInput) === normalizeEq(q.answer)) { pointsEarned++; }
+            allCorrect = pointsEarned > 0;
+        }
+        
+        score += pointsEarned;
+        totalPossible += pointsAvailable;
+
+        // Generate Feedback UI
+        const feedbackClass = allCorrect ? 'feedback-correct' : 'feedback-incorrect';
+        const feedbackTitle = allCorrect ? 'Correct!' : 'Not Quite...';
+        feedbackHtml = `<div class="${feedbackClass} border-l-4 p-4 rounded-md"><h3 class="font-bold text-lg">${feedbackTitle} (${pointsEarned}/${pointsAvailable} points)</h3>`;
+        if (!allCorrect) {
+            feedbackHtml += `<p class="mt-1">Here is the correct answer and a step-by-step solution:</p>`;
+        }
+        feedbackHtml += generateSolution(q);
+        feedbackHtml += `</div>`;
+        feedbackContainer.innerHTML = feedbackHtml;
+        
+        // Disable inputs and update navigation
+        questionContainer.querySelectorAll('input').forEach(input => input.disabled = true);
+        const nextButtonText = (currentQuestionIndex < currentQuestions.length - 1) ? 'Next Question &rarr;' : 'Finish Quiz';
+        navigationContainer.innerHTML = `<button onclick="navigateNext()" class="nav-button bg-gray-600 text-white hover:bg-gray-700">${nextButtonText}</button>`;
+        //</editor-fold>
+    }
+
+    function generateSolution(q) {
+        let html = '<div class="mt-4 space-y-2 text-sm">';
+        switch(q.type) {
+            case 'from-graph':
+                q.subQuestions.forEach((sq, i) => {
+                    html += `<p><strong>Line ${String.fromCharCode(97+i)}:</strong> The correct equation is <strong>${sq.answer}</strong>.</p>
+                             <div class="solution-step">
+                                1. <strong>Find y-intercept (b):</strong> The line crosses the y-axis at ${sq.data.b}. So, b = ${sq.data.b}.<br>
+                                2. <strong>Find slope (m):</strong> From the y-intercept, you go ${Math.abs(sq.data.m_num)} unit(s) ${sq.data.m_num > 0 ? 'up' : 'down'} and ${sq.data.m_den} unit(s) right. So, m = ${sq.data.m_str}.<br>
+                                3. <strong>Write $y=mx+b$:</strong> $y = ${sq.data.m_str}x ${formatB(String(sq.data.b))}$
+                             </div>`;
+                }); break;
+            case 'rewrite':
+                html += `<p>The correct answer is <strong>${q.answers.equation}</strong> (Slope: ${q.answers.slope}, y-int: ${q.answers.y_int}).</p>
+                         <div class="solution-step">
+                            1. Start with <code>${q.text}</code>.<br>
+                            2. Subtract <code>${q.data.A}x</code> from both sides: <code>${q.data.B}y = ${-q.data.A}x + ${q.data.C}</code>.<br>
+                            3. Divide all terms by ${q.data.B}: <code>y = (${-q.data.A}/${q.data.B})x + (${q.data.C}/${q.data.B})</code>.<br>
+                            4. Simplify fractions: <code>y = ${q.answers.slope}x ${formatB(simplifyFrac(q.data.C, q.data.B))}</code>.
+                         </div>`; break;
+            case 'two-points':
+                html += `<p>The correct equation is <strong>${q.answer}</strong>.</p>
+                         <div class="solution-step">
+                            1. <strong>Find slope ($m$):</strong> $m = \frac{y_2-y_1}{x_2-x_1} = \frac{${q.data.y2} - ${q.data.y1}}{${q.data.x2} - ${q.data.x1}} = ${simplifyFrac(q.data.y2 - q.data.y1, q.data.x2 - q.data.x1)}$ (Rise over run).<br>
+                            2. <strong>Use point-slope form:</strong> $y-y_1 = m(x-x_1) \implies y - (${q.data.y1}) = ${simplifyFrac(q.data.y2 - q.data.y1, q.data.x2 - q.data.x1)}(x - (${q.data.x1}))$.<br>
+                            3. <strong>Solve for $y$:</strong> Distribute the slope and add ${q.data.y1} to both sides to get the final equation.
+                         </div>`; break;
+            // The interactive problems don't need a solution here, as they provide instant feedback on the graph itself.
+            default: html += `<p>The correct answer is highlighted in the problem details above.</p>`; break;
+        }
+        html += '</div>';
+        return html;
+    }
+
+    function navigateNext() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < currentQuestions.length) {
+            renderCurrentQuestion();
+        } else {
+            showFinalScore();
+        }
+    }
+
+    function showFinalScore() {
+        quizArea.classList.add('hidden');
+        resultsSection.classList.remove('hidden');
+        const percentage = totalPossible > 0 ? Math.round((score / totalPossible) * 100) : 0;
+        let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
+        scoreElement.innerHTML = `Your Final Score: <span class="${scoreColor}">${score} out of ${totalPossible} (${percentage}%)</span>`;
+    }
+
+    function startQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        totalPossible = 0;
+        quizArea.classList.remove('hidden');
+        resultsSection.classList.add('hidden');
+        generateQuizData();
+        renderCurrentQuestion();
+    }
+    
+    // --- EVENT LISTENERS ---
+    generateNewBtn.addEventListener('click', startQuiz);
+    
+    // Global listener for the interactive graph (attached dynamically on render)
+    document.addEventListener('DOMContentLoaded', () => {
+        // Need to add the listener here since the SVG is loaded later
+        document.addEventListener('click', (event) => {
+            if (event.target.id === 'interactive-svg-grid') {
+                handleInteractiveGraphClick(event);
+            }
+        });
+        startQuiz();
+    });
+</script>
+</body>
+</html>

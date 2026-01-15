@@ -1,368 +1,438 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Linear Models and Applications Quiz</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .quiz-container {
-            transition: all 0.3s ease-in-out;
-        }
-        .result-item.correct {
-            background-color: #f0fdf4;
-            border-left-color: #22c55e;
-        }
-        .result-item.incorrect {
-            background-color: #fef2f2;
-            border-left-color: #ef4444;
-        }
-        .question-prefix {
-            font-weight: 500;
-            flex-shrink: 0;
-        }
-        canvas {
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            max-width: 100%;
-            height: auto;
-        }
-        .data-table {
-            border-collapse: collapse;
-            width: 100%;
-            max-width: 250px;
-            margin: 1rem auto;
-        }
-        .data-table th, .data-table td {
-            border: 1px solid #d1d5db;
-            padding: 0.5rem;
-            text-align: center;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linear Equations Dynamic Quiz</title>
+<style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f8; color: #333; display: flex; justify-content: center; min-height: 100vh; padding: 20px; margin: 0; }
+    .container { background: white; width: 100%; max-width: 700px; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .stats-bar { display: flex; justify-content: space-between; background: #e9ecef; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; color: #555; }
+    .question-box { font-size: 1.2em; margin-bottom: 20px; line-height: 1.5; }
+    .math-text { font-weight: bold; font-family: monospace; background: #f8f9fa; padding: 2px 4px; border-radius: 4px; color: #2c3e50; }
+    input[type="text"] { width: 100%; padding: 12px; font-size: 1.1em; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 10px; box-sizing: border-box; }
+    .mc-option { display: block; background: #f8f9fa; border: 2px solid #ddd; padding: 12px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .mc-option:hover { background-color: #e2e6ea; }
+    .mc-option.selected { background: #d4eaf7; border-color: #3498db; }
+    .btn { background-color: #3498db; color: white; border: none; padding: 12px 24px; font-size: 1em; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; transition: background 0.2s; }
+    .btn:hover { background-color: #2980b9; }
+    .feedback { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; animation: fadeIn 0.3s; }
+    .feedback.correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .feedback.incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .solution { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 0.95em; white-space: pre-wrap; line-height: 1.6; }
+    
+    /* CRITICAL VISIBILITY CLASS */
+    .hidden { display: none !important; }
+    
+    .summary-score { font-size: 3em; text-align: center; color: #2c3e50; margin: 20px 0; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+</style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body>
 
-    <main class="bg-white rounded-2xl shadow-lg w-full max-w-5xl quiz-container">
-        <div class="p-8 border-b border-gray-200">
-            <h1 class="text-3xl font-bold text-gray-800">Linear Models & Applications</h1>
-            <p class="text-gray-600 mt-2">Generate a new quiz anytime.</p>
+<div class="container">
+    <h1 style="text-align: center; color: #2c3e50;">Linear Equations Practice</h1>
+    
+    <div class="stats-bar">
+        <span>Question: <span id="q-num">1</span>/<span id="total-q">8</span></span>
+        <span>Correct: <span id="score-correct">0</span></span>
+    </div>
+
+    <div id="quiz-area">
+        <div class="question-box" id="question-text"></div>
+        <div class="input-area" id="input-container"></div>
+        <button class="btn" id="submit-btn" onclick="checkAnswer()">Check Answer</button>
+        <button class="btn hidden" id="next-btn" onclick="nextQuestion()">Next Question</button>
+        <div class="feedback" id="feedback-area">
+            <strong id="feedback-title"></strong>
+            <div class="solution" id="solution-text"></div>
         </div>
+    </div>
 
-        <div id="quizContainer" class="p-8">
-            <!-- The quiz form will be dynamically generated and inserted here -->
-        </div>
+    <div id="summary-area" class="hidden">
+        <h2 style="text-align:center">Quiz Complete!</h2>
+        <div class="summary-score">Score: <span id="final-score"></span></div>
+        <p style="text-align:center">Great job practicing linear equations!</p>
+        <button class="btn" onclick="startNewQuiz()">Generate New Quiz (New Numbers)</button>
+    </div>
+</div>
 
-        <!-- Results Section -->
-        <div id="resultsSection" class="hidden p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quiz Results</h2>
-            <div id="score" class="text-xl mb-6 font-semibold"></div>
-            <div id="detailedResults" class="space-y-4"></div>
-             <div class="mt-8 text-center flex flex-col sm:flex-row justify-center items-center gap-4">
-                <button id="retakeQuizBtn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700">Try This Quiz Again</button>
-                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">Generate New Quiz</button>
-            </div>
-        </div>
-    </main>
+<script>
+    // --- UTILITY MATH FUNCTIONS ---
+    function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+    
+    function simplifyFraction(num, den) {
+        if (den === 0) return "undefined";
+        if (num === 0) return "0";
+        let sign = (num * den < 0) ? -1 : 1;
+        num = Math.abs(num); den = Math.abs(den);
+        let divisor = gcd(num, den);
+        num /= divisor; den /= divisor;
+        if (den === 1) return (sign * num).toString();
+        return (sign === -1 ? "-" : "") + num + "/" + den;
+    }
 
-    <script>
-        const quizContainer = document.getElementById('quizContainer');
-        const resultsSection = document.getElementById('resultsSection');
-        const scoreElement = document.getElementById('score');
-        const detailedResultsElement = document.getElementById('detailedResults');
-        const retakeQuizBtn = document.getElementById('retakeQuizBtn');
-        const generateNewBtn = document.getElementById('generateNewBtn');
+    function formatCoord(x, y) { return `(${x}, ${y})`; }
+    
+    function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    
+    function randNonZero(min, max) {
+        let n = 0;
+        while(n === 0) n = randInt(min, max);
+        return n;
+    }
 
-        let currentQuestions = [];
+    // --- QUESTION GENERATORS ---
+    let questions = [];
+    let currentQIndex = 0;
+    let score = 0;
+    let selectedMCOption = null;
 
-        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+    // Q1: Point-Slope Form from two points
+    function genQ1() {
+        // Ensure integer slope for cleaner entry logic
+        let x1 = randInt(-8, 8);
+        let y1 = randInt(-8, 8);
+        let rise = randNonZero(-5, 5);
+        let run = randNonZero(-5, 5);
+        // Avoid undefined slope
+        if(run === 0) run = 1;
+        
+        let x2 = x1 + run;
+        let y2 = y1 + rise;
+        
+        let slopeFrac = simplifyFraction(rise, run);
+        let slopeVal = rise/run;
+        
+        // Expected answer logic for Point-Slope: y - y1 = m(x - x1)
+        // We will generate the string for the specific point (x1, y1)
+        // Ideally we accept either point, but for simplicity we ask for point 1.
+        let ans = `y - ${y1} = ${slopeFrac}(x - ${x1})`;
+        ans = ans.replace(`- -`, `+ `).replace(`+ -`, `- `); // clean signs
+        
+        // Simplified version for checking logic
+        let cleanAns = ans.replace(/\s/g, '');
 
-        const contexts = {
-            growth: [
-                { thing: 'sunflower', y_axis: 'Height (inches)', x_axis: 'Time (weeks)' },
-                { thing: 'savings account', y_axis: 'Balance ($)', x_axis: 'Time (months)' },
-                { thing: 'beanstalk', y_axis: 'Height (feet)', x_axis: 'Time (days)' }
-            ],
-            depletion: [
-                { thing: 'car with gas', y_axis: 'Gallons Remaining', x_axis: 'Hours Driven' },
-                { thing: 'phone battery', y_axis: 'Battery (%)', x_axis: 'Hours of Use' },
-                { thing: 'water tank', y_axis: 'Water Level (ft)', x_axis: 'Time (minutes)' }
-            ],
-            cost: [
-                { thing: 'phone manufacturing', p: 'phones', C: 'Total Cost ($)', item: 'phone' },
-                { thing: 'studio rental', p: 'hours', C: 'Total Fee ($)', item: 'hour' },
-                { thing: 't-shirt printing', p: 'shirts', C: 'Total Price ($)', item: 'shirt' }
-            ]
+        return {
+            type: 'text',
+            text: `Write the equation of the line that passes through the points <span class="math-text">${formatCoord(x1, y1)}</span> and <span class="math-text">${formatCoord(x2, y2)}</span>. Leave your answer in <b>Point-Slope form</b> using the first point <span class="math-text">${formatCoord(x1, y1)}</span>.`,
+            correctAnswer: cleanAns,
+            solution: `1. Find the slope (m): (y2 - y1) / (x2 - x1)\n   m = (${y2} - ${y1}) / (${x2} - ${x1}) = ${rise}/${run} = ${slopeFrac}.\n2. Use Point-Slope form: y - y1 = m(x - x1)\n   Using point ${formatCoord(x1, y1)}:\n   ${ans}`
         };
+    }
 
-        function generateQuizData() {
-            let questions = [];
-
-            // Q1: Slope from graph in context
-            const ctx1 = shuffle(contexts.growth)[0];
-            const m1 = getRandomInt(4, 8); const b1 = getRandomInt(5, 15);
-            questions.push({ type: 'graph-slope', id: 'q1',
-                title: `At the beginning of spring, Makayla planted a small ${ctx1.thing}. The graph below represents the ${ctx1.thing}'s ${ctx1.y_axis.toLowerCase()} after x ${ctx1.x_axis.toLowerCase()}. What does the slope of the line represent?`,
-                data: { m: m1, b: b1, ...ctx1 },
-                answer: m1.toString()
-            });
-
-            // Q2: Interpret equation components
-            const m2 = getRandomInt(25, 50) / 100; const b2 = getRandomInt(20, 40);
-            questions.push({ type: 'interpret-equation', id: 'q2',
-                title: `There's a roughly linear relationship between the number of times a species of cricket will chirp in one minute and the temperature outside. For a certain type of cricket, this relationship can be expressed using the formula T = ${b2} + ${m2}c, where T represents the temperature in degrees Fahrenheit and c represents the number of times the cricket chirps in one minute. What could the number ${m2} represent in the equation?`,
-                answer: 'The increase in temperature for each additional chirp per minute.'
-            });
-            
-            // Q3: Equation and y-intercept from graph
-            const ctx3 = shuffle(contexts.depletion)[0];
-            const m3 = -getRandomInt(1, 4); const b3 = getRandomInt(8, 12);
-            questions.push({ type: 'graph-equation-intercept', id: 'q3',
-                title: `Serenity filled up her car with gas before embarking on a road trip across the country. Let G represent the number of gallons of gas remaining in her gas tank after driving for t hours. A graph of G is shown below. Write an equation for G then state the y-intercept of the graph and determine its interpretation in the context of the problem.`,
-                data: { m: m3, b: b3, ...ctx3 },
-                answers: {
-                    equation: `G=${m3}t+${b3}`,
-                    y_intercept: `(0,${b3})`,
-                    interpretation: `The initial amount of gas in the tank.`
-                }
-            });
-
-            // Q4: Cost from table
-            const ctx4 = shuffle(contexts.cost)[0];
-            const m4 = getRandomInt(75, 125); const b4 = getRandomInt(200, 400);
-            const table4 = [1, 5, 8].map(p => ({ p, C: m4 * p + b4 }));
-            const final_p = (getRandomInt(15, 20) / 2).toFixed(1);
-            questions.push({ type: 'table-cost', id: 'q4',
-                title: `${ctx4.thing.charAt(0).toUpperCase() + ctx4.thing.slice(1)}.`,
-                text: `Determine how much Janelys would need to pay in fees if she needed to use the studio for ${final_p} ${ctx4.p}.`,
-                data: { table: table4, p_label: ctx4.p, C_label: ctx4.C },
-                answer: (m4 * final_p + b4).toString()
-            });
-            
-            // Q5: Interpret y-intercept from equation
-            const m5 = -getRandomInt(25, 35); const b5 = getRandomInt(250, 350);
-            questions.push({ type: 'interpret-intercept', id: 'q5',
-                title: `Charlotte is going to drive from her house to City A without stopping. An equation that determines Charlotte's distance from City A t hours after leaving her house is D = ${m5}t + ${b5}. What is the y-intercept of the equation and what is its interpretation in the context of the problem?`,
-                answers: {
-                    y_intercept: b5.toString(),
-                    interpretation: `Charlotte's initial distance from City A.`
-                }
-            });
-
-            // Q6: Write equation from word problem
-            const start_depth = getRandomInt(12, 18);
-            const hours = getRandomInt(3, 5);
-            const end_depth = start_depth - getRandomInt(2, 5);
-            const m6 = (end_depth - start_depth) / hours;
-            questions.push({ type: 'word-problem-equation', id: 'q6',
-                title: `At the end of a snow storm, Emily saw there was a lot of snow on her front lawn. The temperature increased and the snow began to melt at a steady rate. There was a depth of ${start_depth} inches of snow on the lawn when the storm ended and after ${hours} hours, the depth of snow was down to ${end_depth} inches. Write an equation for S, in terms of t, representing the depth of snow on Emily's lawn, in inches, t hours after the snow stopped falling.`,
-                answer: `S=${m6}t+${start_depth}`
-            });
-
-            currentQuestions = questions;
-        }
-
-        function drawGraph(canvasId, graphData) {
-            const { m, b, x_axis, y_axis } = graphData;
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const { width, height, scaleX, scaleY, originX, originY, pad } = { width: 400, height: 300, scaleX: 30, scaleY: 5, originX: 40, originY: 260, pad: 40 };
-            canvas.width = width; canvas.height = height;
-            
-            ctx.clearRect(0, 0, width, height);
-
-            // Draw grid
-            ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
-            for (let i = 1; i <= 12; i++) { // Vertical lines
-                const x = originX + i * scaleX;
-                ctx.beginPath(); ctx.moveTo(x, pad); ctx.lineTo(x, originY); ctx.stroke();
-            }
-             for (let i = 1; i <= 12; i++) { // Horizontal lines
-                const y = originY - i * 2 * scaleY; // y-axis scale is different
-                ctx.beginPath(); ctx.moveTo(originX, y); ctx.lineTo(width-pad, y); ctx.stroke();
-            }
-
-            // Draw axes
-            ctx.strokeStyle = '#374151'; ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.moveTo(originX, pad); ctx.lineTo(originX, originY); ctx.lineTo(width - pad, originY); ctx.stroke();
-
-            // Draw labels and ticks
-            ctx.fillStyle = '#374151'; ctx.font = '12px Inter'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            // X-axis
-            ctx.fillText(x_axis, originX + (width-pad-originX)/2, originY + 25);
-            for(let i=0; i <= 12; i++) {
-                if(i>0) { ctx.beginPath(); ctx.moveTo(originX + i*scaleX, originY-3); ctx.lineTo(originX + i*scaleX, originY+3); ctx.stroke(); }
-                if(i % 2 === 0) ctx.fillText(i, originX + i*scaleX, originY + 15);
-            }
-            // Y-axis
-            ctx.save(); ctx.translate(15, originY - (originY-pad)/2); ctx.rotate(-Math.PI/2); ctx.fillText(y_axis, 0, 0); ctx.restore();
-            for(let i=0; i <= 12; i++) {
-                 if(i>0) { ctx.beginPath(); ctx.moveTo(originX-3, originY - i*2*scaleY); ctx.lineTo(originX+3, originY - i*2*scaleY); ctx.stroke(); }
-                 if(i>0 && i % 2 === 0) ctx.fillText(i*2, originX - 20, originY - i*2*scaleY);
-            }
-
-            // Draw the line
-            ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 2;
-            ctx.beginPath();
-            const x1 = 0; const y1 = b;
-            ctx.moveTo(originX + x1 * scaleX, originY - y1 * scaleY * (m > 0 ? 1 : 2));
-            const x2 = 12; const y2 = m*x2 + b;
-            ctx.lineTo(originX + x2 * scaleX, originY - y2 * scaleY * (m > 0 ? 1 : 2) );
-            ctx.stroke();
-        }
+    // Q2: Slope of line parallel to Ax - By = C
+    function genQ2() {
+        let A = randInt(2, 9);
+        let B = randInt(2, 9);
+        let C = randInt(10, 50);
+        let sign = Math.random() < 0.5 ? '-' : '+';
+        let eq = `${A}x ${sign} ${B}y = ${C}`;
         
-        function renderQuizForm() {
-            let html = '<form id="quizForm">';
-            currentQuestions.forEach(q => {
-                html += `<div class="mb-10"><h2 class="text-xl font-semibold text-gray-700 mb-4">${q.id.slice(1)}. ${q.title}</h2>`;
-                if(q.type === 'graph-slope') {
-                    html += `<div class="flex flex-col items-center gap-4">
-                                <canvas id="${q.id}_canvas" class="max-w-md"></canvas>
-                                <div><label>Slope: </label><input id="${q.id}" class="p-1 border rounded-lg w-24"></div>
-                             </div>`;
-                } else if (q.type === 'interpret-equation') {
-                    html += `<textarea id="${q.id}" class="w-full p-2 border rounded-lg" rows="2" placeholder="Explain the meaning..."></textarea>`;
-                } else if (q.type === 'graph-equation-intercept') {
-                    html += `<div class="flex flex-col items-center gap-4">
-                                <canvas id="${q.id}_canvas" class="max-w-md"></canvas>
-                                <div class="space-y-2 text-center">
-                                    <div><label>Equation: </label><input id="${q.id}_eq" class="p-1 border rounded-lg" placeholder="G=mt+b"></div>
-                                    <div><label>y-intercept: </label><input id="${q.id}_yint" class="p-1 border rounded-lg" placeholder="(0, y)"></div>
-                                    <div><label>Interpretation: </label><textarea id="${q.id}_interp" class="w-full p-2 border rounded-lg" rows="1"></textarea></div>
-                                </div>
-                             </div>`;
-                } else if (q.type === 'table-cost') {
-                    html += `<div class="flex flex-col items-center gap-4">
-                                <table class="data-table"><thead><tr><th>${q.data.p_label}</th><th>${q.data.C_label}</th></tr></thead><tbody>
-                                ${q.data.table.map(row => `<tr><td>${row.p}</td><td>${row.C}</td></tr>`).join('')}</tbody></table>
-                                <p>${q.text}</p>
-                                <div><label>Cost: $</label><input type="number" step="0.01" id="${q.id}" class="p-1 border rounded-lg w-32"></div>
-                             </div>`;
-                } else if (q.type === 'interpret-intercept') {
-                     html += `<div class="space-y-2">
-                                <div><label>The y-intercept of the function is </label><input id="${q.id}_yint" class="p-1 border rounded-lg w-20"></div>
-                                <div><label>which represents </label><textarea id="${q.id}_interp" class="w-full p-2 border rounded-lg" rows="1"></textarea></div>
-                              </div>`;
-                } else if (q.type === 'word-problem-equation') {
-                    html += `<input type="text" id="${q.id}" class="w-full p-2 border rounded-lg" placeholder="S = mt + b">`;
-                }
-                html += `</div>`;
-            });
-            html += `<div class="mt-10 text-center"><button type="submit" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg">Grade My Quiz</button></div></form>`;
-            quizContainer.innerHTML = html;
-            
-            currentQuestions.filter(q => q.type.includes('graph')).forEach(q => drawGraph(`${q.id}_canvas`, q.data));
-            
-            document.getElementById('quizForm').addEventListener('submit', gradeQuiz);
-        }
+        // Slope is -A/B if form is Ax + By = C.
+        // If Ax - By = C, slope is A/B.
+        let actualSlope = (sign === '-') ? simplifyFraction(A, B) : simplifyFraction(-A, B);
         
-        const normalize = str => {
-            let s = str.replace(/\s+/g, '').toLowerCase();
-            // Handle implicit -1 coefficient, e.g., s=-t+16 -> s=-1t+16
-            const parts = s.split('=');
-            if (parts.length === 2) {
-                if (parts[1].startsWith('-') && isNaN(parseInt(parts[1][1]))) {
-                    parts[1] = '-1' + parts[1].substring(1);
-                    s = parts.join('=');
-                }
-            }
-            return s;
+        return {
+            type: 'text',
+            text: `Find the <b>slope</b> of a line <b>parallel</b> to the line whose equation is <span class="math-text">${eq}</span>. Fully simplify your answer.`,
+            correctAnswer: actualSlope,
+            solution: `1. Parallel lines have the same slope.\n2. Convert ${eq} to slope-intercept form (y = mx + b).\n   ${sign === '-' ? -B : B}y = ${-A}x + ${C}\n   y = ${actualSlope}x + (intercept)\n3. The slope is ${actualSlope}.`
         };
+    }
 
-        function gradeQuiz(event) {
-            event.preventDefault();
-            let score = 0, total = 0, resultsHTML = '';
-            
-            currentQuestions.forEach(q => {
-                let isCorrect, userInput;
-                switch(q.type) {
-                    case 'graph-slope':
-                        total++;
-                        userInput = document.getElementById(q.id).value.trim();
-                        isCorrect = userInput === q.answer;
-                        if(isCorrect) score++;
-                        resultsHTML += `<div class="result-item border-l-4 p-4 ${isCorrect?'c':'inc'}orrect"><p>Q${q.id.slice(1)} Slope: Your answer ${userInput}. Correct: ${q.answer}</p></div>`;
-                        break;
-                    case 'interpret-equation':
-                        total++;
-                        userInput = document.getElementById(q.id).value.toLowerCase();
-                        isCorrect = userInput.includes('increase') && (userInput.includes('temp') || userInput.includes('degree')) && userInput.includes('chirp');
-                        if(isCorrect) score++;
-                        resultsHTML += `<div class="result-item border-l-4 p-4 ${isCorrect?'c':'inc'}orrect"><p>Q${q.id.slice(1)} Interpretation: Your answer was graded for keywords. Correct: ${q.answer}</p></div>`;
-                        break;
-                    case 'graph-equation-intercept':
-                        total += 3;
-                        const eqU = document.getElementById(`${q.id}_eq`).value;
-                        const yintU = document.getElementById(`${q.id}_yint`).value;
-                        const interpU = document.getElementById(`${q.id}_interp`).value.toLowerCase();
-                        const eqC = normalize(eqU) === normalize(q.answers.equation);
-                        const yintC = normalize(yintU) === normalize(q.answers.y_intercept);
-                        const interpC = interpU.includes('initial') || interpU.includes('start');
-                        if(eqC) score++; if(yintC) score++; if(interpC) score++;
-                        resultsHTML += `<div class="result-item border-l-4 p-4"><p>Q${q.id.slice(1)}:</p>
-                            <p class="${eqC?'':'text-red-500'}">Eq: ${eqU} (Correct: ${q.answers.equation})</p>
-                            <p class="${yintC?'':'text-red-500'}">Y-int: ${yintU} (Correct: ${q.answers.y_intercept})</p>
-                            <p class="${interpC?'':'text-red-500'}">Interp: ${interpU} (Keywords: initial/start)</p></div>`;
-                        break;
-                    case 'table-cost':
-                        total++;
-                        userInput = document.getElementById(q.id).value;
-                        isCorrect = userInput === q.answer;
-                        if(isCorrect) score++;
-                         resultsHTML += `<div class="result-item border-l-4 p-4 ${isCorrect?'c':'inc'}orrect"><p>Q${q.id.slice(1)} Cost: Your answer ${userInput}. Correct: ${q.answer}</p></div>`;
-                        break;
-                    case 'interpret-intercept':
-                        total += 2;
-                        const yintU2 = document.getElementById(`${q.id}_yint`).value;
-                        const interpU2 = document.getElementById(`${q.id}_interp`).value.toLowerCase();
-                        const yintC2 = yintU2 === q.answers.y_intercept;
-                        const interpC2 = interpU2.includes('initial') || interpU2.includes('start') || interpU2.includes('beginning');
-                        if(yintC2) score++; if(interpC2) score++;
-                        resultsHTML += `<div class="result-item border-l-4 p-4"><p>Q${q.id.slice(1)}:</p>
-                            <p class="${yintC2?'':'text-red-500'}">Y-int: ${yintU2} (Correct: ${q.answers.y_intercept})</p>
-                            <p class="${interpC2?'':'text-red-500'}">Interp: ${interpU2} (Keywords: initial/start/beginning)</p></div>`;
-                        break;
-                    case 'word-problem-equation':
-                        total++;
-                        userInput = document.getElementById(q.id).value;
-                        isCorrect = normalize(userInput) === normalize(q.answer);
-                        if(isCorrect) score++;
-                         resultsHTML += `<div class="result-item border-l-4 p-4 ${isCorrect?'c':'inc'}orrect"><p>Q${q.id.slice(1)} Equation: Your answer ${userInput}. Correct: ${q.answer}</p></div>`;
-                        break;
-                }
-            });
-            
-            const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
-            let scoreColor = percentage >= 80 ? 'text-green-600' : (percentage >= 60 ? 'text-yellow-600' : 'text-red-600');
-            scoreElement.innerHTML = `Your Score: <span class="${scoreColor}">${score} out of ${total} (${percentage}%)</span>`;
-            detailedResultsElement.innerHTML = resultsHTML;
-            quizContainer.classList.add('hidden');
-            resultsSection.classList.remove('hidden');
-            window.scrollTo(0, 0);
-        }
+    // Q3: Slope of line perpendicular to Ax + By = C
+    function genQ3() {
+        let A = randInt(2, 8);
+        let B = randInt(2, 8);
+        let C = randInt(10, 40);
+        let eq = `${A}x + ${B}y = ${C}`;
         
-        retakeQuizBtn.addEventListener('click', () => {
-            renderQuizForm();
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-        });
-        generateNewBtn.addEventListener('click', () => {
-            generateQuizData();
-            renderQuizForm();
-            resultsSection.classList.add('hidden');
-            quizContainer.classList.remove('hidden');
-        });
-        document.addEventListener('DOMContentLoaded', () => {
-             generateQuizData();
-             renderQuizForm();
-        });
-    </script>
+        // Original slope m1 = -A/B
+        // Perpendicular slope m2 = B/A
+        let perpSlope = simplifyFraction(B, A);
+        
+        return {
+            type: 'text',
+            text: `Find the <b>slope</b> of a line <b>perpendicular</b> to the line whose equation is <span class="math-text">${eq}</span>.`,
+            correctAnswer: perpSlope,
+            solution: `1. Find the slope of the given line.\n   ${B}y = -${A}x + ${C}  ->  y = -${A}/${B}x + ...\n   Original slope m = -${A}/${B}.\n2. Perpendicular lines have negative reciprocal slopes.\n   Flip fraction and change sign: ${B}/${A}.\n   Simplified: ${perpSlope}.`
+        };
+    }
+
+    // Q4: Equation of line through point perp to y = mx + b
+    function genQ4() {
+        let mNum = randNonZero(-3, 3);
+        let mDen = 1; // Keep it integer for easier typing check
+        let b = randInt(1, 10);
+        let x1 = randInt(-5, 5);
+        let y1 = randInt(-5, 5);
+        
+        let eqGiven = `y = ${mNum}x + ${b}`;
+        if (mNum === 1) eqGiven = `y = x + ${b}`;
+        if (mNum === -1) eqGiven = `y = -x + ${b}`;
+
+        // Perp slope is -1/mNum
+        let perpSlopeFrac = simplifyFraction(-1, mNum); 
+        let perpSlopeVal = -1 / mNum;
+        
+        // y = mx + b -> b = y - mx
+        // We need the answer in y = mx + b form generally, or just any valid equation.
+        // Let's ask for slope-intercept for checking ease.
+        let newB = y1 - (perpSlopeVal * x1);
+        
+        // Check if newB is integer. If not, this is hard to type.
+        // Let's force the random numbers to make newB clean? 
+        // Or just ask for Point-Slope which is easier to validate?
+        // Prompt 4 usually implies slope-intercept or point-slope. Let's do Point-Slope for text input ease.
+        
+        let ans = `y - ${y1} = ${perpSlopeFrac}(x - ${x1})`;
+        ans = ans.replace(`- -`, `+ `).replace(`+ -`, `- `);
+        let cleanAns = ans.replace(/\s/g, '');
+
+        return {
+            type: 'text',
+            text: `What is an equation of the line that passes through <span class="math-text">${formatCoord(x1, y1)}</span> and is <b>perpendicular</b> to <span class="math-text">${eqGiven}</span>? (Write in Point-Slope Form).`,
+            correctAnswer: cleanAns,
+            solution: `1. Original slope m = ${mNum}.\n2. Perpendicular slope is negative reciprocal: ${perpSlopeFrac}.\n3. Use Point-Slope form with ${formatCoord(x1, y1)}:\n   y - y1 = m(x - x1)\n   ${ans}`
+        };
+    }
+
+    // Q5: Equation through point parallel to fraction slope (Text)
+    function genQ5() {
+        let num = randNonZero(1, 4);
+        let den = randInt(2, 5);
+        let slope = simplifyFraction(-num, den); // e.g. -3/2
+        let b = randInt(1, 9);
+        let x1 = randInt(2, 8);
+        let y1 = randInt(-8, -2);
+        
+        let eq = `y = ${slope}x - ${b}`;
+        
+        let ans = `y - ${y1} = ${slope}(x - ${x1})`;
+        ans = ans.replace(`- -`, `+ `).replace(`+ -`, `- `);
+        let cleanAns = ans.replace(/\s/g, '');
+
+        return {
+            type: 'text',
+            text: `What is an equation of the line that passes through <span class="math-text">${formatCoord(x1, y1)}</span> and is <b>parallel</b> to <span class="math-text">${eq}</span>? (Write in Point-Slope Form).`,
+            correctAnswer: cleanAns,
+            solution: `1. Parallel lines have the same slope: m = ${slope}.\n2. Use Point-Slope form with point ${formatCoord(x1, y1)}:\n   y - y1 = m(x - x1)\n   ${ans}`
+        };
+    }
+
+    // Q6: Line through two points (Multiple Choice)
+    function genQ6() {
+        // Construct line y = mx + b with integer coords
+        let m = randNonZero(-4, 4);
+        let b = randInt(-5, 5);
+        
+        let x1 = randInt(0, 3);
+        let y1 = m * x1 + b;
+        let x2 = randInt(4, 7);
+        let y2 = m * x2 + b;
+        
+        let correctEq = `y = ${m}x ${b >= 0 ? '+' : '-'} ${Math.abs(b)}`;
+        let wrong1 = `y = ${-m}x ${b >= 0 ? '+' : '-'} ${Math.abs(b)}`;
+        let wrong2 = `y = ${m}x ${b >= 0 ? '-' : '+'} ${Math.abs(b)}`;
+        let wrong3 = `y = ${m}x ${b >= 0 ? '+' : '-'} ${Math.abs(b) + 2}`;
+
+        let options = [correctEq, wrong1, wrong2, wrong3];
+        options = options.sort(() => Math.random() - 0.5);
+
+        return {
+            type: 'mc',
+            text: `Write equation of the line that passes through points <span class="math-text">${formatCoord(x1, y1)}</span> and <span class="math-text">${formatCoord(x2, y2)}</span>.`,
+            options: options,
+            correctAnswer: correctEq,
+            solution: `1. Find slope: (${y2} - ${y1}) / (${x2} - ${x1}) = ${m}.\n2. Find y-intercept (b) using y = mx + b:\n   ${y1} = ${m}(${x1}) + b\n   ${y1} = ${m*x1} + b -> b = ${b}.\n3. Equation: ${correctEq}`
+        };
+    }
+
+    // Q7: Parallel to y = -x - 5 (MC)
+    function genQ7() {
+        let m = -1; 
+        let b = randInt(-9, 9);
+        let x1 = randInt(2, 9);
+        let y1 = randInt(-5, 5);
+        
+        let eqGiven = `y = -x ${b >= 0 ? '+' : '-'} ${Math.abs(b)}`;
+        
+        // Correct: y - y1 = -1(x - x1) -> y - y1 = -(x - x1)
+        let signY = y1 < 0 ? '+' : '-';
+        let absY = Math.abs(y1);
+        let signX = x1 < 0 ? '+' : '-';
+        let absX = Math.abs(x1);
+
+        let correct = `y ${signY} ${absY} = -(x ${signX} ${absX})`;
+        let wrong1 = `y ${signY} ${absY} = (x ${signX} ${absX})`; // wrong slope sign
+        let wrong2 = `y ${signY == '+'?'-':'+'} ${absY} = -(x ${signX} ${absX})`; // wrong y sign
+        let wrong3 = `y ${signY} ${absY} = -(x ${signX == '+'?'-':'+'} ${absX})`; // wrong x sign
+
+        let options = [correct, wrong1, wrong2, wrong3];
+        options = options.sort(() => Math.random() - 0.5);
+
+        return {
+            type: 'mc',
+            text: `Find the equation of a line <b>parallel</b> to <span class="math-text">${eqGiven}</span> that passes through <span class="math-text">${formatCoord(x1, y1)}</span>.`,
+            options: options,
+            correctAnswer: correct,
+            solution: `1. Parallel slope is same: m = -1.\n2. Point-Slope form: y - y1 = m(x - x1).\n3. y - (${y1}) = -1(x - (${x1}))\n   ${correct}`
+        };
+    }
+
+    // Q8: Perpendicular to Ax - By = C (MC)
+    function genQ8() {
+        let A = 2; 
+        let B = 3;
+        let C = randInt(10, 20);
+        let x1 = randInt(2, 8);
+        let y1 = randInt(2, 8);
+        
+        // Given 2x - 3y = 15. Slope m = 2/3.
+        // Perp slope = -3/2.
+        let perpSlopeM = -3/2;
+        let perpSlopeStr = "-3/2";
+        
+        // Calc b for answer: y = mx + b -> b = y - mx
+        // We need integer b for nice MC options? Not guaranteed. 
+        // Let's pick x1, y1 such that b is clean?
+        // y1 - (-1.5 * x1) = integer. 
+        // If x1 is even, -1.5*x1 is integer. 
+        x1 = x1 * 2; // ensure even
+        
+        let bVal = y1 - (perpSlopeM * x1);
+        
+        let correct = `y = ${perpSlopeStr}x ${bVal >= 0 ? '+' : '-'} ${Math.abs(bVal)}`;
+        let wrong1 = `y = 2/3x ${bVal >= 0 ? '+' : '-'} ${Math.abs(bVal)}`; // parallel slope
+        let wrong2 = `y = ${perpSlopeStr}x ${bVal >= 0 ? '-' : '+'} ${Math.abs(bVal)}`; // wrong b sign
+        let wrong3 = `y = 3/2x ${bVal >= 0 ? '+' : '-'} ${Math.abs(bVal)}`; // reciprocal but wrong sign
+
+        let options = [correct, wrong1, wrong2, wrong3];
+        options = options.sort(() => Math.random() - 0.5);
+
+        return {
+            type: 'mc',
+            text: `Find the equation of a line <b>perpendicular</b> to <span class="math-text">2x - 3y = ${C}</span> that passes through the point <span class="math-text">${formatCoord(x1, y1)}</span>.`,
+            options: options,
+            correctAnswer: correct,
+            solution: `1. Find slope of given line: 2x - 3y = ${C} -> -3y = -2x... -> y = 2/3x... Slope = 2/3.\n2. Perpendicular slope is negative reciprocal: -3/2.\n3. Find b using (${x1}, ${y1}):\n   ${y1} = (-3/2)(${x1}) + b\n   ${y1} = -${(3*x1)/2} + b\n   b = ${bVal}.\n4. Equation: ${correct}`
+        };
+    }
+
+    // --- MAIN ENGINE ---
+
+    function generateQuestions() {
+        questions = [
+            genQ1(), genQ2(), genQ3(), genQ4(), genQ5(), genQ6(), genQ7(), genQ8()
+        ];
+    }
+
+    function startNewQuiz() {
+        generateQuestions();
+        currentQIndex = 0;
+        score = 0;
+        document.getElementById('total-q').innerText = questions.length;
+        document.getElementById('score-correct').innerText = "0";
+        document.getElementById('summary-area').classList.add('hidden');
+        document.getElementById('quiz-area').classList.remove('hidden');
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        let q = questions[currentQIndex];
+        document.getElementById('q-num').innerText = currentQIndex + 1;
+        document.getElementById('question-text').innerHTML = q.text;
+        document.getElementById('feedback-area').style.display = 'none';
+        document.getElementById('feedback-area').className = 'feedback'; // reset classes
+        document.getElementById('submit-btn').classList.remove('hidden');
+        document.getElementById('next-btn').classList.add('hidden');
+        
+        let container = document.getElementById('input-container');
+        container.innerHTML = '';
+
+        if (q.type === 'text') {
+            let input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'user-ans';
+            input.placeholder = 'Type your answer...';
+            input.autocomplete = 'off';
+            container.appendChild(input);
+        } else if (q.type === 'mc') {
+            selectedMCOption = null;
+            q.options.forEach(opt => {
+                let div = document.createElement('div');
+                div.className = 'mc-option';
+                div.innerText = opt;
+                div.onclick = function() {
+                    document.querySelectorAll('.mc-option').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                    selectedMCOption = opt;
+                };
+                container.appendChild(div);
+            });
+        }
+    }
+
+    function checkAnswer() {
+        let q = questions[currentQIndex];
+        let isCorrect = false;
+        let userVal = "";
+
+        if (q.type === 'text') {
+            let rawInput = document.getElementById('user-ans').value;
+            // Normalize: remove spaces, handle double signs if user typed them
+            userVal = rawInput.replace(/\s/g, '').replace(/\-\-/g, '+').replace(/\+\-/g, '-');
+            // Normalize correct answer too
+            let correctNorm = q.correctAnswer.replace(/\s/g, '');
+            
+            // Simple string check. For equation equivalency this is basic, 
+            // but strict instructions ("Point Slope Form") help.
+            if (userVal === correctNorm) isCorrect = true;
+        } else {
+            if (!selectedMCOption) {
+                alert("Please select an option.");
+                return;
+            }
+            if (selectedMCOption === q.correctAnswer) isCorrect = true;
+        }
+
+        let feedbackTitle = document.getElementById('feedback-title');
+        let feedbackArea = document.getElementById('feedback-area');
+        let solutionText = document.getElementById('solution-text');
+
+        feedbackArea.style.display = 'block';
+        if (isCorrect) {
+            score++;
+            document.getElementById('score-correct').innerText = score;
+            feedbackArea.classList.add('correct');
+            feedbackTitle.innerText = "Correct! ✅";
+        } else {
+            feedbackArea.classList.add('incorrect');
+            feedbackTitle.innerText = "Incorrect ❌";
+        }
+
+        solutionText.innerText = q.solution;
+
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+        currentQIndex++;
+        if (currentQIndex < questions.length) {
+            renderQuestion();
+        } else {
+            document.getElementById('quiz-area').classList.add('hidden');
+            document.getElementById('summary-area').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+        }
+    }
+
+    // Initialize on load
+    startNewQuiz();
+
+</script>
 </body>
 </html>
-
-

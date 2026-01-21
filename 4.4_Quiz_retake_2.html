@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linear Inequalities Dynamic Quiz</title>
+<style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f8; color: #333; display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
+    .container { background: white; width: 100%; max-width: 700px; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .stats-bar { display: flex; justify-content: space-between; background: #e9ecef; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; color: #555; }
+    .question-box { font-size: 1.2em; margin-bottom: 20px; line-height: 1.5; }
+    .math-text { font-weight: bold; font-family: monospace; background: #f8f9fa; padding: 2px 4px; border-radius: 4px; color: #2c3e50; }
+    input[type="text"] { width: 100%; padding: 12px; font-size: 1.1em; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 10px; box-sizing: border-box; }
+    .mc-option { display: block; background: #f8f9fa; border: 2px solid #ddd; padding: 12px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .mc-option:hover { background: #e2e6ea; }
+    .mc-option.selected { background: #d4eaf7; border-color: #3498db; }
+    .btn { background-color: #3498db; color: white; border: none; padding: 12px 24px; font-size: 1em; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.2s; }
+    .btn:hover { background-color: #2980b9; }
+    .feedback { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
+    .feedback.correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .feedback.incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .solution { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 0.95em; white-space: pre-wrap; }
+    
+    /* CRITICAL VISIBILITY CLASS */
+    .hidden { display: none !important; }
+    
+    .summary-score { font-size: 3em; text-align: center; color: #2c3e50; margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Inequalities Practice</h1>
+    
+    <div class="stats-bar">
+        <span>Question: <span id="q-num">1</span>/<span id="total-q">5</span></span>
+        <span>Correct: <span id="score-correct">0</span></span>
+    </div>
+
+    <div id="quiz-area">
+        <div class="question-box" id="question-text"></div>
+        <div class="input-area" id="input-container"></div>
+        <button class="btn" id="submit-btn" onclick="checkAnswer()">Check Answer</button>
+        <button class="btn hidden" id="next-btn" onclick="nextQuestion()">Next Question</button>
+        <div class="feedback" id="feedback-area">
+            <strong id="feedback-title"></strong>
+            <div class="solution" id="solution-text"></div>
+        </div>
+    </div>
+
+    <div id="summary-area" class="hidden">
+        <h2 style="text-align:center">Quiz Complete!</h2>
+        <div class="summary-score">Score: <span id="final-score"></span>/5</div>
+        <p style="text-align:center">Great job practicing linear inequalities.</p>
+        <button class="btn" onclick="startNewQuiz()">Generate New Quiz (New Numbers)</button>
+    </div>
+</div>
+
+<script>
+    // --- STATE MANAGEMENT ---
+    let currentQIndex = 0;
+    let score = 0;
+    let currentQuestionData = {};
+    const totalQuestions = 5;
+
+    // --- UTILITY FUNCTIONS ---
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const formatSlope = (m) => {
+        if (m === 1) return "";
+        if (m === -1) return "-";
+        return m;
+    }
+
+    // --- QUESTION GENERATORS ---
+
+    // Q1: Is point (x,y) a solution to Ax + By <= C?
+    function genQ1() {
+        const A = randInt(2, 6);
+        const B = randInt(-6, -2); // Keep B negative to make it interesting
+        const C = randInt(10, 30);
+        const x = randInt(0, 5);
+        const y = randInt(-5, 5);
+        
+        const lhs = (A * x) + (B * y);
+        const isSolution = lhs <= C;
+        
+        // Randomize whether we ask for <= or >= to keep it fresh
+        const symbol = randInt(0,1) === 0 ? "≤" : "≥";
+        const truth = symbol === "≤" ? (lhs <= C) : (lhs >= C);
+        const correctAnswer = truth ? "Yes" : "No";
+
+        const explanation = `Substitute x = ${x} and y = ${y} into the inequality:
+${A}(${x}) + (${B})(${y}) ${symbol} ${C}
+${A*x} - ${Math.abs(B*y)} ${symbol} ${C}
+${lhs} ${symbol} ${C}
+
+Is ${lhs} ${symbol} ${C}? **${truth ? "True" : "False"}**.
+Therefore, the point **${truth ? "is" : "is not"}** part of the solution set.`;
+
+        return {
+            type: "mc",
+            text: `Is the point <span class="math-text">(${x}, ${y})</span> part of the solution set of the inequality <span class="math-text">${A}x + ${B}y ${symbol} ${C}</span>?`,
+            options: ["Yes", "No"],
+            answer: correctAnswer,
+            explanation: explanation
+        };
+    }
+
+    // Q2: Describe graph features from inequality y < mx + b
+    function genQ2() {
+        const mNum = randInt(1, 4);
+        const mDen = randInt(2, 5);
+        const b = randInt(-5, 5);
+        // 0: < (Dashed/Below), 1: > (Dashed/Above), 2: <= (Solid/Below), 3: >= (Solid/Above)
+        const type = randInt(0, 3);
+        
+        const symbols = ["<", ">", "≤", "≥"];
+        const symbol = symbols[type];
+        
+        const lineType = (type === 0 || type === 1) ? "Dashed line" : "Solid line";
+        const shading = (type === 0 || type === 2) ? "Shaded Below" : "Shaded Above";
+        
+        const correctAnswer = `${lineType}, ${shading}`;
+        
+        // Distractors
+        const options = [
+            "Dashed line, Shaded Below",
+            "Dashed line, Shaded Above",
+            "Solid line, Shaded Below",
+            "Solid line, Shaded Above"
+        ];
+
+        return {
+            type: "mc",
+            text: `Describe the graph of the inequality: <br> <span class="math-text">y ${symbol} ${mNum}/${mDen}x ${b >= 0 ? '+ '+b : b}</span>`,
+            options: options,
+            answer: correctAnswer,
+            explanation: `1. <strong>Line Type:</strong> The symbol is <span class="math-text">${symbol}</span>. Since it ${type > 1 ? "includes 'or equal to'" : "does not include 'or equal to'"}, the line is <strong>${lineType}</strong>.
+2. <strong>Shading:</strong> The inequality is solved for y. It says "y is ${type % 2 === 0 ? "less" : "greater"} than...". Therefore, we shade <strong>${type % 2 === 0 ? "Below" : "Above"}</strong>.`
+        };
+    }
+
+    // Q3: Text description to Inequality (Reverse of Q2)
+    function genQ3() {
+        const m = randInt(-3, 3) || 1;
+        const b = randInt(-4, 4);
+        const isSolid = randInt(0, 1) === 1; // true/false
+        const isAbove = randInt(0, 1) === 1; // true/false
+
+        const symbol = isSolid 
+            ? (isAbove ? "≥" : "≤") 
+            : (isAbove ? ">" : "<");
+
+        const desc = `A graph has a <strong>${isSolid ? "Solid" : "Dashed"}</strong> boundary line with a slope of ${m} and y-intercept of ${b}. The shaded region is <strong>${isAbove ? "Above" : "Below"}</strong> the line.`;
+        
+        const correctEq = `y ${symbol} ${formatSlope(m)}x ${b >= 0 ? '+ '+b : b}`;
+        
+        // Generate wrong symbols for distractors
+        const wrongSym1 = isSolid ? (isAbove ? "≤" : "≥") : (isAbove ? "<" : ">"); // Wrong shade
+        const wrongSym2 = !isSolid ? (isAbove ? "≥" : "≤") : (isAbove ? ">" : "<"); // Wrong line type
+
+        const options = [
+            `y ${symbol} ${formatSlope(m)}x ${b >= 0 ? '+ '+b : b}`,
+            `y ${wrongSym1} ${formatSlope(m)}x ${b >= 0 ? '+ '+b : b}`,
+            `y ${wrongSym2} ${formatSlope(m)}x ${b >= 0 ? '+ '+b : b}`,
+            `y ${symbol} ${formatSlope(-m)}x ${b >= 0 ? '+ '+b : b}` // Wrong slope sign
+        ];
+        
+        // Shuffle options
+        options.sort(() => Math.random() - 0.5);
+
+        return {
+            type: "mc",
+            text: `Select the inequality that matches this description:<br>${desc}`,
+            options: options,
+            answer: correctEq,
+            explanation: `<strong>Slope-Intercept Form:</strong> y = mx + b.
+m (slope) = ${m}, b (y-intercept) = ${b}.
+<strong>Line:</strong> ${isSolid ? "Solid means ≤ or ≥" : "Dashed means < or >"}.
+<strong>Shade:</strong> ${isAbove ? "Above means > or ≥" : "Below means < or ≤"}.
+Combining these, the correct symbol is <strong>${symbol}</strong>.`
+        };
+    }
+
+    // Q4: Standard Form to Graph Matching
+    function genQ4() {
+        // Inequality: 2x - 3y <= 12
+        // We want to test if they know to flip the sign if dividing by negative
+        const A = 2; 
+        const B = -4; 
+        const C = randInt(8, 16);
+        const symbol = "≤"; // Starting with <=
+        
+        // If we solve for y:
+        // -4y <= -2x + C
+        // y >= 1/2x - C/4 (SIGN FLIPS!)
+        
+        const correctAnswer = "Solid line, Shaded Above";
+        
+        return {
+            type: "mc",
+            text: `Which description best fits the graph of the inequality: <br><span class="math-text">${A}x ${B}y ${symbol} ${C}</span>`,
+            options: [
+                "Solid line, Shaded Below",
+                "Solid line, Shaded Above",
+                "Dashed line, Shaded Below",
+                "Dashed line, Shaded Above"
+            ],
+            answer: correctAnswer,
+            explanation: `To graph, solve for y:
+1. Subtract ${A}x:  <span class="math-text">${B}y ${symbol} -${A}x + ${C}</span>
+2. Divide by ${B}. <strong>Since we divide by a negative, FLIP the symbol!</strong>
+<span class="math-text">y ≥ ${(-A/B).toFixed(1)}x + ${C/B}</span>
+The new symbol is <strong>≥</strong>, which means a <strong>Solid line</strong> and <strong>Shading Above</strong>.`
+        };
+    }
+
+    // Q5: Which inequality matches a graph (Multiple choice logic)
+    function genQ5() {
+        // We describe a graph and ask for the inequality (Standard form context)
+        const xInt = randInt(2, 6);
+        const yInt = randInt(2, 6);
+        // Line passes through (xInt, 0) and (0, yInt)
+        // Slope = (yInt - 0) / (0 - xInt) = -yInt/xInt
+        // Equation: y = -yInt/xInt * x + yInt
+        // Convert to Standard: yInt*x + xInt*y = xInt*yInt
+        
+        const A = yInt;
+        const B = xInt;
+        const C = xInt * yInt;
+        
+        const isSolid = randInt(0,1) === 0;
+        // Test point (0,0). If we want (0,0) to be solution (True), then 0 < C. 
+        // Let's make (0,0) a solution.
+        const symbol = isSolid ? "≤" : "<";
+        
+        const correctStd = `${A}x + ${B}y ${symbol} ${C}`;
+        
+        // Distractors
+        const wrong1 = `${A}x + ${B}y ${isSolid ? "≥" : ">"} ${C}`; // Shaded wrong way
+        const wrong2 = `${A}x - ${B}y ${symbol} ${C}`; // Wrong slope
+        const wrong3 = `${B}x + ${A}y ${symbol} ${C}`; // Swapped A and B
+
+        const options = [correctStd, wrong1, wrong2, wrong3].sort(() => Math.random() - 0.5);
+
+        return {
+            type: "mc",
+            text: `A graph has a ${isSolid?"Solid":"Dashed"} boundary line passing through positive intercepts (${C/A}, 0) and (0, ${C/B}). The origin (0,0) IS inside the shaded region. Which inequality represents this?`,
+            options: options,
+            answer: correctStd,
+            explanation: `1. <strong>Boundary Line:</strong> The line passes through positive intercepts. The equation is ${A}x + ${B}y = ${C}.
+2. <strong>Line Type:</strong> ${isSolid ? "Solid means ≤ or ≥" : "Dashed means < or >"}.
+3. <strong>Test Point (0,0):</strong> The problem says (0,0) is in the shaded region, so the inequality must be TRUE for (0,0).
+Plug (0,0) into ${correctStd}: 0 + 0 ${symbol} ${C}. Is 0 ${symbol} ${C}? Yes.
+If we picked the other direction (≥), 0 ≥ ${C} would be False.`
+        };
+    }
+
+    // --- ENGINE ---
+
+    function startNewQuiz() {
+        score = 0;
+        currentQIndex = 0;
+        document.getElementById('score-correct').innerText = 0;
+        document.getElementById('summary-area').classList.add('hidden');
+        document.getElementById('quiz-area').classList.remove('hidden');
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        // Select generator based on index
+        let qData;
+        switch(currentQIndex) {
+            case 0: qData = genQ1(); break;
+            case 1: qData = genQ2(); break;
+            case 2: qData = genQ3(); break;
+            case 3: qData = genQ4(); break;
+            case 4: qData = genQ5(); break;
+            default: qData = genQ1();
+        }
+        currentQuestionData = qData;
+
+        // Update UI
+        document.getElementById('q-num').innerText = currentQIndex + 1;
+        document.getElementById('question-text').innerHTML = qData.text;
+        document.getElementById('feedback-area').style.display = 'none';
+        document.getElementById('submit-btn').classList.remove('hidden');
+        document.getElementById('next-btn').classList.add('hidden');
+
+        // Render Inputs
+        const container = document.getElementById('input-container');
+        container.innerHTML = '';
+
+        if (qData.type === 'text') {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'user-answer';
+            input.placeholder = 'Type your answer...';
+            container.appendChild(input);
+        } else if (qData.type === 'mc') {
+            qData.options.forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'mc-option';
+                div.innerText = opt;
+                div.onclick = function() {
+                    document.querySelectorAll('.mc-option').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                };
+                container.appendChild(div);
+            });
+        }
+    }
+
+    function checkAnswer() {
+        let userVal = '';
+        if (currentQuestionData.type === 'text') {
+            userVal = document.getElementById('user-answer').value.trim();
+        } else {
+            const selected = document.querySelector('.mc-option.selected');
+            if (!selected) {
+                alert("Please select an option.");
+                return;
+            }
+            userVal = selected.innerText;
+        }
+
+        const isCorrect = userVal === currentQuestionData.answer;
+        
+        if (isCorrect) score++;
+        document.getElementById('score-correct').innerText = score;
+
+        const fbArea = document.getElementById('feedback-area');
+        const fbTitle = document.getElementById('feedback-title');
+        const solText = document.getElementById('solution-text');
+
+        fbArea.style.display = 'block';
+        fbArea.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+        fbTitle.innerText = isCorrect ? "Correct!" : "Incorrect";
+        solText.innerHTML = `<strong>Correct Answer:</strong> ${currentQuestionData.answer}<br><br><strong>Explanation:</strong><br>${currentQuestionData.explanation}`;
+
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+        currentQIndex++;
+        if (currentQIndex < totalQuestions) {
+            renderQuestion();
+        } else {
+            document.getElementById('quiz-area').classList.add('hidden');
+            document.getElementById('summary-area').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+        }
+    }
+
+    // Init
+    startNewQuiz();
+
+</script>
+</body>
+</html>

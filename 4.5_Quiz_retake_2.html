@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Scatter Plots & Regression Quiz (v2)</title>
+<style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f4f8; color: #333; display: flex; justify-content: center; min-height: 100vh; padding: 20px; }
+    .container { background: white; width: 100%; max-width: 750px; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .stats-bar { display: flex; justify-content: space-between; background: #e9ecef; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; color: #555; }
+    .question-box { font-size: 1.15em; margin-bottom: 20px; line-height: 1.6; }
+    .math-text { font-weight: bold; font-family: monospace; background: #f8f9fa; padding: 2px 4px; border-radius: 4px; color: #2c3e50; }
+    
+    /* Input Styling */
+    input[type="number"], input[type="text"] { width: 100%; padding: 12px; font-size: 1.1em; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 10px; box-sizing: border-box; }
+    label { font-weight: 600; color: #555; display: block; margin-top: 10px; margin-bottom: 5px; }
+    
+    .mc-option { display: block; background: #f8f9fa; border: 2px solid #ddd; padding: 12px; margin-bottom: 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .mc-option:hover { background: #e2e6ea; }
+    .mc-option.selected { background: #d4eaf7; border-color: #3498db; }
+    
+    /* Buttons */
+    .btn { background-color: #3498db; color: white; border: none; padding: 12px 24px; font-size: 1em; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: 600; transition: background 0.2s; }
+    .btn:hover { background-color: #2980b9; }
+    
+    /* Feedback & Solution */
+    .feedback { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
+    .feedback.correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .feedback.incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .solution { margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 0.95em; white-space: pre-wrap; }
+    
+    /* Custom Elements */
+    .data-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.9em; }
+    .data-table th, .data-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    .data-table th { background-color: #f2f2f2; }
+    
+    .graph-container { text-align: center; margin: 20px 0; overflow-x: auto; }
+    svg { background: white; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    
+    /* Utility */
+    .hidden { display: none !important; }
+    .summary-score { font-size: 3em; text-align: center; color: #2c3e50; margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Stats & Lines of Best Fit</h1>
+    
+    <div class="stats-bar">
+        <span>Question: <span id="q-num">1</span>/<span id="total-q">4</span></span>
+        <span>Score: <span id="score-correct">0</span></span>
+    </div>
+
+    <div id="quiz-area">
+        <div class="question-box" id="question-text"></div>
+        <div class="graph-container" id="graph-area"></div>
+        <div class="input-area" id="input-container"></div>
+        
+        <button class="btn" id="submit-btn" onclick="checkAnswer()">Check Answer</button>
+        <button class="btn hidden" id="next-btn" onclick="nextQuestion()">Next Question</button>
+        
+        <div class="feedback" id="feedback-area">
+            <strong id="feedback-title"></strong>
+            <div class="solution" id="solution-text"></div>
+        </div>
+    </div>
+
+    <div id="summary-area" class="hidden">
+        <h2 style="text-align:center">Quiz Complete!</h2>
+        <div class="summary-score">Score: <span id="final-score"></span></div>
+        <p style="text-align:center">Great practice! Generating new numbers creates new graphs.</p>
+        <button class="btn" onclick="startNewQuiz()">Generate New Quiz (New Data)</button>
+    </div>
+</div>
+
+<script>
+// --- GLOBAL STATE ---
+let currentQIndex = 0;
+let score = 0;
+let currentQuestionData = {};
+const TOTAL_QUESTIONS = 4;
+
+// --- MATH UTILITIES & SVG ENGINE ---
+
+function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+// Simple Linear Regression Calculator (Least Squares)
+function calculateRegression(points) {
+    const n = points.length;
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0, sumYY = 0;
+    
+    for(let p of points) {
+        sumX += p.x;
+        sumY += p.y;
+        sumXY += (p.x * p.y);
+        sumXX += (p.x * p.x);
+        sumYY += (p.y * p.y);
+    }
+    
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+    
+    // Correlation Coefficient (r)
+    const numerator = (n * sumXY - sumX * sumY);
+    const denominator = Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+    const r = numerator / denominator;
+    
+    return { m: slope, b: intercept, r: r };
+}
+
+// SVG Graph Generator
+function generateSVGGraph(points, width, height, xLabel, yLabel, showLine = false, lineData = null) {
+    let maxX = 0, maxY = 0;
+    points.forEach(p => {
+        if(p.x > maxX) maxX = p.x;
+        if(p.y > maxY) maxY = p.y;
+    });
+    
+    maxX = Math.ceil(maxX * 1.1);
+    maxY = Math.ceil(maxY * 1.1);
+    
+    const padding = 50;
+    const plotW = width - padding * 2;
+    const plotH = height - padding * 2;
+    
+    const mapX = (x) => padding + (x / maxX) * plotW;
+    const mapY = (y) => (height - padding) - (y / maxY) * plotH;
+    
+    let svgHtml = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+    
+    // Grid & Axes
+    svgHtml += `<line x1="${padding}" y1="${height-padding}" x2="${width-padding}" y2="${height-padding}" stroke="black" stroke-width="2"/>`; 
+    svgHtml += `<line x1="${padding}" y1="${height-padding}" x2="${padding}" y2="${padding}" stroke="black" stroke-width="2"/>`; 
+    
+    svgHtml += `<text x="${width/2}" y="${height-5}" text-anchor="middle" font-size="14" font-family="sans-serif">${xLabel}</text>`;
+    svgHtml += `<text x="15" y="${height/2}" text-anchor="middle" font-size="14" font-family="sans-serif" transform="rotate(-90, 15, ${height/2})">${yLabel}</text>`;
+    
+    // Draw Points
+    points.forEach(p => {
+        svgHtml += `<circle cx="${mapX(p.x)}" cy="${mapY(p.y)}" r="4" fill="#3498db" stroke="#2980b9"/>`;
+    });
+    
+    // Draw Line of Best Fit
+    if(showLine && lineData) {
+        let x1 = 0;
+        let y1 = lineData.m * x1 + lineData.b;
+        let x2 = maxX;
+        let y2 = lineData.m * x2 + lineData.b;
+        svgHtml += `<line x1="${mapX(x1)}" y1="${mapY(y1)}" x2="${mapX(x2)}" y2="${mapY(y2)}" stroke="#e74c3c" stroke-width="3" stroke-dasharray="5,5"/>`;
+    }
+    
+    svgHtml += `</svg>`;
+    return svgHtml;
+}
+
+// --- QUESTION GENERATORS ---
+
+// Q1: Visual Correlation ID
+function genQ1() {
+    const types = ["Positive", "Negative", "No Correlation"];
+    const type = types[randomInt(0, 2)];
+    const points = [];
+    
+    for(let i=0; i<15; i++) {
+        let x = randomInt(5, 95);
+        let y;
+        if(type === "Positive") y = x + randomInt(-20, 20);
+        else if(type === "Negative") y = 100 - x + randomInt(-20, 20);
+        else y = randomInt(10, 90);
+        
+        if(y < 0) y = 0; if(y > 100) y = 100;
+        points.push({x, y});
+    }
+
+    const svg = generateSVGGraph(points, 400, 300, "Variable X", "Variable Y");
+    
+    return {
+        text: "Determine the type of correlation shown in the scatter plot below.",
+        graph: svg,
+        type: "mc",
+        options: ["Positive", "Negative", "No Correlation"],
+        answer: type,
+        explanation: `The trend of the data points goes ${type === 'Positive' ? 'up' : type === 'Negative' ? 'down' : 'randomly'} as you move from left to right.`
+    };
+}
+
+// Q2: Slope & Equation Calculation (Modified)
+function genQ2() {
+    const slope = randomInt(0, 1) === 0 ? -1 * randomInt(1, 3) : randomInt(1, 3);
+    const intercept = slope < 0 ? randomInt(80, 100) : randomInt(10, 30);
+    
+    const points = [];
+    for(let i=0; i<10; i++) {
+        let x = i * 10 + randomInt(0, 5);
+        let y = (slope * x + intercept) + randomInt(-10, 10);
+        if(y < 0) y = 0;
+        points.push({x, y});
+    }
+    
+    const lineInfo = { m: slope, b: intercept };
+    const svg = generateSVGGraph(points, 400, 300, "X Value", "Y Value", true, lineInfo);
+    
+    return {
+        text: `The graph shows a line of best fit through the data. <br>The line passes exactly through <b>(0, ${intercept})</b> and <b>(10, ${slope*10+intercept})</b>.<br>
+        <b>Part A:</b> Calculate the slope of this line.<br>
+        <b>Part B:</b> Write the Y-Intercept of the equation.`,
+        graph: svg,
+        type: "multi-input",
+        inputs: ["Part A: Slope (m)", "Part B: Y-Intercept (b)"],
+        answer: [slope, intercept],
+        explanation: `<b>Part A (Slope):</b> (y₂ - y₁) / (x₂ - x₁) = (${slope*10+intercept} - ${intercept}) / (10 - 0) = ${slope}.<br>
+                      <b>Part B (Equation):</b> Since the y-intercept is ${intercept}, the equation is y = ${slope}x + ${intercept}.`
+    };
+}
+
+// Q3: Regression Equation & Correlation (Modified)
+function genQ3() {
+    const contexts = [
+        { x: "Horsepower", y: "MPG", m: -0.1, b: 40 },
+        { x: "Hours Studied", y: "Test Score", m: 5, b: 50 },
+        { x: "Car Age (yrs)", y: "Price ($k)", m: -2, b: 35 }
+    ];
+    const ctx = contexts[randomInt(0, contexts.length-1)];
+    
+    let htmlTable = `<table class="data-table"><tr><th>${ctx.x}</th>`;
+    let yRow = `<tr><td>${ctx.y}</td>`;
+    
+    let points = [];
+    let xStart = 5; 
+    
+    for(let i=0; i<6; i++) {
+        let x = xStart + i*randomInt(2, 5);
+        let idealY = ctx.m * x + ctx.b;
+        let y = Math.round(idealY + (Math.random() * 4 - 2)); 
+        points.push({x, y});
+        
+        htmlTable += `<td>${x}</td>`;
+        yRow += `<td>${y}</td>`;
+    }
+    htmlTable += `</tr>${yRow}</tr></table>`;
+    
+    const regResult = calculateRegression(points);
+    // Rounding to nearest thousandths (3 decimal places)
+    const m = parseFloat(regResult.m.toFixed(3));
+    const b = parseFloat(regResult.b.toFixed(3));
+    const r = parseFloat(regResult.r.toFixed(3));
+    
+    return {
+        text: `The table below shows data for ${ctx.x} vs ${ctx.y}.<br>${htmlTable}<br>
+        Using linear regression technology, find the <b>Regression Equation</b> components and <b>Correlation Coefficient (r)</b>.<br>
+        <i>Round all values to the nearest thousandths (3 decimal places).</i>`,
+        graph: "",
+        type: "multi-input",
+        inputs: ["Slope (a)", "Y-Intercept (b)", "Correlation (r)"],
+        answer: [m, b, r],
+        explanation: `Using a calculator:<br>
+        Equation: y = ax + b<br>
+        a ≈ <b>${m}</b><br>
+        b ≈ <b>${b}</b><br>
+        Correlation (r) ≈ <b>${r}</b>`
+    };
+}
+
+// Q4: Prediction X & Y (Modified)
+function genQ4() {
+    const m = randomInt(2, 5);
+    const b = randomInt(10, 20);
+    
+    // Part A Data
+    const xVal = randomInt(15, 25);
+    const yPred = m * xVal + b;
+    
+    // Part B Data (Ensure clean numbers roughly)
+    const yVal = randomInt(100, 150);
+    const xPred = (yVal - b) / m;
+    
+    return {
+        text: `A scatter plot suggests a linear relationship between Height (x) and Weight (y).<br>The regression equation is determined to be: <br>
+        <div style="text-align:center; margin:10px; font-size:1.3em;">y = ${m}x + ${b}</div><br>
+        Use this model to answer the following:`,
+        graph: "",
+        type: "multi-input",
+        inputs: [`Part A: Find y (Weight) when x = ${xVal}`, `Part B: Find x (Height) when y = ${yVal}`],
+        answer: [yPred, parseFloat(xPred.toFixed(2))], // Round x prediction to 2 decimals for check
+        explanation: `<b>Part A:</b> Substitute x = ${xVal}:<br>y = ${m}(${xVal}) + ${b} = ${yPred}<br><br>
+                      <b>Part B:</b> Substitute y = ${yVal}:<br>${yVal} = ${m}x + ${b}<br>${yVal - b} = ${m}x<br>x = ${xPred.toFixed(2)}`
+    };
+}
+
+// --- QUIZ LOGIC ---
+
+function startNewQuiz() {
+    score = 0;
+    currentQIndex = 0;
+    document.getElementById('summary-area').classList.add('hidden');
+    document.getElementById('quiz-area').classList.remove('hidden');
+    document.getElementById('score-correct').innerText = "0";
+    renderQuestion();
+}
+
+function nextQuestion() {
+    currentQIndex++;
+    if (currentQIndex < TOTAL_QUESTIONS) {
+        renderQuestion();
+    } else {
+        document.getElementById('quiz-area').classList.add('hidden');
+        document.getElementById('summary-area').classList.remove('hidden');
+        document.getElementById('final-score').innerText = score + "/" + TOTAL_QUESTIONS;
+    }
+}
+
+function renderQuestion() {
+    document.getElementById('q-num').innerText = currentQIndex + 1;
+    document.getElementById('feedback-area').style.display = 'none';
+    document.getElementById('submit-btn').classList.remove('hidden');
+    document.getElementById('next-btn').classList.add('hidden');
+    document.getElementById('graph-area').innerHTML = ""; 
+    
+    if(currentQIndex === 0) currentQuestionData = genQ1();
+    else if(currentQIndex === 1) currentQuestionData = genQ2();
+    else if(currentQIndex === 2) currentQuestionData = genQ3();
+    else currentQuestionData = genQ4(); 
+    
+    document.getElementById('question-text').innerHTML = currentQuestionData.text;
+    
+    if(currentQuestionData.graph) {
+        document.getElementById('graph-area').innerHTML = currentQuestionData.graph;
+    }
+
+    const container = document.getElementById('input-container');
+    container.innerHTML = '';
+    
+    if (currentQuestionData.type === 'text') {
+        container.innerHTML = `<input type="number" id="user-ans" placeholder="Enter your answer...">`;
+    } 
+    else if (currentQuestionData.type === 'mc') {
+        currentQuestionData.options.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = 'mc-option';
+            div.innerText = opt;
+            div.onclick = function() {
+                document.querySelectorAll('.mc-option').forEach(el => el.classList.remove('selected'));
+                div.classList.add('selected');
+            };
+            container.appendChild(div);
+        });
+    }
+    else if (currentQuestionData.type === 'multi-input') {
+        currentQuestionData.inputs.forEach((label, idx) => {
+            container.innerHTML += `<label>${label}:</label><input type="number" id="user-ans-${idx}" step="0.001">`;
+        });
+    }
+}
+
+function checkAnswer() {
+    let isCorrect = false;
+    
+    if (currentQuestionData.type === 'text') {
+        const userVal = parseFloat(document.getElementById('user-ans').value);
+        if(Math.abs(userVal - currentQuestionData.answer) < 0.1) isCorrect = true; 
+    } 
+    else if (currentQuestionData.type === 'mc') {
+        const selected = document.querySelector('.mc-option.selected');
+        if(selected && selected.innerText === currentQuestionData.answer) isCorrect = true;
+    }
+    else if (currentQuestionData.type === 'multi-input') {
+        let allCorrect = true;
+        // Iterate through all expected answers (handles 2 or 3 inputs dynamically)
+        currentQuestionData.answer.forEach((ans, idx) => {
+            const el = document.getElementById(`user-ans-${idx}`);
+            if(!el) return;
+            
+            const userIn = parseFloat(el.value);
+            // Higher tolerance (0.005) for rounding differences, especially for Q3 thousandths
+            if(isNaN(userIn) || Math.abs(userIn - ans) > 0.005) {
+                allCorrect = false;
+            }
+        });
+        isCorrect = allCorrect;
+    }
+    
+    const feedback = document.getElementById('feedback-area');
+    const title = document.getElementById('feedback-title');
+    const sol = document.getElementById('solution-text');
+    
+    feedback.style.display = 'block';
+    feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+    title.innerText = isCorrect ? "Correct!" : "Incorrect";
+    
+    sol.innerHTML = currentQuestionData.explanation;
+    
+    if (isCorrect) {
+        score++;
+        document.getElementById('score-correct').innerText = score;
+    }
+    
+    document.getElementById('submit-btn').classList.add('hidden');
+    document.getElementById('next-btn').classList.remove('hidden');
+}
+
+startNewQuiz();
+
+</script>
+</body>
+</html>

@@ -106,10 +106,9 @@
         let slopeVal = rise/run;
         
         // Expected answer logic for Point-Slope: y - y1 = m(x - x1)
-        // We will generate the string for the specific point (x1, y1)
-        // Ideally we accept either point, but for simplicity we ask for point 1.
         let ans = `y - ${y1} = ${slopeFrac}(x - ${x1})`;
-        ans = ans.replace(`- -`, `+ `).replace(`+ -`, `- `); // clean signs
+        // FIX: Use Regex /g to replace ALL double negatives
+        ans = ans.replace(/\- \-/g, "+ ").replace(/\+ \-/g, "- "); 
         
         // Simplified version for checking logic
         let cleanAns = ans.replace(/\s/g, '');
@@ -130,8 +129,6 @@
         let sign = Math.random() < 0.5 ? '-' : '+';
         let eq = `${A}x ${sign} ${B}y = ${C}`;
         
-        // Slope is -A/B if form is Ax + By = C.
-        // If Ax - By = C, slope is A/B.
         let actualSlope = (sign === '-') ? simplifyFraction(A, B) : simplifyFraction(-A, B);
         
         return {
@@ -149,8 +146,6 @@
         let C = randInt(10, 40);
         let eq = `${A}x + ${B}y = ${C}`;
         
-        // Original slope m1 = -A/B
-        // Perpendicular slope m2 = B/A
         let perpSlope = simplifyFraction(B, A);
         
         return {
@@ -164,7 +159,7 @@
     // Q4: Equation of line through point perp to y = mx + b
     function genQ4() {
         let mNum = randNonZero(-3, 3);
-        let mDen = 1; // Keep it integer for easier typing check
+        let mDen = 1;
         let b = randInt(1, 10);
         let x1 = randInt(-5, 5);
         let y1 = randInt(-5, 5);
@@ -173,22 +168,12 @@
         if (mNum === 1) eqGiven = `y = x + ${b}`;
         if (mNum === -1) eqGiven = `y = -x + ${b}`;
 
-        // Perp slope is -1/mNum
         let perpSlopeFrac = simplifyFraction(-1, mNum); 
         let perpSlopeVal = -1 / mNum;
         
-        // y = mx + b -> b = y - mx
-        // We need the answer in y = mx + b form generally, or just any valid equation.
-        // Let's ask for slope-intercept for checking ease.
-        let newB = y1 - (perpSlopeVal * x1);
-        
-        // Check if newB is integer. If not, this is hard to type.
-        // Let's force the random numbers to make newB clean? 
-        // Or just ask for Point-Slope which is easier to validate?
-        // Prompt 4 usually implies slope-intercept or point-slope. Let's do Point-Slope for text input ease.
-        
         let ans = `y - ${y1} = ${perpSlopeFrac}(x - ${x1})`;
-        ans = ans.replace(`- -`, `+ `).replace(`+ -`, `- `);
+        // FIX: Use Regex /g to replace ALL double negatives
+        ans = ans.replace(/\- \-/g, "+ ").replace(/\+ \-/g, "- ");
         let cleanAns = ans.replace(/\s/g, '');
 
         return {
@@ -203,7 +188,7 @@
     function genQ5() {
         let num = randNonZero(1, 4);
         let den = randInt(2, 5);
-        let slope = simplifyFraction(-num, den); // e.g. -3/2
+        let slope = simplifyFraction(-num, den);
         let b = randInt(1, 9);
         let x1 = randInt(2, 8);
         let y1 = randInt(-8, -2);
@@ -211,7 +196,8 @@
         let eq = `y = ${slope}x - ${b}`;
         
         let ans = `y - ${y1} = ${slope}(x - ${x1})`;
-        ans = ans.replace(`- -`, `+ `).replace(`+ -`, `- `);
+        // FIX: Use Regex /g to replace ALL double negatives
+        ans = ans.replace(/\- \-/g, "+ ").replace(/\+ \-/g, "- ");
         let cleanAns = ans.replace(/\s/g, '');
 
         return {
@@ -224,7 +210,6 @@
 
     // Q6: Line through two points (Multiple Choice)
     function genQ6() {
-        // Construct line y = mx + b with integer coords
         let m = randNonZero(-4, 4);
         let b = randInt(-5, 5);
         
@@ -259,16 +244,15 @@
         
         let eqGiven = `y = -x ${b >= 0 ? '+' : '-'} ${Math.abs(b)}`;
         
-        // Correct: y - y1 = -1(x - x1) -> y - y1 = -(x - x1)
         let signY = y1 < 0 ? '+' : '-';
         let absY = Math.abs(y1);
         let signX = x1 < 0 ? '+' : '-';
         let absX = Math.abs(x1);
 
         let correct = `y ${signY} ${absY} = -(x ${signX} ${absX})`;
-        let wrong1 = `y ${signY} ${absY} = (x ${signX} ${absX})`; // wrong slope sign
-        let wrong2 = `y ${signY == '+'?'-':'+'} ${absY} = -(x ${signX} ${absX})`; // wrong y sign
-        let wrong3 = `y ${signY} ${absY} = -(x ${signX == '+'?'-':'+'} ${absX})`; // wrong x sign
+        let wrong1 = `y ${signY} ${absY} = (x ${signX} ${absX})`; 
+        let wrong2 = `y ${signY == '+'?'-':'+'} ${absY} = -(x ${signX} ${absX})`; 
+        let wrong3 = `y ${signY} ${absY} = -(x ${signX == '+'?'-':'+'} ${absX})`;
 
         let options = [correct, wrong1, wrong2, wrong3];
         options = options.sort(() => Math.random() - 0.5);
@@ -290,24 +274,17 @@
         let x1 = randInt(2, 8);
         let y1 = randInt(2, 8);
         
-        // Given 2x - 3y = 15. Slope m = 2/3.
-        // Perp slope = -3/2.
         let perpSlopeM = -3/2;
         let perpSlopeStr = "-3/2";
         
-        // Calc b for answer: y = mx + b -> b = y - mx
-        // We need integer b for nice MC options? Not guaranteed. 
-        // Let's pick x1, y1 such that b is clean?
-        // y1 - (-1.5 * x1) = integer. 
-        // If x1 is even, -1.5*x1 is integer. 
         x1 = x1 * 2; // ensure even
         
         let bVal = y1 - (perpSlopeM * x1);
         
         let correct = `y = ${perpSlopeStr}x ${bVal >= 0 ? '+' : '-'} ${Math.abs(bVal)}`;
-        let wrong1 = `y = 2/3x ${bVal >= 0 ? '+' : '-'} ${Math.abs(bVal)}`; // parallel slope
-        let wrong2 = `y = ${perpSlopeStr}x ${bVal >= 0 ? '-' : '+'} ${Math.abs(bVal)}`; // wrong b sign
-        let wrong3 = `y = 3/2x ${bVal >= 0 ? '+' : '-'} ${Math.abs(bVal)}`; // reciprocal but wrong sign
+        let wrong1 = `y = 2/3x ${bVal >= 0 ? '+' : '-'} ${Math.abs(bVal)}`; 
+        let wrong2 = `y = ${perpSlopeStr}x ${bVal >= 0 ? '-' : '+'} ${Math.abs(bVal)}`; 
+        let wrong3 = `y = 3/2x ${bVal >= 0 ? '+' : '-'} ${Math.abs(bVal)}`; 
 
         let options = [correct, wrong1, wrong2, wrong3];
         options = options.sort(() => Math.random() - 0.5);
@@ -387,8 +364,6 @@
             // Normalize correct answer too
             let correctNorm = q.correctAnswer.replace(/\s/g, '');
             
-            // Simple string check. For equation equivalency this is basic, 
-            // but strict instructions ("Point Slope Form") help.
             if (userVal === correctNorm) isCorrect = true;
         } else {
             if (!selectedMCOption) {

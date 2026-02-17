@@ -1,0 +1,235 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Systems Practice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+    </style></head><body class="bg-slate-100 flex items-center justify-center min-h-screen p-4">
+    <main class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden border border-slate-200">
+        <div class="bg-slate-50 p-6 border-b border-slate-200">
+            <h1 class="text-2xl font-bold text-slate-800">Dynamic Word Problems</h1> 
+            <div id="progressContainer" class="mt-4">
+                <div class="flex justify-between text-sm text-slate-500 mb-1">
+                    <span id="progressText">Question 1</span>
+                    <span id="scoreTracker" class="font-semibold text-slate-700">Score: 0</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5">
+                    <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quizContainer" class="p-8"></div>
+
+        <div id="feedbackContainer" class="px-8 pb-4 space-y-4">
+            <div id="tipBox" class="hidden fade-in bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r shadow-sm">
+                <div class="flex">
+                    <div class="flex-shrink-0"><span class="text-yellow-400 text-xl">💡</span></div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800">Strategy Hint</h3>
+                        <div class="mt-2 text-sm text-yellow-700" id="tipText"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="solutionBox" class="hidden fade-in rounded-xl overflow-hidden border">
+                <div id="solutionHeader" class="p-4 bg-gray-100 border-b"><h3 id="solutionTitle" class="font-bold text-lg"></h3></div>
+                <div class="p-4 bg-white">
+                    <p class="text-sm font-bold text-gray-500 uppercase tracking-wide mb-2">Step-by-Step Solution</p>
+                    <div id="solutionText" class="text-gray-700 space-y-2 text-sm font-mono leading-relaxed"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="actionArea" class="p-6 bg-slate-50 border-t border-slate-200 flex justify-end">
+            <button id="checkBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 shadow-lg">Check Answer</button>
+            <button id="nextBtn" class="hidden bg-slate-800 text-white font-bold py-3 px-8 rounded-lg hover:bg-slate-900 shadow-lg">Next Problem</button>
+        </div>
+
+        <div id="resultsSection" class="hidden p-8 text-center">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4">Quiz Complete!</h2>
+            <div id="finalScoreDisplay" class="text-5xl font-bold text-blue-600 mb-6"></div>
+            <button onclick="location.reload()" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700">New Round (Randomized)</button>
+        </div>
+    </main>
+
+    <script>
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
+
+        function generateQuizData() {
+            // Problem 1: Coins (Dimes & Quarters)
+            const d = rand(10, 30);
+            const q = rand(10, 30);
+            const totalCoins = d + q;
+            const totalVal = (d * 0.10 + q * 0.25).toFixed(2);
+
+            // Problem 2: Tickets & Snacks
+            const t = rand(2, 6);
+            const extraSnacks = rand(2, 5);
+            const s = t + extraSnacks;
+            const tPrice = 10, sPrice = 5;
+            const totalSpend = (t * tPrice) + (s * sPrice);
+
+            // Problem 3: Pages
+            const p1 = rand(400, 700);
+            const diff = rand(20, 100);
+            const p2 = p1 + diff;
+            const totalPages = p1 + p2;
+
+            // Problem 4: Rushing Yards
+            const y1 = rand(200, 400);
+            const multiplier = rand(3, 5);
+            const y2 = y1 * multiplier;
+            const totalYards = y1 + y2;
+
+            // Problem 5: Fishing
+            const kevin = rand(10, 20);
+            const extra = rand(1, 5);
+            const david = (2 * kevin) + extra;
+            const totalFish = kevin + david;
+
+            return [
+                {
+                    id: 'q1',
+                    type: 'Coin Systems',
+                    content: `There were ${totalCoins} dimes and quarters in a bag. The total value was $${totalVal}. How many of each type? (Format: X dimes, Y quarters)`,
+                    answer: `${d} dimes, ${q} quarters`,
+                    hint: "Use d + q = total and 0.10d + 0.25q = total value.",
+                    steps: `1. d + q = ${totalCoins} → d = ${totalCoins} - q<br>2. 10d + 25q = ${Math.round(totalVal * 100)} cents<br>3. 10(${totalCoins} - q) + 25q = ${Math.round(totalVal * 100)}<br>4. 15q = ${Math.round(totalVal * 100) - (10 * totalCoins)}<br>5. q = ${q}, d = ${d}`
+                },
+                {
+                    id: 'q2',
+                    type: 'Systems by Substitution',
+                    content: `Tickets cost $10 and snacks cost $5. Total spent is $${totalSpend}. There are ${extraSnacks} more snacks than tickets. How many of each? (Format: X tickets, Y snacks)`,
+                    answer: `${t} tickets, ${s} snacks`,
+                    hint: "Let t = tickets. Then snacks = t + " + extraSnacks + ". Total cost: 10t + 5(t + " + extraSnacks + ") = " + totalSpend,
+                    steps: `1. 10t + 5(t + ${extraSnacks}) = ${totalSpend}<br>2. 15t + ${5 * extraSnacks} = ${totalSpend}<br>3. 15t = ${totalSpend - (5 * extraSnacks)}<br>4. t = ${t}, s = ${s}`
+                },
+                {
+                    id: 'q3',
+                    type: 'Part-Whole Relations',
+                    content: `An Algebra text has ${totalPages} total pages in two parts. Part two has ${diff} more pages than part one. How many in each? (Format: P1: X, P2: Y)`,
+                    answer: `P1: ${p1}, P2: ${p2}`,
+                    hint: "x + (x + " + diff + ") = " + totalPages,
+                    steps: `1. 2x + ${diff} = ${totalPages}<br>2. 2x = ${totalPages - diff}<br>3. x = ${p1} (Part 1)<br>4. Part 2 = ${p1} + ${diff} = ${p2}`
+                },
+                {
+                    id: 'q4',
+                    type: 'Multiplicative Systems',
+                    content: `Two players rushed for a combined ${totalYards} yards. One player rushed ${multiplier} times as many as the other. How many yards each? (Format: X, Y)`,
+                    answer: `${y1}, ${y2}`,
+                    hint: `x + ${multiplier}x = ${totalYards}`,
+                    steps: `1. ${multiplier + 1}x = ${totalYards}<br>2. x = ${y1}<br>3. Second player = ${y1} * ${multiplier} = ${y2}`
+                },
+                {
+                    id: 'q5',
+                    type: 'Complex Linear',
+                    content: `Together they caught ${totalFish} trout. David caught ${extra} more than twice as many as Kevin. How many did David catch?`,
+                    answer: `${david}`,
+                    hint: `Kevin = K, David = 2K + ${extra}. Sum: K + (2K + ${extra}) = ${totalFish}`,
+                    steps: `1. 3K + ${extra} = ${totalFish}<br>2. 3K = ${totalFish - extra}<br>3. K = ${kevin}<br>4. David = 2(${kevin}) + ${extra} = ${david}`
+                }
+            ];
+        }
+
+        let currentQuestions = generateQuizData();
+        let currentIndex = 0;
+        let score = 0;
+        let attempts = 0; 
+        
+        const normalize = str => str.replace(/\s+/g, '').toLowerCase().replace(/[$,:]/g, '');
+
+        function renderQuestion() {
+            const q = currentQuestions[currentIndex];
+            const progress = ((currentIndex) / currentQuestions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressText').innerText = `Question ${currentIndex + 1} of ${currentQuestions.length}`;
+            
+            attempts = 0;
+            document.getElementById('tipBox').classList.add('hidden');
+            document.getElementById('solutionBox').classList.add('hidden');
+            document.getElementById('checkBtn').innerText = "Check Answer";
+            document.getElementById('checkBtn').className = "bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 shadow-lg";
+            document.getElementById('checkBtn').classList.remove('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+
+            document.getElementById('quizContainer').innerHTML = `
+                <div class="text-center fade-in">
+                    <span class="inline-block bg-slate-200 text-slate-700 text-xs px-2 py-1 rounded-full mb-4 uppercase tracking-wide font-bold">${q.type}</span>
+                    <div class="text-xl md:text-2xl font-medium text-slate-800 mb-8 leading-relaxed">${q.content}</div>
+                    <input type="text" id="answerInput" class="w-full max-w-sm p-4 border-2 border-slate-300 rounded-xl text-center text-xl outline-none focus:border-blue-500 transition-all" placeholder="Enter answer..." autocomplete="off">
+                </div>
+            `;
+            
+            setTimeout(() => {
+                const input = document.getElementById('answerInput');
+                if(input) { input.focus(); }
+            }, 100);
+        }
+
+        function checkAnswer() {
+            const input = document.getElementById('answerInput');
+            const q = currentQuestions[currentIndex];
+            if(!input.value) return;
+            
+            if (normalize(input.value) === normalize(q.answer)) {
+                finalize(true);
+            } else if (attempts === 0) {
+                attempts = 1;
+                document.getElementById('tipText').innerHTML = q.hint;
+                document.getElementById('tipBox').classList.remove('hidden');
+                document.getElementById('checkBtn').innerText = "Try Again";
+                document.getElementById('checkBtn').className = "bg-yellow-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-yellow-600 shadow-lg";
+                input.parentElement.classList.add('shake');
+                setTimeout(() => input.parentElement.classList.remove('shake'), 500);
+            } else {
+                finalize(false);
+            }
+        }
+
+        function finalize(isSuccess) {
+            const q = currentQuestions[currentIndex];
+            if(isSuccess) score++;
+            document.getElementById('scoreTracker').innerText = `Score: ${score}`;
+            document.getElementById('tipBox').classList.add('hidden');
+            document.getElementById('solutionBox').classList.remove('hidden');
+            
+            const header = document.getElementById('solutionHeader');
+            const title = document.getElementById('solutionTitle');
+            
+            if(isSuccess) {
+                header.className = "p-4 bg-green-100 border-b border-green-200";
+                title.className = "font-bold text-lg text-green-800";
+                title.innerHTML = `✓ Correct! Answer: ${q.answer}`;
+            } else {
+                header.className = "p-4 bg-red-100 border-b border-red-200";
+                title.className = "font-bold text-lg text-red-800";
+                title.innerHTML = `✗ Incorrect. Answer: ${q.answer}`;
+            }
+            
+            document.getElementById('solutionText').innerHTML = q.steps;
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('checkBtn').classList.add('hidden');
+            document.getElementById('nextBtn').classList.remove('hidden');
+        }
+
+        document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            currentIndex++;
+            if(currentIndex < currentQuestions.length) renderQuestion();
+            else {
+                 document.getElementById('quizContainer').classList.add('hidden');
+                 document.getElementById('feedbackContainer').classList.add('hidden');
+                 document.getElementById('actionArea').classList.add('hidden');
+                 document.getElementById('resultsSection').classList.remove('hidden');
+                 document.getElementById('finalScoreDisplay').innerText = `${Math.round((score/currentQuestions.length)*100)}%`;
+            }
+        });
+
+        renderQuestion();
+    </script></body></html>

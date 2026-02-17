@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Systems of Equations - Immediate Feedback</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .system-brace {
+            font-size: 4rem;
+            font-family: serif;
+            margin-right: 0.5rem;
+            line-height: 1;
+        }
+        .equation-system {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
+        <div class="bg-gray-50 p-6 border-b border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-800">Solving Systems Algebraically</h1>
+            <div id="progressContainer" class="mt-4">
+                <div class="flex justify-between text-sm text-gray-500 mb-1">
+                    <span id="progressText">Question 1 of 6</span>
+                    <span id="scoreTracker" class="font-semibold text-gray-700">Score: 0</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quizContainer" class="p-8">
+            </div>
+
+        <div id="feedbackArea" class="hidden px-8 pb-8 fade-in">
+            </div>
+
+        <div id="actionArea" class="p-6 bg-gray-50 border-t border-gray-200 flex justify-end">
+            <button id="checkBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 shadow-lg transform transition hover:-translate-y-0.5">Check Answer</button>
+            <button id="nextBtn" class="hidden bg-gray-800 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-900 shadow-lg flex items-center">
+                Next Question 
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+            </button>
+        </div>
+
+        <div id="resultsSection" class="hidden p-8 text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Complete!</h2>
+            <div id="finalScoreDisplay" class="text-5xl font-bold text-blue-600 mb-6"></div>
+            <p id="finalMessage" class="text-gray-600 text-lg mb-8"></p>
+            
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button id="generateNewBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 w-full sm:w-auto">Start New Quiz</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // DOM Elements
+        const quizContainer = document.getElementById('quizContainer');
+        const feedbackArea = document.getElementById('feedbackArea');
+        const actionArea = document.getElementById('actionArea');
+        const resultsSection = document.getElementById('resultsSection');
+        const checkBtn = document.getElementById('checkBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const scoreTracker = document.getElementById('scoreTracker');
+        
+        // State
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isQuestionActive = true; // Prevents double checking
+
+        const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+        // --- Data Generation ---
+        function generateQuizData() {
+            let questions = [];
+            let x, y, a1, b1, c1, a2, b2, c2, m, b, k;
+
+            // 1. Substitution (isolated)
+            x = getRandomInt(-5, 5); y = getRandomInt(-5, 5);
+            a1 = getRandomInt(-4, 4) || 1; b1 = getRandomInt(-4, 4) || 1;
+            c1 = a1 * x + b1 * y;
+            m = getRandomInt(-4, 4) || 1;
+            b = y - m * x;
+            questions.push({ 
+                id: 'q1', type: 'sub_iso', title: 'Substitution Method',
+                eq1: `${a1}x + ${b1}y = ${c1}`, eq2: `y = ${m}x ${b>=0?'+':'-'} ${Math.abs(b)}`, answer: `(${x},${y})`,
+                hint: `Since <b>y</b> is already by itself in the second equation, plug <b>(${m}x ${b>=0?'+':'-'} ${Math.abs(b)})</b> into the first equation where you see <b>y</b>.`
+            });
+
+            // 2. Substitution (standard)
+            x = getRandomInt(-5, 5); y = getRandomInt(-5, 5);
+            b1 = getRandomInt(2, 5) * (Math.random() > 0.5 ? 1 : -1);
+            a1 = 1 * (Math.random() > 0.5 ? 1 : -1); 
+            c1 = a1 * x + b1 * y;
+            a2 = getRandomInt(-4, 4) || 1; b2 = getRandomInt(-4, 4) || 1;
+            c2 = a2 * x + b2 * y;
+            questions.push({ 
+                id: 'q2', type: 'sub_std', title: 'Substitution Method',
+                eq1: `${a1}x + ${b1}y = ${c1}`, eq2: `${a2}x + ${b2}y = ${c2}`, answer: `(${x},${y})`,
+                hint: `Isolate <b>x</b> in the first equation (since its coefficient is 1 or -1), then substitute that expression into the second equation.`
+            });
+
+            // 3. Elimination (addition)
+            x = getRandomInt(-5, 5); y = getRandomInt(-5, 5);
+            a1 = getRandomInt(-5, 5) || 1; b1 = getRandomInt(-5, 5) || 1;
+            c1 = a1 * x + b1 * y;
+            a2 = getRandomInt(-5, 5) || 1; b2 = -b1;
+            c2 = a2 * x + b2 * y;
+            questions.push({ 
+                id: 'q3', type: 'elim_add', title: 'Elimination Method',
+                eq1: `${a1}x + ${b1}y = ${c1}`, eq2: `${a2}x + ${b2}y = ${c2}`, answer: `(${x},${y})`,
+                hint: `Look at the <b>y</b> terms (${b1}y and ${b2}y). They are opposites! Add the two equations together straight down to eliminate y.`
+            });
+
+            // 4. Elimination (multiplication)
+            x = getRandomInt(-3, 3); y = getRandomInt(-3, 3);
+            a1 = getRandomInt(2, 5); b1 = getRandomInt(2, 5);
+            a2 = getRandomInt(2, 5); b2 = getRandomInt(2, 5);
+            if (a1 === a2) a2++; if (b1 === b2) b2++;
+            c1 = a1 * x + b1 * y; c2 = a2 * x + b2 * y;
+            questions.push({ 
+                id: 'q4', type: 'elim_mult', title: 'Elimination Method',
+                eq1: `${a1}x + ${b1}y = ${c1}`, eq2: `${a2}x + ${b2}y = ${c2}`, answer: `(${x},${y})`,
+                hint: `You need to make coefficients match. Try multiplying the top equation by <b>${a2}</b> and the bottom by <b>${-a1}</b> (or similar factors) to eliminate x.`
+            });
+
+            // 5 & 6. Special Cases
+            const isNoSolutionFirst = Math.random() > 0.5;
+            a1 = getRandomInt(-5, 5) || 1; b1 = getRandomInt(-5, 5) || 1; c1 = getRandomInt(-10, 10);
+            k = getRandomInt(2, 4);
+            const noSolEq1 = `${a1}x + ${b1}y = ${c1}`;
+            const noSolEq2 = `${a1*k}x + ${b1*k}y = ${c1*k + (getRandomInt(1,5) * (Math.random()>0.5?1:-1))}`;
+            
+            a2 = getRandomInt(-5, 5) || 1; b2 = getRandomInt(-5, 5) || 1; c2 = getRandomInt(-10, 10);
+            k = getRandomInt(2, 4);
+            const infSolEq1 = `${a2}x + ${b2}y = ${c2}`;
+            const infSolEq2 = `${a2*k}x + ${b2*k}y = ${c2*k}`;
+            
+            const qNoSol = { 
+                id: 'q_no', type: 'special', title: 'Special Cases', 
+                eq1: noSolEq1, eq2: noSolEq2, answer: 'no solution',
+                hint: `Notice that the variables cancel out completely, but you are left with a FALSE statement (like 0 = 5).`
+            };
+            const qInfSol = { 
+                id: 'q_inf', type: 'special', title: 'Special Cases', 
+                eq1: infSolEq1, eq2: infSolEq2, answer: 'infinite solutions',
+                hint: `Notice that the second equation is just the first equation multiplied by ${k}. They are the same line!`
+            };
+
+            if (isNoSolutionFirst) {
+                questions.push(qNoSol);
+                questions.push(qInfSol);
+            } else {
+                questions.push(qInfSol);
+                questions.push(qNoSol);
+            }
+
+            currentQuestions = questions;
+        }
+
+        // --- Render UI ---
+        function renderQuestion() {
+            const q = currentQuestions[currentQuestionIndex];
+            
+            // Update Progress
+            const progress = ((currentQuestionIndex) / currentQuestions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.innerText = `Question ${currentQuestionIndex + 1} of ${currentQuestions.length}`;
+            
+            // Reset UI states
+            feedbackArea.classList.add('hidden');
+            feedbackArea.innerHTML = '';
+            checkBtn.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            isQuestionActive = true;
+
+            // Render Question HTML
+            quizContainer.innerHTML = `
+                <div class="text-center fade-in">
+                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mb-2 uppercase tracking-wide font-semibold">${q.title}</span>
+                    <div class="equation-system mb-8 mt-4">
+                        <span class="system-brace text-gray-400">{</span>
+                        <div class="text-3xl font-mono text-left leading-relaxed text-gray-800">
+                            ${q.eq1.replace(/\+ -/g, '- ')}<br>${q.eq2.replace(/\+ -/g, '- ')}
+                        </div>
+                    </div>
+                    <div class="max-w-xs mx-auto">
+                        <input type="text" id="answerInput" 
+                            class="w-full p-4 bg-white border-2 border-gray-300 rounded-xl text-center text-xl shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all" 
+                            placeholder="Enter (x, y), no solution, or infinite" 
+                            autocomplete="off">
+                    </div>
+                </div>
+            `;
+
+            // Auto focus and Enter key support
+            setTimeout(() => {
+                const input = document.getElementById('answerInput');
+                if(input) {
+                    input.focus();
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') checkAnswer();
+                    });
+                }
+            }, 100);
+        }
+
+        const normalizeAnswer = str => {
+            let s = str.replace(/\s+/g, '').toLowerCase();
+            if (s.includes('inf')) return 'infinite solutions';
+            if (s.includes('no') || s.includes('none') || s.includes('null')) return 'no solution';
+            return s;
+        }
+
+        // --- Logic: Check Answer ---
+        function checkAnswer() {
+            if (!isQuestionActive) return;
+
+            const input = document.getElementById('answerInput');
+            const userVal = input.value;
+            if (!userVal) return; // Don't check empty
+
+            const q = currentQuestions[currentQuestionIndex];
+            const isCorrect = normalizeAnswer(userVal) === normalizeAnswer(q.answer);
+            
+            isQuestionActive = false; // Lock input
+            input.disabled = true;
+            input.classList.add('bg-gray-50', 'text-gray-500');
+
+            if (isCorrect) score++;
+            scoreTracker.innerText = `Score: ${score}`;
+
+            // Generate Feedback HTML
+            const feedbackColor = isCorrect ? 'green' : 'red';
+            const feedbackTitle = isCorrect ? 'Correct!' : 'Not quite.';
+            
+            let feedbackHTML = `
+                <div class="rounded-xl p-6 ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}">
+                    <div class="flex items-start gap-4">
+                        <div class="${isCorrect ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} p-2 rounded-full shrink-0">
+                            ${isCorrect ? 
+                                '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : 
+                                '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>'}
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-${feedbackColor}-800">${feedbackTitle}</h3>
+                            ${!isCorrect ? `<p class="text-${feedbackColor}-700 mt-1">The correct answer is <span class="font-mono font-bold">${q.answer}</span>.</p>` : ''}
+                            
+                            <div class="mt-3 pt-3 border-t border-${feedbackColor}-200">
+                                <p class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Strategy Tip</p>
+                                <p class="text-gray-700">${q.hint}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            feedbackArea.innerHTML = feedbackHTML;
+            feedbackArea.classList.remove('hidden');
+            
+            // Swap Buttons
+            checkBtn.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+            
+            // Focus Next button for accessibility/speed
+            nextBtn.focus();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuestions.length) {
+                renderQuestion();
+            } else {
+                showFinalResults();
+            }
+        }
+
+        function showFinalResults() {
+            quizContainer.classList.add('hidden');
+            feedbackArea.classList.add('hidden');
+            actionArea.classList.add('hidden');
+            document.querySelector('.bg-gray-50.border-b').classList.add('hidden'); // Hide header
+
+            resultsSection.classList.remove('hidden');
+            
+            const percent = Math.round((score / currentQuestions.length) * 100);
+            document.getElementById('finalScoreDisplay').innerText = `${percent}%`;
+            
+            let msg = '';
+            if (percent === 100) msg = "Perfect score! You are a systems master.";
+            else if (percent >= 80) msg = "Great job! You have a solid understanding.";
+            else if (percent >= 60) msg = "Good effort. Review the feedback on the ones you missed.";
+            else msg = "Keep practicing. Don't forget to check the hints!";
+            
+            document.getElementById('finalMessage').innerText = msg;
+        }
+
+        // --- Initialization ---
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreTracker.innerText = "Score: 0";
+            document.querySelector('.bg-gray-50.border-b').classList.remove('hidden');
+            
+            resultsSection.classList.add('hidden');
+            quizContainer.classList.remove('hidden');
+            actionArea.classList.remove('hidden');
+            
+            generateQuizData();
+            renderQuestion();
+        }
+
+        // Listeners
+        checkBtn.addEventListener('click', checkAnswer);
+        nextBtn.addEventListener('click', nextQuestion);
+        document.getElementById('generateNewBtn').addEventListener('click', startQuiz);
+        
+        // Start
+        startQuiz();
+
+    </script>
+</body>
+</html>

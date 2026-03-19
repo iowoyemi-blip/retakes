@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polynomial Operations Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none; }
+        sup { vertical-align: super; font-size: 0.75em; }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <main class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden">
+        <!-- Header -->
+        <div class="p-6 border-b border-gray-100 bg-white">
+            <h1 class="text-2xl font-bold text-gray-800">Introduction to Polynomials</h1>
+            <div id="progressHeader" class="flex items-center justify-between mt-4">
+                <span id="progressText" class="text-sm font-semibold text-blue-600 uppercase tracking-wider">Question 1 of 14</span>
+                <div class="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-blue-500 transition-all duration-300" style="width: 7%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Content -->
+        <div id="quizContainer" class="p-8 min-h-[300px]">
+            <!-- Dynamic Content -->
+        </div>
+
+        <!-- Feedback Area -->
+        <div id="feedbackArea" class="px-8 pb-4 hidden">
+            <div id="feedbackMessage" class="p-4 rounded-xl border"></div>
+        </div>
+
+        <!-- Action Footer -->
+        <div class="p-6 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+            <div id="currentScoreDisplay" class="text-sm font-medium text-gray-500">
+                Score: 0
+            </div>
+            <button id="actionBtn" class="bg-blue-600 text-white font-bold py-2.5 px-8 rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                Check Answer
+            </button>
+        </div>
+
+        <!-- Final Results -->
+        <div id="resultsSection" class="hidden p-10 text-center">
+            <div class="mb-6">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-100 text-blue-600 rounded-full mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-800">Quiz Complete!</h2>
+                <p class="text-gray-500 mt-2">Great job completing the polynomial review.</p>
+            </div>
+            
+            <div id="finalScore" class="text-5xl font-black text-blue-600 mb-8"></div>
+            
+            <button id="restartBtn" class="bg-gray-800 text-white font-bold py-3 px-10 rounded-xl hover:bg-black transition-all">
+                Generate New Quiz
+            </button>
+        </div>
+    </main>
+
+    <script>
+        // --- Core Math Logic (From your original file) ---
+        const getRandomInt = (min, max, allowZero = false) => {
+            let num;
+            do { num = Math.floor(Math.random() * (max - min + 1)) + min; } while (num === 0 && !allowZero);
+            return num;
+        };
+
+        const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+
+        const formatTerm = (coeff, exp, isFirst = false) => {
+            if (coeff === 0) return '';
+            const sign = isFirst ? (coeff < 0 ? '-' : '') : (coeff < 0 ? ' - ' : ' + ');
+            const absCoeff = Math.abs(coeff);
+            const coeffStr = absCoeff === 1 && exp > 0 ? '' : absCoeff;
+            const xStr = exp > 0 ? 'x' : '';
+            const expStr = exp > 1 ? `<sup>${exp}</sup>` : '';
+            return `${sign}${coeffStr}${xStr}${expStr}`;
+        };
+
+        const formatPoly = (polyMap) => {
+            const exps = Object.keys(polyMap).map(Number).sort((a, b) => b - a);
+            if (exps.length === 0) return '0';
+            let result = '';
+            exps.forEach((exp, i) => {
+                result += formatTerm(polyMap[exp], exp, i === 0);
+            });
+            return result.trim();
+        };
+
+        const normalizePoly = str => {
+            if (!str) return "";
+            let s = str.replace(/\s+/g, '').replace(/\+-/g, '-');
+            s = s.replace(/<sup>/g, '^').replace(/<\/sup>/g, '');
+            s = s.replace(/(^|[-+])x/g, '$11x');
+            s = s.replace(/\^1/g, '');
+            return s.toLowerCase();
+        }
+
+        // --- Question Generation ---
+        function generateFlattenedQuestions() {
+            let list = [];
+            const degreeNames = ['Constant', 'Linear', 'Quadratic', 'Cubic', 'Quartic'];
+            const termNames = ['Monomial', 'Binomial', 'Trinomial'];
+            
+            // 1. Classification (3 Questions)
+            for(let i=0; i<3; i++) {
+                const p = i === 0 ? { 2: getRandomInt(-9, -2), 1: getRandomInt(2, 8), 0: getRandomInt(2, 8) } :
+                          i === 1 ? { 3: getRandomInt(2, 8), 2: getRandomInt(2, 8), 1: getRandomInt(-8, -2), 0: getRandomInt(2, 8) } :
+                                    { 1: -1, 0: getRandomInt(2, 9) };
+                
+                const deg = Math.max(...Object.keys(p).map(Number));
+                const terms = Object.keys(p).length;
+                
+                list.push({
+                    type: 'classify',
+                    title: 'Classify this polynomial:',
+                    problemText: shuffle(Object.entries(p).map(([exp, coeff]) => formatTerm(coeff, exp, true))).join(' + ').replace(/\+ -/g, '- '),
+                    answers: {
+                        std: formatPoly(p),
+                        lc: p[deg].toString(),
+                        deg: deg.toString(),
+                        terms: terms.toString(),
+                        class: `${degreeNames[deg]} ${termNames[terms-1] || terms + '-term Polynomial'}`
+                    }
+                });
+            }
+
+            // 2. Add/Subtract (4 Questions)
+            const ops = [
+                {p1: {2:1, 1:-7, 0:-6}, p2: {2:-5, 1:-8, 0:10}, mode: 'add'},
+                {p1: {2:1, 1:-4, 0:-5}, p2: {2:3, 1:-2, 0:-1}, mode: 'sub'},
+                {p1: {3:-4, 2:2, 1:3, 0:-5}, p2: {3:7, 2:3, 1:3, 0:10}, mode: 'add'},
+                {p1: {3:8, 2:2, 0:-5, 1:6}, p2: {3:-1, 2:1, 1:1, 0:-1}, mode: 'sub'}
+            ];
+
+            ops.forEach(op => {
+                const res = {...op.p1};
+                for(const k in op.p2) {
+                    res[k] = op.mode === 'add' ? (res[k]||0) + op.p2[k] : (res[k]||0) - op.p2[k];
+                }
+                list.push({
+                    type: 'standard',
+                    title: op.mode === 'add' ? 'Add the polynomials:' : 'Subtract the polynomials:',
+                    problemText: `(${formatPoly(op.p1)}) ${op.mode === 'add' ? '+' : '-'} (${formatPoly(op.p2)})`,
+                    answer: formatPoly(res)
+                });
+            });
+
+            // 3. Multiply (7 Questions)
+            const mul = (p1, p2) => {
+                const res = {};
+                for (const e1 in p1) { for (const e2 in p2) {
+                    const newExp = Number(e1) + Number(e2);
+                    res[newExp] = (res[newExp] || 0) + p1[e1] * p2[e2];
+                }}
+                return res;
+            };
+
+            const mults = [
+                {p1: {1:getRandomInt(2,5)}, p2: {1:1,0:getRandomInt(-5,-2)}},
+                {p1: {1:1,0:getRandomInt(2,5)}, p2: {1:1,0:getRandomInt(-8,-5)}},
+                {p1: {1:getRandomInt(2,5),0:getRandomInt(-5,-2)}, p2: {1:getRandomInt(2,5),0:-1}},
+                {p1: {1:1,0:getRandomInt(-5,-2)}, p2: null, square: true},
+                {p1: {1:-getRandomInt(2,5)}, p2: {2:1,1:-getRandomInt(2,5),0:getRandomInt(2,5)}},
+                {p1: {1:getRandomInt(2,5),0:-1}, p2: {2:1,1:-getRandomInt(2,5),0:-getRandomInt(2,7)}},
+                {p1: {2:getRandomInt(2,5),1:-getRandomInt(2,5),0:-2}, p2: {2:1,1:-getRandomInt(2,5),0:2}}
+            ];
+
+            mults.forEach(m => {
+                const p2 = m.square ? m.p1 : m.p2;
+                list.push({
+                    type: 'standard',
+                    title: 'Multiply and simplify:',
+                    problemText: m.square ? `(${formatPoly(m.p1)})<sup>2</sup>` : `(${formatPoly(m.p1)})(${formatPoly(m.p2)})`,
+                    answer: formatPoly(mul(m.p1, p2))
+                });
+            });
+
+            return list;
+        }
+
+        // --- State Management ---
+        let questions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let isShowingFeedback = false;
+
+        const quizContainer = document.getElementById('quizContainer');
+        const feedbackArea = document.getElementById('feedbackArea');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const actionBtn = document.getElementById('actionBtn');
+        const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+        const currentScoreDisplay = document.getElementById('currentScoreDisplay');
+        const resultsSection = document.getElementById('resultsSection');
+        const finalScore = document.getElementById('finalScore');
+        const restartBtn = document.getElementById('restartBtn');
+
+        function startQuiz() {
+            questions = generateFlattenedQuestions();
+            currentIndex = 0;
+            score = 0;
+            isShowingFeedback = false;
+            
+            resultsSection.classList.add('hidden');
+            document.querySelector('main').classList.remove('hidden'); // Ensure main is visible
+            document.getElementById('progressHeader').parentElement.classList.remove('hidden');
+            document.querySelector('.bg-gray-50').classList.remove('hidden');
+            quizContainer.classList.remove('hidden');
+            
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            isShowingFeedback = false;
+            feedbackArea.classList.add('hidden');
+            actionBtn.textContent = "Check Answer";
+            actionBtn.className = "bg-blue-600 text-white font-bold py-2.5 px-8 rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200";
+            
+            const q = questions[currentIndex];
+            
+            // Update UI trackers
+            progressText.textContent = `Question ${currentIndex + 1} of ${questions.length}`;
+            progressBar.style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
+            currentScoreDisplay.textContent = `Score: ${score}`;
+
+            if (q.type === 'classify') {
+                quizContainer.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="text-center">
+                            <h3 class="text-lg font-medium text-gray-500 mb-2">${q.title}</h3>
+                            <div class="text-3xl font-mono text-gray-800 p-6 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                                ${q.problemText}
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-gray-400 uppercase">Standard Form</label>
+                                <input type="text" id="ans_std" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. 3x^2 + x">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-gray-400 uppercase">Leading Coeff.</label>
+                                <input type="text" id="ans_lc" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-gray-400 uppercase">Degree</label>
+                                <input type="text" id="ans_deg" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-gray-400 uppercase">No. of Terms</label>
+                                <input type="text" id="ans_terms" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                            <div class="space-y-1 sm:col-span-2">
+                                <label class="text-xs font-bold text-gray-400 uppercase">Classification</label>
+                                <input type="text" id="ans_class" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="e.g. Quadratic Trinomial">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                quizContainer.innerHTML = `
+                    <div class="space-y-8 flex flex-col items-center justify-center h-full pt-4">
+                        <div class="text-center w-full">
+                            <h3 class="text-lg font-medium text-gray-500 mb-4">${q.title}</h3>
+                            <div class="text-3xl font-mono text-gray-800 p-8 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                                ${q.problemText}
+                            </div>
+                        </div>
+                        <div class="w-full max-w-md">
+                            <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Your Answer</label>
+                            <input type="text" id="ans_main" class="w-full p-4 text-xl font-mono border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all" placeholder="Use ^ for exponents">
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function checkAnswer() {
+            const q = questions[currentIndex];
+            let isCorrect = false;
+            let displayCorrect = "";
+
+            if (q.type === 'classify') {
+                const u_std = document.getElementById('ans_std').value;
+                const u_lc = document.getElementById('ans_lc').value.trim();
+                const u_deg = document.getElementById('ans_deg').value.trim();
+                const u_terms = document.getElementById('ans_terms').value.trim();
+                const u_class = document.getElementById('ans_class').value.trim().toLowerCase();
+
+                const c = q.answers;
+                const matchStd = normalizePoly(u_std) === normalizePoly(c.std);
+                const matchLc = u_lc == c.lc;
+                const matchDeg = u_deg == c.deg;
+                const matchTerms = u_terms == c.terms;
+                // Flexible class check
+                const cleanClass = str => str.replace('-term polynomial', ' polynomial').replace('polynomial', '').trim();
+                const matchClass = cleanClass(u_class) === cleanClass(c.class.toLowerCase());
+
+                isCorrect = matchStd && matchLc && matchDeg && matchTerms && matchClass;
+                displayCorrect = `Standard: ${c.std}, LC: ${c.lc}, Degree: ${c.deg}, Terms: ${c.terms}, Class: ${c.class}`;
+            } else {
+                const u_main = document.getElementById('ans_main').value;
+                isCorrect = normalizePoly(u_main) === normalizePoly(q.answer);
+                displayCorrect = q.answer;
+            }
+
+            isShowingFeedback = true;
+            feedbackArea.classList.remove('hidden');
+
+            if (isCorrect) {
+                score++;
+                feedbackMessage.className = "p-4 rounded-xl border bg-green-50 border-green-200 text-green-800";
+                feedbackMessage.innerHTML = `<div class="flex items-center gap-3"><svg class="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg> <span class="font-bold">Correct!</span></div>`;
+                actionBtn.className = "bg-green-600 text-white font-bold py-2.5 px-8 rounded-lg hover:bg-green-700 transition-colors shadow-lg shadow-green-200";
+            } else {
+                feedbackMessage.className = "p-4 rounded-xl border bg-red-50 border-red-200 text-red-800";
+                feedbackMessage.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-red-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        <div>
+                            <span class="font-bold">Not quite.</span><br>
+                            <span class="text-sm opacity-90">Correct Answer: <span class="font-mono">${displayCorrect}</span></span>
+                        </div>
+                    </div>`;
+                actionBtn.className = "bg-red-600 text-white font-bold py-2.5 px-8 rounded-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-200";
+            }
+
+            actionBtn.textContent = (currentIndex < questions.length - 1) ? "Next Question" : "Finish Quiz";
+            currentScoreDisplay.textContent = `Score: ${score}`;
+        }
+
+        function handleAction() {
+            if (!isShowingFeedback) {
+                checkAnswer();
+            } else {
+                if (currentIndex < questions.length - 1) {
+                    currentIndex++;
+                    renderQuestion();
+                } else {
+                    showResults();
+                }
+            }
+        }
+
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            feedbackArea.classList.add('hidden');
+            document.querySelector('.bg-gray-50').classList.add('hidden');
+            document.getElementById('progressHeader').parentElement.classList.add('hidden');
+            
+            resultsSection.classList.remove('hidden');
+            const percent = Math.round((score / questions.length) * 100);
+            finalScore.textContent = `${percent}%`;
+        }
+
+        actionBtn.addEventListener('click', handleAction);
+        restartBtn.addEventListener('click', startQuiz);
+
+        // Allow 'Enter' key to submit/next
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !resultsSection.classList.contains('hidden')) {
+                // Ignore if quiz is finished
+            } else if (e.key === 'Enter') {
+                handleAction();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', startQuiz);
+    </script>
+</body>
+</html>
